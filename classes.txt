@@ -1,0 +1,52 @@
+
+
+System
+
+ - contains all the other components
+
+ Q Function
+ State
+ Experience
+
+Q Function (Neural Network, use Keras?)
+
+ - Maps states to numpy array of rewards (one reward per action)
+
+Q Trainer
+
+ - Accepts experience of (old state, action, reward, new_state)
+ - Trains onto target reward + gamma * maxQ
+  where maxQ = max(Q(new_state))
+
+ - For better vectorisation, we could have have as our experience
+  - (old state, rewards, new_states), where rewards and new_states are
+   lists with one value per action.
+  - thus, calling Q(new_states) will give a rectangular result of
+    shape (num_actions, num_actions), and we take the max over one of the
+    axis to give a vectorised
+     rewards + gamma * maxQs
+    for training
+
+Model
+
+ - Maps (old_state, action) to (new_state, reward)
+ - May or may not be deterministic
+
+Experience
+
+ - History of (old_state, action, reward, new_state)
+
+Episode
+
+ - A game from beginning to end
+ - Contains a list of state, action, reward
+
+
+(Is this a class?)CurrentState
+
+ - The state of the model
+ - Represented as a numpy array. External interface of this must be 1d numpy array
+   which must be compatible with the system's
+
+ = Examples =
+  - Grid world

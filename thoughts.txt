@@ -25,6 +25,10 @@ Initialise state state s,
 For my use cases, I will be performing analysis on systems where I already a have a model, and for which I want to train
  an optimal bot. So I can use offline learning.
 
+== Off Policy ==
+
+We are following an off policy learning method, as in Q learning we are randomly following actions
+
 === Offline Learning ===
 
 When performing offline learning (i.e. We have a model to test, or static training data) Steps can be divided into 2 portions:
@@ -50,6 +54,14 @@ Q(s, a) is a vector, and we will only be choosing one value to update at a time.
 
 Calling Q(s) is slow, but we can call it in a vectorised manner which will make it a lot faster. How could we reflect this in a clean way?
 
+== Initialising Q =
+
+We update the q val with:
+
+qval[action] = reward + gamma + maxQ
+
+So qval[action] will be correlated to reward.
+We could start off by generating a load of random training data, and then fitting qval to match the rewards.
 
 Further Tricks:
 
