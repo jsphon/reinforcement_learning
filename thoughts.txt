@@ -1,0 +1,59 @@
+Good tutorial:
+
+http://outlace.com/rlpart3.html
+
+A Reinforcement System consists of a few components:
+
+ - Neural Network Model for the Q function: Q(s, a)
+ - Environment, representing the state
+
+Basic Q Learning Algo For Offline Learning
+
+Initialise state state s,
+
+ - Run Q Network Q(s), giving us a value per action
+ - Use epsilon greedy method to choose the action, a,  to take
+ - Take action a, observe new state s' and reward r_{t+1}
+ - Run network forward using s', and store maxQ
+ - target for training is reward + gamma + maxQ
+   qval = Q(state)
+   qval[action] = reward + gamma + maxQ
+   fit( state, qval,)
+
+ - repeat previous steps
+
+For my use cases, I will be performing analysis on systems where I already a have a model, and for which I want to train
+ an optimal bot. So I can use offline learning.
+
+=== Offline Learning ===
+
+When performing offline learning (i.e. We have a model to test, or static training data) Steps can be divided into 2 portions:
+
+ - Generating data, through using the Q function to step through multiple epochs
+ - Fitting the neural network model
+
+Above algo has catastophic forgetting, so we need experience replay.
+In offline learning, we do not need to take 1 step, then fit data, then take 1 step... we can vectorise the data generation
+and learning phases, which will allow us to train models faster.
+
+The 2 portions become:
+
+ 1 - Generate data (old_state, reward, action, new_state)
+   - Store data
+
+ 2 - Sample from the data
+     Generate the fitting targets (i.e. Q(s, a) <- Q(s, a) + reward + gamma * maxQ
+     Fitting the model
+
+Q(s, a) is a vector, and we will only be choosing one value to update at a time. This could be optimised by changing as many of them as possible. So portion 1 would generate date of form:
+ ( old_state, vector of rewards, vector of actions, vector of new states)
+
+Calling Q(s) is slow, but we can call it in a vectorised manner which will make it a lot faster. How could we reflect this in a clean way?
+
+
+Further Tricks:
+
+Double Q Learning
+https://rubenfiszel.github.io/posts/rl4j/2016-08-24-Reinforcement-Learning-and-DQN.html#doubleq
+
+Experience Replay
