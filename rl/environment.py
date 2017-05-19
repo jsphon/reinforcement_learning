@@ -1,4 +1,3 @@
-
 import numba
 import numpy as np
 
@@ -9,7 +8,6 @@ def rand_pair(s, e):
 
 
 def init_grid():
-
     player = (0, 1)
     wall = (2, 2)
     pit = (1, 1)
@@ -19,7 +17,6 @@ def init_grid():
 
 
 class Grid(object):
-
     def __init__(self, player, wall, pit, goal):
         self.player = player
         self.wall = wall
@@ -45,9 +42,12 @@ class Grid(object):
         return r
 
     def get_reward(self):
-        if self.player==self.pit:
+        return self.get_reward_if_player(self.player)
+
+    def get_reward_if_player(self, player):
+        if player == self.pit:
             return -10
-        elif self.player==self.goal:
+        elif player == self.goal:
             return 10
         return -1
 
@@ -65,8 +65,8 @@ class Grid(object):
         self.player = self.if_move_down()
 
     def if_move_down(self):
-        new_position = (min(self.player[0]+1, 3), self.player[1])
-        if new_position!=self.wall:
+        new_position = (min(self.player[0] + 1, 3), self.player[1])
+        if new_position != self.wall:
             return new_position
         else:
             return self.player
@@ -90,6 +90,7 @@ class Grid(object):
             return new_position
         else:
             return self.player
+
 
 def randPair(s, e):
     return np.random.randint(s, e), np.random.randint(s, e)
@@ -140,6 +141,7 @@ def initGridPlayer():
 
     return state.reshape(1, 64)
 
+
 # Initialize grid so that goal, pit, wall, player are all randomly placed
 def initGridRand():
     state = np.zeros((4, 4, 4))
@@ -164,9 +166,7 @@ def initGridRand():
     return state.reshape(1, 64)
 
 
-
 def makeMove(state, action):
-
     state = state.reshape((4, 4, 4))
 
     # need to locate player in grid
@@ -239,7 +239,6 @@ def getReward(state):
 
 
 class Environment(object):
-
     def __init__(self):
         pass
         self.state = None
@@ -258,7 +257,7 @@ class Environment(object):
         action_states = np.ndarray((4, 64))
         for action in range(4):
             new_state = makeMove(self.state, action)
-            action_states[action, :] = new_state.ravel()#.reshape(1, 64)
+            action_states[action, :] = new_state.ravel()  # .reshape(1, 64)
         return action_states
 
     def get_action_rewards(self):
@@ -292,7 +291,7 @@ class Environment(object):
             ssar.append((old_state.reshape(64, 1).copy(), new_states, action_rewards))
 
             action = np.random.randint(0, 4)
-            #print('Doing action %s' % action)
+            # print('Doing action %s' % action)
             old_state = makeMove(old_state, action)
 
         return ssar
@@ -320,8 +319,8 @@ def display_state(state):
 
     print(grid)
 
-if __name__=='__main__':
 
+if __name__ == '__main__':
     grid = init_grid()
     print(grid.as_2d_array())
 
