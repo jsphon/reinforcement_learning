@@ -59,7 +59,10 @@ class Grid(object):
         if new_position!=self.wall:
             self.player = new_position
 
-
+    def move_right(self):
+        new_position = (self.player[0], min(self.player[1] + 1, 3))
+        if new_position != self.wall:
+            self.player = new_position
 
 def randPair(s, e):
     return np.random.randint(s, e), np.random.randint(s, e)
