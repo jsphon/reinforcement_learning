@@ -44,6 +44,13 @@ class Grid(object):
         r[self.goal[0], self.goal[1]] = '+'
         return r
 
+    def get_reward(self):
+        if self.player==self.pit:
+            return -10
+        elif self.player==self.goal:
+            return 10
+        return -1
+
     def move_up(self):
         new_position = (max(self.player[0]-1, 0), self.player[1])
         if new_position!=self.wall:

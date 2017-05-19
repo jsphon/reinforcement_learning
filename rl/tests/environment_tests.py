@@ -110,6 +110,21 @@ class MyTestCase(unittest.TestCase):
         grid.move_right()
         self.assertEqual((2, 1), grid.player)
 
+    def test_get_reward_pit(self):
+        grid = rle.init_grid()
+        grid.player = grid.pit
+        self.assertEqual(-10, grid.get_reward())
+
+    def test_get_reward_goal(self):
+        grid = rle.init_grid()
+        grid.player = grid.goal
+        self.assertEqual(10, grid.get_reward())
+
+    def test_get_reward_other(self):
+        grid = rle.init_grid()
+        self.assertEqual(-1, grid.get_reward())
+
+
 
 
 
