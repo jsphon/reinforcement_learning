@@ -124,10 +124,6 @@ class MyTestCase(unittest.TestCase):
         grid = rle.init_grid()
         self.assertEqual(-1, grid.get_reward())
 
-
-
-
-
     def test_rand_pair(self):
 
         for _ in range(N):

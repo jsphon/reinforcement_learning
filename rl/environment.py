@@ -52,24 +52,44 @@ class Grid(object):
         return -1
 
     def move_up(self):
-        new_position = (max(self.player[0]-1, 0), self.player[1])
-        if new_position!=self.wall:
-            self.player = new_position
+        self.player = self.if_move_up()
+
+    def if_move_up(self):
+        new_position = (max(self.player[0] - 1, 0), self.player[1])
+        if new_position != self.wall:
+            return new_position
+        else:
+            return self.player
 
     def move_down(self):
+        self.player = self.if_move_down()
+
+    def if_move_down(self):
         new_position = (min(self.player[0]+1, 3), self.player[1])
         if new_position!=self.wall:
-            self.player = new_position
+            return new_position
+        else:
+            return self.player
 
     def move_left(self):
-        new_position = (self.player[0], max(self.player[1]-1, 0))
-        if new_position!=self.wall:
-            self.player = new_position
+        self.player = self.if_move_left()
+
+    def if_move_left(self):
+        new_position = (self.player[0], max(self.player[1] - 1, 0))
+        if new_position != self.wall:
+            return new_position
+        else:
+            return self.player
 
     def move_right(self):
+        self.player = self.if_move_right()
+
+    def if_move_right(self):
         new_position = (self.player[0], min(self.player[1] + 1, 3))
         if new_position != self.wall:
-            self.player = new_position
+            return new_position
+        else:
+            return self.player
 
 def randPair(s, e):
     return np.random.randint(s, e), np.random.randint(s, e)
