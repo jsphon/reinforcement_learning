@@ -64,17 +64,35 @@ class MyTestCase(unittest.TestCase):
         grid.move_down()
         self.assertEqual((1, 1), grid.player)
 
-    def test_move_into_edge(self):
+    def test_move_down_into_edge(self):
         grid = rle.init_grid()
         grid.player = (3, 0)
         grid.move_down()
         self.assertEqual((3, 0), grid.player)
 
-    def test_move_into_wall(self):
+    def test_move_down_into_wall(self):
         grid = rle.init_grid()
         grid.player = (1, 2)
         grid.move_down()
         self.assertEqual((1, 2), grid.player)
+
+    def test_move_left(self):
+        grid = rle.init_grid()
+        grid.move_left()
+        self.assertEqual((0, 0), grid.player)
+
+    def test_move_left_into_edge(self):
+        grid = rle.init_grid()
+        grid.player = (0, 0)
+        grid.move_left()
+        self.assertEqual((0, 0), grid.player)
+
+    def test_move_down_into_wall(self):
+        grid = rle.init_grid()
+        grid.player = (2, 3)
+        grid.move_left()
+        self.assertEqual((2, 3), grid.player)
+
 
     def test_rand_pair(self):
 
