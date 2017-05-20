@@ -1,16 +1,40 @@
+From https://en.wikipedia.org/wiki/Reinforcement_learning:
 
+The basic reinforcement learning model consists of:
+
+a set of environment and agent states {\displaystyle S} S;
+a set of actions {\displaystyle A} A of the agent;
+policies of transitioning from states to actions;
+rules that determine the scalar immediate reward of a transition; and
+rules that describe what the agent observes.
 
 System
 
  - contains all the other components
 
  Q Function
+ Environment
  State
  Experience
 
 Q Function (Neural Network, use Keras?)
 
  - Maps states to numpy array of rewards (one reward per action)
+
+Environment
+
+Offline functions
+
+ - Maps (State, Action) to (New State, Reward)
+
+Online Functions
+
+ - Maps (Current State, action) to (New State, action).
+
+Actor
+
+ - has as statef
+
 
 Q Trainer
 
@@ -27,10 +51,67 @@ Q Trainer
      rewards + gamma * maxQs
     for training
 
-Model
+= Elements Of Reinforcement Learning =
+
+== Model ==
 
  - Maps (old_state, action) to (new_state, reward)
  - May or may not be deterministic
+
+=== Example Model: Grid ===
+
+ - Maps (position, actions) to (new position)
+ - How can we cleanly design an environment where actions can be what-ifs, or applied?
+
+== Reward Function ==
+
+ - Maps (old_state, action, new_state) to a reward
+
+=== Reward Function Examples ===
+ - Grid World maps the new state to a reward
+ - Trading sim maps the change in price, and prior position, to a reward. i.e. uses prior and current state
+
+== Policy ==
+
+ - How the agent reacts to states.
+ i.e. maps states to actions
+
+= Experience Collector =
+
+== Live ==
+
+Can only step through time in one direction, taking one action at each point in time. This is how an
+online system would learn.
+
+i.e.
+
+action = Policy(current_state)
+new_state = Model(current_state, action)
+reward = Reward Function(state, action, new_state)
+repeat
+
+This method leaves a lot of unhelpful values in the action/reward vector.
+
+Defn: Action/Reward Vector
+
+Suppose we have n possible actions. Then the action/reward vector a\in\R^n is a vector where
+a[i] is the reward from action a.
+
+== Action Complete ==
+
+Given a state, gather experience for each action.
+
+i.e.
+
+for each action:
+    new_state = Model(current_state, action)
+    reward = Reward Function(state, action, new_state
+
+new_state = random choice of new states
+
+
+
+
 
 Experience
 
