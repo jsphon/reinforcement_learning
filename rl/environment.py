@@ -51,6 +51,26 @@ class Grid(object):
             return 10
         return -1
 
+    def apply_action(self, action):
+        self.player = self.if_apply_action(action)
+
+    def state_reward_if_apply_action(self, action):
+        player = self.if_apply_action(action)
+        reward = self.get_reward_if_player(player)
+        return player, reward
+
+    def if_apply_action(self, action):
+        if action == 0:
+            return self.if_move_up()
+        elif action == 1:
+            return self.if_move_down()
+        elif action == 2:
+            return self.if_move_left()
+        elif action == 3:
+            return self.if_move_right()
+        else:
+            raise Exception
+
     def move_up(self):
         self.player = self.if_move_up()
 
