@@ -167,15 +167,19 @@ if __name__=='__main__':
     grid_sys.num_actions = 4
     grid_sys.state_size = 64
 
-    states, action_rewards = grid_sys.generate_initial_training_data()
+    grid_sys.initialise_value_function()
 
-    print(states.shape)
-    print(action_rewards.shape)
+    for _ in range(10):
+        states, action_rewards, new_states = grid_sys.generate_experience()
 
-    grid_sys.value_function.fit(states, action_rewards, epochs=100)
+        N = len(new_states)
+        # TODO:
+        # How do we know that these reshapes are correct?
+        new_values = grid_sys.value_function.get_value(new_states.reshape(N*grid_sys.num_actions, grid_sys.state_size))
+        new_values = new_values.max(axis=1).reshape(N, grid_sys.num_actions)
 
-    predicted_action_rewards = grid_sys.value_function.get_value(states)
+        gamma = 0.9
+        targets = action_rewards + gamma * new_values
+        grid_sys.value_function.fit(states, targets)
 
-    print(predicted_action_rewards[:10])
-    print(action_rewards[:10])
-    #y = grid_sys.value_function.get_value(action_states)
+    print(grid_sys.value_function.get_value(states))
