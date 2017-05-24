@@ -64,6 +64,9 @@ class GridValueFunction(ValueFunction):
     def get_value(self, state):
         return self.model.predict(state)
 
+    def fit(self, x, y, **kwargs):
+        self.model.fit(x, y, **kwargs)
+
 
 class GridState(object):
 
@@ -163,9 +166,16 @@ if __name__=='__main__':
     grid_sys = GridSystem()
     grid_sys.num_actions = 4
     grid_sys.state_size = 64
-    action_rewards, action_states = grid_sys.generate_initial_training_data()
 
+    states, action_rewards = grid_sys.generate_initial_training_data()
+
+    print(states.shape)
     print(action_rewards.shape)
-    print(action_states.shape)
 
-    y = grid_sys.value_function.get_value(action_states)
+    grid_sys.value_function.fit(states, action_rewards, epochs=100)
+
+    predicted_action_rewards = grid_sys.value_function.get_value(states)
+
+    print(predicted_action_rewards[:10])
+    print(action_rewards[:10])
+    #y = grid_sys.value_function.get_value(action_states)
