@@ -18,6 +18,10 @@ class GridSystem(RLSystem):
         self.model = GridModel()
 
 
+        self.num_actions = 4
+        self.state_size = 64
+
+
 class GridPolicy(Policy):
 
     def __init__(self):
@@ -169,17 +173,18 @@ if __name__=='__main__':
 
     grid_sys.initialise_value_function()
 
-    for _ in range(10):
-        states, action_rewards, new_states = grid_sys.generate_experience()
+    for _ in range(5):
+        states, action_rewards, new_states = grid_sys.generate_experience(num_epochs=10)
 
         N = len(new_states)
         # TODO:
         # How do we know that these reshapes are correct?
-        new_values = grid_sys.value_function.get_value(new_states.reshape(N*grid_sys.num_actions, grid_sys.state_size))
-        new_values = new_values.max(axis=1).reshape(N, grid_sys.num_actions)
+        new_values0 = grid_sys.value_function.get_value(new_states.reshape(N*grid_sys.num_actions, grid_sys.state_size))
+        new_values1 = new_values0.reshape(N, grid_sys.num_actions, grid_sys.num_actions).max(axis=1)
 
         gamma = 0.9
-        targets = action_rewards + gamma * new_values
+        targets = action_rewards + gamma * new_values1
         grid_sys.value_function.fit(states, targets)
 
+    np.set_printoptions(precision=1)
     print(grid_sys.value_function.get_value(states))

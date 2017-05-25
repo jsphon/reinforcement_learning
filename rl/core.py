@@ -128,6 +128,31 @@ class RLSystem(object):
 
         return arr_states, arr_action_rewards, arr_new_states
 
+    def generate_action_target_values(self, action_states):
+        '''
+        Give an experience of action-states, calculate their values
+
+        1st dimension of length N represents the number of experiences.
+
+        2nd dimension represents an action.
+
+        3rd dimension represents the state vector that the 2nd dimension's action takes us to
+
+        So for the result, the 3rd dimension becomes the value of a subsequent action.
+
+        i.e. result[0, 1, 2] would be the value from experience 0,
+             of action 1 followed by action 2
+
+        :param action_states: ndarray(N x num_actions x state_size)
+
+        :return: ndarray(N x num_actions x num_actions)
+        '''
+
+        N = action_states.shape[0]
+        new_values0 = self.value_function.get_value(action_states.reshape(N*self.num_actions, self.state_size))
+        new_values1 = new_values0.max(axis=1).reshape(N, self.num_actions)
+        return new_values1
+
 
 class Policy(object):
     def get_action(self, action_values):
