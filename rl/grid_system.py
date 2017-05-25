@@ -7,6 +7,9 @@ import numpy as np
 
 from rl.core import RLSystem, Policy, RewardFunction, ValueFunction, Model
 
+np.set_printoptions(precision=1)
+np.set_printoptions(linewidth=200)
+
 
 class GridSystem(RLSystem):
 
@@ -20,6 +23,27 @@ class GridSystem(RLSystem):
 
         self.num_actions = 4
         self.state_size = 64
+
+    def get_value_grid(self):
+
+        state = GridState.new()
+        values = np.ndarray((4, 4))
+        for i in range(4):
+            for j in range(4):
+                state.player = (i, j)
+                v = self.value_function.get_value(state.as_vector().reshape(1, 64))
+                values[i, j] = v.max()
+        return values
+
+
+    def get_reward_grid(self):
+        state = GridState.new()
+        rewards = np.ndarray((4, 4))
+        for i in range(4):
+            for j in range(4):
+                state.player = (i, j)
+                rewards[i, j] = self.reward_function.get_reward(None, None, state)
+        return rewards
 
 
 class GridPolicy(Policy):
@@ -173,18 +197,41 @@ if __name__=='__main__':
 
     grid_sys.initialise_value_function()
 
-    for _ in range(5):
-        states, action_rewards, new_states = grid_sys.generate_experience(num_epochs=10)
+    print('initial value function')
+    print(grid_sys.get_value_grid())
+
+    gamma = 0.9
+    for i in range(5):
+        states, action_rewards, new_states = grid_sys.generate_experience(num_epochs=5)
 
         N = len(new_states)
-        # TODO:
-        # How do we know that these reshapes are correct?
-        new_values0 = grid_sys.value_function.get_value(new_states.reshape(N*grid_sys.num_actions, grid_sys.state_size))
-        new_values1 = new_values0.reshape(N, grid_sys.num_actions, grid_sys.num_actions).max(axis=1)
+        new_values = grid_sys.generate_action_target_values(new_states)
 
-        gamma = 0.9
-        targets = action_rewards + gamma * new_values1
-        grid_sys.value_function.fit(states, targets)
+        targets = action_rewards + gamma * new_values
+        #print('targets for epoch %s:\n%s'%(i, str(targets)))
+        grid_sys.value_function.fit(states, targets, verbose=0)
+
+        print('targets, action_rewards, new_values for epoch %i' % i)
+        print(str(np.c_[targets, action_rewards, new_values]))
+
+        print('Values after epoch %s'%i)
+        print(grid_sys.get_value_grid())
+
+
 
     np.set_printoptions(precision=1)
-    print(grid_sys.value_function.get_value(states))
+    #print(grid_sys.value_function.get_value(states))
+
+
+    # Display values of each location
+
+    print('values')
+    values = grid_sys.get_value_grid()
+    print(values)
+
+    print('2d grid')
+    state = GridState.new()
+    print(state.as_2d_array())
+
+    print('Reward Grid')
+    print(grid_sys.get_reward_grid())

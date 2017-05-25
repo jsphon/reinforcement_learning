@@ -35,7 +35,6 @@ class MyTestCase(unittest.TestCase):
         states, action_rewards, new_states = grid_sys.generate_experience(num_epochs=10)
 
         new_state_values = grid_sys.generate_action_target_values(new_states)
-        print(new_state_values)
 
         N = len(new_state_values)
         expected = np.ndarray((N, grid_sys.num_actions))
@@ -44,19 +43,7 @@ class MyTestCase(unittest.TestCase):
                 action_values = grid_sys.value_function.get_value(new_states[i][action].reshape(1, grid_sys.state_size))
                 expected[i, action] = action_values.max()
 
-        print('actual:\n%s'%new_state_values[:3])
-        print('expected:\n%s' %expected[:3])
-
         np.testing.assert_almost_equal(expected, new_state_values)
-
-
-
-        # TODO:
-        # How do we know that these reshapes are correct?
-        # new_values0 = grid_sys.value_function.get_value(
-        #     new_states.reshape(N * grid_sys.num_actions, grid_sys.state_size))
-        # new_values1 = new_values0.reshape(N, grid_sys.num_actions, grid_sys.num_actions).max(axis=1)
-
 
     #
     # def test_init_grid(self):

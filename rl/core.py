@@ -37,7 +37,7 @@ class RLSystem(object):
         print('trained action_rewards:')
         print(self.value_function.get_value(states[:5]))
 
-    def generate_initial_training_data(self, num_epochs=10, max_epoch_len=100):
+    def generate_initial_training_data(self, num_epochs=20, max_epoch_len=100):
         '''
         Generate states / action-reward pairs, which can be used to initialise
         the value function to something more intelligent that randomness.
