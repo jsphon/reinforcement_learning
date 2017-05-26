@@ -9,6 +9,7 @@ from rl.core import RLSystem, Policy, RewardFunction, ValueFunction, Model
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
+np.set_printoptions(suppress=True)
 
 
 class GridSystem(RLSystem):
@@ -201,23 +202,21 @@ if __name__=='__main__':
     print(grid_sys.get_value_grid())
 
     gamma = 0.9
-    for i in range(5):
-        states, action_rewards, new_states = grid_sys.generate_experience(num_epochs=5)
+    for i in range(10):
+        states, action_rewards, new_states, new_states_terminal = grid_sys.generate_experience(num_epochs=10)
 
         N = len(new_states)
         new_values = grid_sys.generate_action_target_values(new_states)
+        new_values[new_states_terminal] = 0
 
         targets = action_rewards + gamma * new_values
-        #print('targets for epoch %s:\n%s'%(i, str(targets)))
         grid_sys.value_function.fit(states, targets, verbose=0)
 
-        print('targets, action_rewards, new_values for epoch %i' % i)
-        print(str(np.c_[targets, action_rewards, new_values]))
-
+        # print('targets, action_rewards, new_values for epoch %i' % i)
+        # print(str(np.c_[targets, action_rewards, new_values]))
+        #
         print('Values after epoch %s'%i)
         print(grid_sys.get_value_grid())
-
-
 
     np.set_printoptions(precision=1)
     #print(grid_sys.value_function.get_value(states))
