@@ -1,11 +1,9 @@
-import random
-
 from keras.layers.core import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import RMSprop
 import numpy as np
 
-from rl.core import RLSystem, Policy, RewardFunction, ValueFunction, Model
+from rl.core import RLSystem, EpsilonGreedyPolicy, RewardFunction, ValueFunction, Model, Episode
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
@@ -13,14 +11,12 @@ np.set_printoptions(suppress=True)
 
 
 class GridSystem(RLSystem):
-
     def __init__(self):
         super(GridSystem, self).__init__()
-        self.policy = GridPolicy()
+        self.policy = EpsilonGreedyPolicy()
         self.reward_function = GridRewardFunction()
         self.value_function = GridValueFunction()
         self.model = GridModel()
-
 
         self.num_actions = 4
         self.state_size = 64
@@ -36,7 +32,6 @@ class GridSystem(RLSystem):
                 values[i, j] = v.max()
         return values
 
-
     def get_reward_grid(self):
         state = GridState.new()
         rewards = np.ndarray((4, 4))
@@ -47,21 +42,7 @@ class GridSystem(RLSystem):
         return rewards
 
 
-class GridPolicy(Policy):
-
-    def __init__(self):
-        self.epsilon=0.1
-
-    def get_action(self, action_values):
-        if (random.random() < self.epsilon):  # choose random action
-            action = np.random.randint(0, 4)
-        else:  # choose best action from Q(s,a) values
-            action = (np.argmax(action_values))
-        return action
-
-
 class GridRewardFunction(RewardFunction):
-
     def get_reward(self, old_state, action, new_state):
 
         if new_state.player == new_state.pit:
@@ -72,7 +53,6 @@ class GridRewardFunction(RewardFunction):
 
 
 class GridValueFunction(ValueFunction):
-
     def __init__(self):
         model = Sequential()
         model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(64,)))
@@ -98,14 +78,13 @@ class GridValueFunction(ValueFunction):
 
 
 class GridState(object):
-
     def __init__(self, player, wall, pit, goal):
         self.player = player
         self.wall = wall
         self.pit = pit
         self.goal = goal
         self.size = 64
-        self.is_terminal=False
+        self.is_terminal = False
 
     @staticmethod
     def new():
@@ -170,28 +149,26 @@ class GridState(object):
             self._update_player(new_position)
 
     def _update_player(self, player):
-        self.player=player
+        self.player = player
         if player in (self.pit, self.goal):
-            self.is_terminal=True
+            self.is_terminal = True
 
 
 class GridModel(Model):
-
     def __init__(self):
         super(GridModel, self).__init__()
-        self.reward_function = GridRewardFunction()
-        self.value_function = GridValueFunction()
+        # self.reward_function = GridRewardFunction()
+        # self.value_function = GridValueFunction()
         self.get_new_state = GridState.new
         self.num_actions = 4
 
     def apply_action(self, state, action):
         new_state = state.copy()
         new_state.apply_action(action)
-        return new_state#, reward
+        return new_state  # , reward
 
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     grid_sys = GridSystem()
     grid_sys.num_actions = 4
     grid_sys.state_size = 64
@@ -215,11 +192,11 @@ if __name__=='__main__':
         # print('targets, action_rewards, new_values for epoch %i' % i)
         # print(str(np.c_[targets, action_rewards, new_values]))
         #
-        print('Values after epoch %s'%i)
+        print('Values after epoch %s' % i)
         print(grid_sys.get_value_grid())
 
     np.set_printoptions(precision=1)
-    #print(grid_sys.value_function.get_value(states))
+    # print(grid_sys.value_function.get_value(states))
 
 
     # Display values of each location
@@ -234,3 +211,25 @@ if __name__=='__main__':
 
     print('Reward Grid')
     print(grid_sys.get_reward_grid())
+
+    episode = Episode(rl_system=grid_sys)
+    episode.initialise()
+
+    print('Episode initialised to...')
+    print(episode.current_state.as_2d_array())
+
+    episode.take_chosen_action()
+    print('After 1 step')
+    print(episode.current_state.as_2d_array())
+
+    episode.take_chosen_action()
+    print('After 2 steps')
+    print(episode.current_state.as_2d_array())
+
+    episode.take_chosen_action()
+    print('After 3 steps')
+    print(episode.current_state.as_2d_array())
+
+    episode.take_chosen_action()
+    print('After 4 steps')
+    print(episode.current_state.as_2d_array())

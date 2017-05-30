@@ -1,4 +1,5 @@
-import numba
+import random
+
 import numpy as np
 
 
@@ -156,14 +157,27 @@ class RLSystem(object):
         '''
 
         N = action_states.shape[0]
-        new_values0 = self.value_function.get_value(action_states.reshape(N*self.num_actions, self.state_size))
+        new_values0 = self.value_function.get_value(action_states.reshape(N * self.num_actions, self.state_size))
         new_values1 = new_values0.max(axis=1).reshape(N, self.num_actions)
         return new_values1
 
 
 class Policy(object):
-    def get_action(self, action_values):
+    def choose_action(self, action_values):
         raise NotImplemented()
+
+
+class EpsilonGreedyPolicy(Policy):
+    def __init__(self):
+        self.epsilon = 0.1
+
+    def choose_action(self, action_values, num_actions):
+        if random.random() < self.epsilon:  # choose random action
+            action = np.random.randint(0, num_actions)
+        else:  # choose best action from Q(s,a) values
+            action = (np.argmax(action_values))
+        print('Choosing action %s from %s' % (action, str(action_values)))
+        return action
 
 
 class RewardFunction(object):
@@ -180,3 +194,31 @@ class Model(object):
     def apply_action(self, state, action):
         ''' Might predict the next state and reward'''
         raise NotImplemented()
+
+
+class Episode(object):
+    """
+    A reinforcement learning episde
+    """
+
+    def __init__(self, rl_system, epsilon=0.0):
+        self.rl_system = rl_system
+        self.current_state = None
+        self.epsilon = epsilon
+
+    def initialise(self):
+        self.current_state = self.rl_system.model.get_new_state()
+
+    def choose_action(self):
+        action_values = self.rl_system.value_function.get_value(self.current_state.as_vector().reshape(1, -1))
+        chosen_action = self.rl_system.policy.choose_action(action_values, self.rl_system.num_actions)
+        return chosen_action
+
+    def take_chosen_action(self):
+        action = self.choose_action()
+        self.take_action(action)
+
+    def take_action(self, action):
+        print('Taking action %s' % action)
+        next_state = self.rl_system.model.apply_action(self.current_state, action)
+        self.current_state = next_state
