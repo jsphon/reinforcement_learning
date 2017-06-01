@@ -157,8 +157,6 @@ class GridState(object):
 class GridModel(Model):
     def __init__(self):
         super(GridModel, self).__init__()
-        # self.reward_function = GridRewardFunction()
-        # self.value_function = GridValueFunction()
         self.get_new_state = GridState.new
         self.num_actions = 4
 
@@ -198,9 +196,6 @@ if __name__ == '__main__':
     np.set_printoptions(precision=1)
     # print(grid_sys.value_function.get_value(states))
 
-
-    # Display values of each location
-
     print('values')
     values = grid_sys.get_value_grid()
     print(values)
@@ -213,23 +208,24 @@ if __name__ == '__main__':
     print(grid_sys.get_reward_grid())
 
     episode = Episode(rl_system=grid_sys)
-    episode.initialise()
-
-    print('Episode initialised to...')
-    print(episode.current_state.as_2d_array())
-
-    episode.take_chosen_action()
-    print('After 1 step')
-    print(episode.current_state.as_2d_array())
-
-    episode.take_chosen_action()
-    print('After 2 steps')
-    print(episode.current_state.as_2d_array())
-
-    episode.take_chosen_action()
-    print('After 3 steps')
-    print(episode.current_state.as_2d_array())
-
-    episode.take_chosen_action()
-    print('After 4 steps')
-    print(episode.current_state.as_2d_array())
+    episode.play()
+    # episode.initialise()
+    #
+    # print('Episode initialised to...')
+    # print(episode.current_state.as_2d_array())
+    #
+    # episode.take_chosen_action()
+    # print('After 1 step')
+    # print(episode.current_state.as_2d_array())
+    #
+    # episode.take_chosen_action()
+    # print('After 2 steps')
+    # print(episode.current_state.as_2d_array())
+    #
+    # episode.take_chosen_action()
+    # print('After 3 steps')
+    # print(episode.current_state.as_2d_array())
+    #
+    # episode.take_chosen_action()
+    # print('After 4 steps')
+    # print(episode.current_state.as_2d_array())
