@@ -2,6 +2,7 @@ from keras.layers.core import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import RMSprop
 import numpy as np
+import pandas as pd
 
 from rl.core import RLSystem, EpsilonGreedyPolicy, RewardFunction, ValueFunction, Model, Episode
 
@@ -154,6 +155,23 @@ class GridState(object):
             self.is_terminal = True
 
 
+class RandomInitialGridState(object):
+    @staticmethod
+    def new():
+
+        values = pd.DataFrame(np.random.randint(0, 3, (4, 2))).drop_duplicates().values
+        if len(values) == 4:
+            player = tuple(values[0])
+            wall = tuple(values[1])
+            pit = tuple(values[2])
+            goal = tuple(values[3])
+
+            grid = GridState(player, wall, pit, goal)
+            return grid
+        else:
+            return RandomInitialGridState.new()
+
+
 class GridModel(Model):
     def __init__(self):
         super(GridModel, self).__init__()
@@ -170,14 +188,25 @@ if __name__ == '__main__':
     grid_sys = GridSystem()
     grid_sys.num_actions = 4
     grid_sys.state_size = 64
+    grid_sys.model.get_new_state = RandomInitialGridState.new
 
     grid_sys.initialise_value_function()
 
     print('initial value function')
     print(grid_sys.get_value_grid())
 
+    # Test the initialized game
+    episode = Episode(rl_system=grid_sys)
+
+    rewards = []
+    for _ in range(100):
+        episode.play()
+        rewards.append(episode.total_reward)
+    init_average_rewards = np.mean(rewards)
+    print('Average initialized reward: %s' % np.mean(rewards))
+
     gamma = 0.9
-    for i in range(10):
+    for i in range(100):
         states, action_rewards, new_states, new_states_terminal = grid_sys.generate_experience(num_epochs=10)
 
         N = len(new_states)
@@ -209,23 +238,9 @@ if __name__ == '__main__':
 
     episode = Episode(rl_system=grid_sys)
     episode.play()
-    # episode.initialise()
-    #
-    # print('Episode initialised to...')
-    # print(episode.current_state.as_2d_array())
-    #
-    # episode.take_chosen_action()
-    # print('After 1 step')
-    # print(episode.current_state.as_2d_array())
-    #
-    # episode.take_chosen_action()
-    # print('After 2 steps')
-    # print(episode.current_state.as_2d_array())
-    #
-    # episode.take_chosen_action()
-    # print('After 3 steps')
-    # print(episode.current_state.as_2d_array())
-    #
-    # episode.take_chosen_action()
-    # print('After 4 steps')
-    # print(episode.current_state.as_2d_array())
+
+    rewards = []
+    for _ in range(100):
+        episode.play()
+        rewards.append(episode.total_reward)
+    print('Average trained reward: %s vs %s' % (np.mean(rewards), init_average_rewards))
