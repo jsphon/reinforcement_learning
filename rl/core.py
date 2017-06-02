@@ -97,7 +97,7 @@ class RLSystem(object):
                     new_states          N x num_actions x state_size
                     new_states_terminal N x num_actions, True if new_state is terminal
         '''
-        state = self.model.get_new_state()
+
 
         state_history = []
         action_reward_history = []
@@ -105,7 +105,10 @@ class RLSystem(object):
         new_states_terminal_history = []
 
         for _ in range(num_epochs):
+            state = self.model.get_new_state()
             for _ in range(max_epoch_len):
+                if state.is_terminal:
+                    print('How did we get here?')
                 action_rewards = np.ndarray(self.num_actions)
                 action_state_arr = np.ndarray((self.num_actions, self.state_size))
                 action_states_terminal = np.ndarray(self.num_actions, dtype=np.bool)
@@ -125,7 +128,8 @@ class RLSystem(object):
                 next_action = np.random.randint(0, self.num_actions)
                 state = action_states[next_action]
 
-                if action_states[next_action].is_terminal:
+                if state.is_terminal:
+                    #print('breaking as terminal')
                     break
 
         arr_action_rewards = np.c_[action_reward_history]
@@ -169,14 +173,14 @@ class Policy(object):
 
 class EpsilonGreedyPolicy(Policy):
     def __init__(self):
-        self.epsilon = 0.1
+        self.epsilon = 0.
 
     def choose_action(self, action_values, num_actions):
         if random.random() < self.epsilon:  # choose random action
             action = np.random.randint(0, num_actions)
         else:  # choose best action from Q(s,a) values
             action = (np.argmax(action_values))
-        print('Choosing action %s from %s' % (action, str(action_values)))
+        #print('Choosing action %s from %s' % (action, str(action_values)))
         return action
 
 
@@ -259,4 +263,5 @@ class Episode(object):
         self.state_history = state_history
         self.reward_history = reward_history
         self.total_reward = total_reward
-        print('Total reward %s' % total_reward)
+
+        #print('Total reward %s' % total_reward)
