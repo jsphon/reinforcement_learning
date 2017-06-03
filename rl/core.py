@@ -48,12 +48,12 @@ class RLSystem(object):
         :return: states, N x state_size ndarray
                  action-rewards N x num_actions ndarray
         '''
-        state = self.model.get_new_state()
 
         state_history = []
         action_reward_history = []
 
         for _ in range(num_epochs):
+            state = self.model.get_new_state()
             for _ in range(max_epoch_len):
                 action_rewards = np.ndarray(self.num_actions)
                 action_state_arr = np.ndarray((self.num_actions, self.state_size))
@@ -67,11 +67,11 @@ class RLSystem(object):
                 state_history.append(state)
                 action_reward_history.append(action_rewards)
 
-                next_action = np.random.randint(0, self.num_actions)
+                #next_action = np.random.randint(0, self.num_actions)
+                next_action = self.policy.choose_action(action_rewards)
                 state = action_states[next_action]
 
                 if state.is_terminal:
-                    state = self.model.get_new_state()
                     break
 
         arr_action_rewards = np.c_[action_reward_history]
@@ -81,7 +81,7 @@ class RLSystem(object):
         return arr_states, arr_action_rewards
 
     def generate_experience(self, num_epochs=10, max_epoch_len=100):
-        '''
+        """
         Generate experience for training the model
 
         qval[action] = reward + gamma + maxQ
@@ -96,8 +96,7 @@ class RLSystem(object):
                     action_rewards      N x num_actions
                     new_states          N x num_actions x state_size
                     new_states_terminal N x num_actions, True if new_state is terminal
-        '''
-
+        """
 
         state_history = []
         action_reward_history = []
@@ -107,8 +106,6 @@ class RLSystem(object):
         for _ in range(num_epochs):
             state = self.model.get_new_state()
             for _ in range(max_epoch_len):
-                if state.is_terminal:
-                    print('How did we get here?')
                 action_rewards = np.ndarray(self.num_actions)
                 action_state_arr = np.ndarray((self.num_actions, self.state_size))
                 action_states_terminal = np.ndarray(self.num_actions, dtype=np.bool)
@@ -129,7 +126,6 @@ class RLSystem(object):
                 state = action_states[next_action]
 
                 if state.is_terminal:
-                    #print('breaking as terminal')
                     break
 
         arr_action_rewards = np.c_[action_reward_history]
@@ -175,12 +171,16 @@ class EpsilonGreedyPolicy(Policy):
     def __init__(self):
         self.epsilon = 0.
 
-    def choose_action(self, action_values, num_actions):
+    def choose_action(self, action_values):
+        """
+
+        :param action_values np.ndarray:
+        :return:
+        """
         if random.random() < self.epsilon:  # choose random action
-            action = np.random.randint(0, num_actions)
+            action = np.random.randint(0, action_values.shape[0])
         else:  # choose best action from Q(s,a) values
             action = (np.argmax(action_values))
-        #print('Choosing action %s from %s' % (action, str(action_values)))
         return action
 
 
@@ -226,7 +226,7 @@ class Episode(object):
 
     def choose_action(self, state):
         action_values = self.rl_system.value_function.get_value(state.as_vector().reshape(1, -1))
-        chosen_action = self.rl_system.policy.choose_action(action_values, self.rl_system.num_actions)
+        chosen_action = self.rl_system.policy.choose_action(action_values)
         return chosen_action
 
     def take_action(self, action):
