@@ -4,12 +4,13 @@ import numpy as np
 
 
 class RLSystem(object):
-    ''' From Sutton, a reinforcement system contains the following 4 components:
+    """
+    From Sutton, a reinforcement system contains the following 4 components:
      - policy
      - reward function
      - value function
      - model
-     '''
+     """
 
     def __init__(self):
 
@@ -23,7 +24,7 @@ class RLSystem(object):
 
     def initialise_value_function(self, epochs=100):
 
-        states, action_rewards = self.generate_initial_training_data()
+        states, action_rewards, _, _ = self.generate_experience()
 
         assert states.shape[1] == self.state_size
         assert action_rewards.shape[1] == self.num_actions
@@ -37,48 +38,6 @@ class RLSystem(object):
 
         print('trained action_rewards:')
         print(self.value_function.get_value(states[:5]))
-
-    def generate_initial_training_data(self, num_epochs=20, max_epoch_len=100):
-        '''
-        Generate states / action-reward pairs, which can be used to initialise
-        the value function to something more intelligent that randomness.
-
-        :param num_epochs:
-        :param max_epoch_len:
-        :return: states, N x state_size ndarray
-                 action-rewards N x num_actions ndarray
-        '''
-
-        state_history = []
-        action_reward_history = []
-
-        for _ in range(num_epochs):
-            state = self.model.get_new_state()
-            for _ in range(max_epoch_len):
-                action_rewards = np.ndarray(self.num_actions)
-                action_state_arr = np.ndarray((self.num_actions, self.state_size))
-                action_states = []
-                for action in range(self.num_actions):
-                    new_state = self.model.apply_action(state, action)
-                    action_rewards[action] = self.reward_function.get_reward(state, action, new_state)
-                    action_states.append(new_state)
-                    action_state_arr[action, :] = new_state.as_vector()
-
-                state_history.append(state)
-                action_reward_history.append(action_rewards)
-
-                #next_action = np.random.randint(0, self.num_actions)
-                next_action = self.policy.choose_action(action_rewards)
-                state = action_states[next_action]
-
-                if state.is_terminal:
-                    break
-
-        arr_action_rewards = np.c_[action_reward_history]
-        state_history_vectors = [sh.as_vector() for sh in state_history]
-        arr_states = np.c_[state_history_vectors]
-
-        return arr_states, arr_action_rewards
 
     def generate_experience(self, num_epochs=10, max_epoch_len=100):
         """
@@ -123,6 +82,7 @@ class RLSystem(object):
                 new_states_terminal_history.append(action_states_terminal)
 
                 next_action = np.random.randint(0, self.num_actions)
+                #next_action = self.policy.choose_action(action_rewards)
                 state = action_states[next_action]
 
                 if state.is_terminal:
@@ -169,7 +129,7 @@ class Policy(object):
 
 class EpsilonGreedyPolicy(Policy):
     def __init__(self):
-        self.epsilon = 0.
+        self.epsilon = 0.1
 
     def choose_action(self, action_values):
         """
