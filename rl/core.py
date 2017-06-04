@@ -21,10 +21,11 @@ class RLSystem(object):
         self.get_new_state = None
         self.num_actions = 0
         self.state_size = 0
+        self.gamma = 0
 
     def initialise_value_function(self, epochs=100):
 
-        states, action_rewards, _, _ = self.generate_experience()
+        states, action_rewards, _, _ = self.generate_experience(epochs)
 
         assert states.shape[1] == self.state_size
         assert action_rewards.shape[1] == self.num_actions
@@ -95,6 +96,18 @@ class RLSystem(object):
         arr_new_states_terminal = np.r_[new_states_terminal_history]
 
         return arr_states, arr_action_rewards, arr_new_states, arr_new_states_terminal
+
+    def train_model(self, num_epochs=10):
+
+        for i in range(num_epochs):
+            #print('Training epoch %i of %i' % (i+1, num_epochs))
+            states, action_rewards, new_states, new_states_terminal = self.generate_experience(num_epochs=20)
+
+            new_values = self.generate_action_target_values(new_states)
+            new_values[new_states_terminal] = 0
+
+            targets = action_rewards + self.gamma * new_values
+            self.value_function.fit(states, targets, verbose=0)
 
     def generate_action_target_values(self, action_states):
         '''

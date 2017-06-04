@@ -215,22 +215,27 @@ if __name__ == '__main__':
     init_average_rewards = np.mean(rewards)
     print('Average initialized reward: %s' % np.mean(rewards))
 
-    gamma = 0.9
-    for i in range(100):
-        states, action_rewards, new_states, new_states_terminal = grid_sys.generate_experience(num_epochs=10)
-
-        N = len(new_states)
-        new_values = grid_sys.generate_action_target_values(new_states)
-        new_values[new_states_terminal] = 0
-
-        targets = action_rewards + gamma * new_values
-        grid_sys.value_function.fit(states, targets, verbose=0)
-
-        # print('targets, action_rewards, new_values for epoch %i' % i)
-        # print(str(np.c_[targets, action_rewards, new_values]))
-        #
-        print('Values after epoch %s' % i)
+    for i in range(5):
+        grid_sys.train_model()
+        print('After training %i times the values are:' % (i+1))
         print(grid_sys.get_value_grid(fixed_grid_state))
+
+    # gamma = 0.9
+    # for i in range(100):
+    #     states, action_rewards, new_states, new_states_terminal = grid_sys.generate_experience(num_epochs=20)
+    #
+    #     N = len(new_states)
+    #     new_values = grid_sys.generate_action_target_values(new_states)
+    #     new_values[new_states_terminal] = 0
+    #
+    #     targets = action_rewards + gamma * new_values
+    #     grid_sys.value_function.fit(states, targets, verbose=0)
+    #
+    #     # print('targets, action_rewards, new_values for epoch %i' % i)
+    #     # print(str(np.c_[targets, action_rewards, new_values]))
+    #     #
+    #     print('Values after epoch %s' % i)
+    #     print(grid_sys.get_value_grid(fixed_grid_state))
 
     np.set_printoptions(precision=1)
     # print(grid_sys.value_function.get_value(states))
