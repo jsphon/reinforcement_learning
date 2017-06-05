@@ -2,6 +2,8 @@ import random
 
 import numpy as np
 
+from rl.lib.timer import Timer
+
 
 class RLSystem(object):
     """
@@ -21,11 +23,13 @@ class RLSystem(object):
         self.get_new_state = None
         self.num_actions = 0
         self.state_size = 0
-        self.gamma = 0
+        self.gamma = 0.9
+
+        self.experience_generator = ExperienceGenerator(self)
 
     def initialise_value_function(self, epochs=100):
 
-        states, action_rewards, _, _ = self.generate_experience(epochs)
+        states, action_rewards = self.experience_generator.generate_initial_training_data(epochs)
 
         assert states.shape[1] == self.state_size
         assert action_rewards.shape[1] == self.num_actions
@@ -39,6 +43,170 @@ class RLSystem(object):
 
         print('trained action_rewards:')
         print(self.value_function.get_value(states[:5]))
+
+    def train_model(self, num_epochs=10):
+
+        for i in range(num_epochs):
+
+            with Timer('Generating experience'):
+                states, action_rewards, new_states, new_states_terminal = \
+                    self.experience_generator.generate_experience(num_epochs=20)
+
+            new_values = self.generate_action_target_values(new_states)
+            new_values[new_states_terminal] = 0
+
+            targets = action_rewards + self.gamma * new_values
+
+            with Timer('Fitting model'):
+                self.value_function.fit(states, targets, verbose=0)
+    #
+    # def generate_experience(self, num_epochs=10, max_epoch_len=100, policy=None):
+    #     """
+    #     Generate experience for training the model
+    #
+    #     qval[action] = reward + gamma + maxQ
+    #
+    #     Then we can fit the model with
+    #
+    #     qval(old_state) ~= action_rewards + max(qval(new_action_states))
+    #
+    #     :param num_epochs:
+    #     :param max_epoch_len:
+    #     :return:    old_state           N x state_size
+    #                 action_rewards      N x num_actions
+    #                 new_states          N x num_actions x state_size
+    #                 new_states_terminal N x num_actions, True if new_state is terminal
+    #     """
+    #
+    #     state_history = []
+    #     action_reward_history = []
+    #     new_states_history = []
+    #     new_states_terminal_history = []
+    #     policy = policy or self.policy.choose_action
+    #
+    #     for _ in range(num_epochs):
+    #         state = self.model.get_new_state()
+    #         for _ in range(max_epoch_len):
+    #             action_rewards = np.ndarray(self.num_actions)
+    #             action_state_arr = np.ndarray((self.num_actions, self.state_size))
+    #             action_states_terminal = np.ndarray(self.num_actions, dtype=np.bool)
+    #             action_states = []
+    #             for action in range(self.num_actions):
+    #                 new_state = self.model.apply_action(state, action)
+    #                 action_rewards[action] = self.reward_function.get_reward(state, action, new_state)
+    #                 action_states.append(new_state)
+    #                 action_state_arr[action, :] = new_state.as_vector()
+    #                 action_states_terminal[action] = new_state.is_terminal
+    #
+    #             state_history.append(state)
+    #             action_reward_history.append(action_rewards)
+    #             new_states_history.append(action_state_arr)
+    #             new_states_terminal_history.append(action_states_terminal)
+    #
+    #             #next_action = np.random.randint(0, self.num_actions)
+    #             #next_action = self.policy.choose_action(action_rewards)
+    #             next_action = policy(action_rewards)
+    #             state = action_states[next_action]
+    #
+    #             if state.is_terminal:
+    #                 break
+    #
+    #     arr_action_rewards = np.c_[action_reward_history]
+    #     state_history_vectors = [sh.as_vector() for sh in state_history]
+    #     arr_states = np.c_[state_history_vectors]
+    #     arr_new_states = np.r_[new_states_history]
+    #     arr_new_states_terminal = np.r_[new_states_terminal_history]
+    #
+    #     return arr_states, arr_action_rewards, arr_new_states, arr_new_states_terminal
+
+    def generate_action_target_values(self, action_states):
+        """
+        Give an experience of action-states, calculate their values
+
+        1st dimension of length N represents the number of experiences.
+
+        2nd dimension represents an action.
+
+        3rd dimension represents the state vector that the 2nd dimension's action takes us to
+
+        So for the result, the 3rd dimension becomes the value of a subsequent action.
+
+        i.e. result[0, 1, 2] would be the value from experience 0,
+             of action 1 followed by action 2
+
+        :param action_states: ndarray(N x num_actions x state_size)
+
+        :return: ndarray(N x num_actions)
+        """
+
+        n = action_states.shape[0]
+        new_values0 = self.value_function.get_value(action_states.reshape(n * self.num_actions, self.state_size))
+        new_values1 = new_values0.max(axis=1).reshape(n, self.num_actions)
+        return new_values1
+
+
+class ExperienceGenerator(object):
+
+    def __init__(self, rl_system):
+
+        self.rl_system = rl_system
+
+    @property
+    def model(self):
+        return self.rl_system.model
+
+    @property
+    def num_actions(self):
+        return self.rl_system.num_actions
+
+    @property
+    def state_size(self):
+        return self.rl_system.state_size
+
+    @property
+    def reward_function(self):
+        return self.rl_system.reward_function
+
+    def generate_initial_training_data(self, num_epochs=20, max_epoch_len=100):
+        '''
+        Generate states / action-reward pairs, which can be used to initialise
+        the value function to something more intelligent that randomness.
+
+        :param num_epochs:
+        :param max_epoch_len:
+        :return: states, N x state_size ndarray
+                 action-rewards N x num_actions ndarray
+        '''
+
+        state_history = []
+        action_reward_history = []
+
+        for _ in range(num_epochs):
+            state = self.model.get_new_state()
+            for _ in range(max_epoch_len):
+                action_rewards = np.ndarray(self.num_actions)
+                action_state_arr = np.ndarray((self.num_actions, self.state_size))
+                action_states = []
+                for action in range(self.num_actions):
+                    new_state = self.model.apply_action(state, action)
+                    action_rewards[action] = self.reward_function.get_reward(state, action, new_state)
+                    action_states.append(new_state)
+                    action_state_arr[action, :] = new_state.as_vector()
+
+                state_history.append(state)
+                action_reward_history.append(action_rewards)
+
+                next_action = np.random.randint(0, self.num_actions)
+                state = action_states[next_action]
+
+                if state.is_terminal:
+                    break
+
+        arr_action_rewards = np.c_[action_reward_history]
+        state_history_vectors = [sh.as_vector() for sh in state_history]
+        arr_states = np.c_[state_history_vectors]
+
+        return arr_states, arr_action_rewards
 
     def generate_experience(self, num_epochs=10, max_epoch_len=100):
         """
@@ -83,7 +251,6 @@ class RLSystem(object):
                 new_states_terminal_history.append(action_states_terminal)
 
                 next_action = np.random.randint(0, self.num_actions)
-                #next_action = self.policy.choose_action(action_rewards)
                 state = action_states[next_action]
 
                 if state.is_terminal:
@@ -96,43 +263,6 @@ class RLSystem(object):
         arr_new_states_terminal = np.r_[new_states_terminal_history]
 
         return arr_states, arr_action_rewards, arr_new_states, arr_new_states_terminal
-
-    def train_model(self, num_epochs=10):
-
-        for i in range(num_epochs):
-            #print('Training epoch %i of %i' % (i+1, num_epochs))
-            states, action_rewards, new_states, new_states_terminal = self.generate_experience(num_epochs=20)
-
-            new_values = self.generate_action_target_values(new_states)
-            new_values[new_states_terminal] = 0
-
-            targets = action_rewards + self.gamma * new_values
-            self.value_function.fit(states, targets, verbose=0)
-
-    def generate_action_target_values(self, action_states):
-        '''
-        Give an experience of action-states, calculate their values
-
-        1st dimension of length N represents the number of experiences.
-
-        2nd dimension represents an action.
-
-        3rd dimension represents the state vector that the 2nd dimension's action takes us to
-
-        So for the result, the 3rd dimension becomes the value of a subsequent action.
-
-        i.e. result[0, 1, 2] would be the value from experience 0,
-             of action 1 followed by action 2
-
-        :param action_states: ndarray(N x num_actions x state_size)
-
-        :return: ndarray(N x num_actions)
-        '''
-
-        N = action_states.shape[0]
-        new_values0 = self.value_function.get_value(action_states.reshape(N * self.num_actions, self.state_size))
-        new_values1 = new_values0.max(axis=1).reshape(N, self.num_actions)
-        return new_values1
 
 
 class Policy(object):

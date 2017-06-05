@@ -80,7 +80,7 @@ class GridModel(Model):
 
     def __init__(self):
         super(GridModel, self).__init__()
-        #self.get_new_state = GridState.new
+        self.get_new_state = new_fixed_grid_state
         self.num_actions = 4
 
     def apply_action(self, state, action):
@@ -195,9 +195,8 @@ def new_random_grid_state():
 
 if __name__ == '__main__':
     grid_sys = GridSystem()
-    grid_sys.num_actions = 4
-    grid_sys.state_size = 64
-    grid_sys.model.get_new_state = new_fixed_grid_state
+    grid_sys.model.get_new_state = new_random_grid_state
+    #grid_sys.policy.epsilon = 0
 
     grid_sys.initialise_value_function()
 
@@ -209,37 +208,21 @@ if __name__ == '__main__':
     episode = Episode(rl_system=grid_sys)
 
     rewards = []
-    for _ in range(100):
+    for _ in range(5):
         episode.play()
         rewards.append(episode.total_reward)
     init_average_rewards = np.mean(rewards)
     print('Average initialized reward: %s' % np.mean(rewards))
 
-    for i in range(5):
-        grid_sys.train_model()
+    for i in range(100):
+        grid_sys.train_model(1)
         print('After training %i times the values are:' % (i+1))
-        print(grid_sys.get_value_grid(fixed_grid_state))
-
-    # gamma = 0.9
-    # for i in range(100):
-    #     states, action_rewards, new_states, new_states_terminal = grid_sys.generate_experience(num_epochs=20)
-    #
-    #     N = len(new_states)
-    #     new_values = grid_sys.generate_action_target_values(new_states)
-    #     new_values[new_states_terminal] = 0
-    #
-    #     targets = action_rewards + gamma * new_values
-    #     grid_sys.value_function.fit(states, targets, verbose=0)
-    #
-    #     # print('targets, action_rewards, new_values for epoch %i' % i)
-    #     # print(str(np.c_[targets, action_rewards, new_values]))
-    #     #
-    #     print('Values after epoch %s' % i)
-    #     print(grid_sys.get_value_grid(fixed_grid_state))
+        print(grid_sys.get_value_grid(new_fixed_grid_state()))
 
     np.set_printoptions(precision=1)
     # print(grid_sys.value_function.get_value(states))
 
+    fixed_grid_state = new_fixed_grid_state()
     print('values')
     values = grid_sys.get_value_grid(fixed_grid_state)
     print(values)
@@ -258,3 +241,24 @@ if __name__ == '__main__':
         episode.play()
         rewards.append(episode.total_reward)
     print('Average trained reward: %s vs %s' % (np.mean(rewards), init_average_rewards))
+
+    ###############
+    # states, action_rewards, new_states, new_states_terminal = grid_sys.experience_generator.generate_experience(
+    #     num_epochs=100)
+    #
+    # state = new_fixed_grid_state()
+    # state.update_player((1, 3))
+    # matches = np.where(np.all(states == state.as_vector(), axis=1))[0]
+    # match = matches[0]
+    #
+    # #expected [-1, -1, -1, -1]
+    # print(action_rewards[match])
+    #
+    # action_targets = grid_sys.generate_action_target_values(new_states)
+    # # Expect it to train towards...
+    # # [-1, 10, -1, -1]
+    # print(action_targets)
+    #
+    # untrained = grid_sys.value_function.get_value(state.as_vector().reshape(1, -1))
+    #
+    # grid_sys.value_function.fit(states, action_targets)

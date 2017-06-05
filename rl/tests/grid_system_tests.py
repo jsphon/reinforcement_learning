@@ -45,6 +45,41 @@ class MyTestCase(unittest.TestCase):
 
         np.testing.assert_almost_equal(expected, new_state_values)
 
+    def test_initialise_value_function(self):
+        grid_sys = grid_system.GridSystem()
+        grid_sys.initialise_value_function(100)
+
+        fixed_grid_state = grid_system.new_fixed_grid_state()
+        value_grid = grid_sys.get_value_grid(fixed_grid_state)
+        self.assertTrue(5.0 < value_grid[2, 3] < 15.0)
+
+    def test_generate_experience(self):
+
+        grid_sys = grid_system.GridSystem()
+        states, action_rewards, new_states, new_states_terminal = grid_sys.experience_generator.generate_experience(num_epochs=100)
+
+        self.assertTrue(states.shape[0]>100)
+
+        state = grid_system.new_fixed_grid_state()
+        state.update_player((1, 3))
+
+        print(states)
+
+        self.assertIn(state.as_vector(), states)
+
+        matches = np.where(np.all(states == state.as_vector(), axis=1))[0]
+
+        match = matches[0]
+
+        np.testing.assert_array_almost_equal(np.array([-1., -1., -1., -1.]), action_rewards[match])
+
+        action_targets = grid_sys.generate_action_target_values(new_states)[match]
+        # We should be training this value towards 10.0
+        self.assertGreater(action_targets[1], 5)
+
+
+
+
     #
     # def test_init_grid(self):
     #     grid = rle.init_grid()
