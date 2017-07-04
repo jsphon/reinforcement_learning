@@ -14,7 +14,8 @@ N = 1000
 logging.basicConfig(level=logging.DEBUG)
 
 
-class EpisodeTests(unittest.TestCase):
+# class EpisodeTests(unittest.TestCase):
+class EpisodeTests(np.testing.TestCase):
 
     def test_learn_episode(self):
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -34,6 +35,10 @@ class EpisodeTests(unittest.TestCase):
         y = grid_world.action_value_function(episode.get_state_array())
         logging.info('fitted targets are:')
         logging.info('\n' + str(y))
+
+        np.testing.assert_allclose([0, -1, 0, 0], y[0], atol=0.5)
+        np.testing.assert_allclose([0, 0, -1, 0], y[0], atol=0.5)
+        np.testing.assert_allclose([0, 0, 0, 0], y[0], atol=0.5)
 
 
 def get_expected_vector(player):
