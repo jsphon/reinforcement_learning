@@ -23,16 +23,31 @@ Steps
 
             Generate Sample Episode
 
-                Initialise State
+    Simple Generate Sample Episode
 
-                while not terminal state:
-                    choose action
-                    take action
+        Initialise State
 
-2 . Fit StateAction Function (experience)
+        while not terminal state:
+            choose action
+            take action
+
+1 b.
+
+    Generate root nodes
+    For each root node:
+        generate target value
+
+2. Initialise StateAction Function (experience)
+ - convert episode states to vectors
+ - get rewards
+ - fit the 1 step rewards against the target values so that we get decent starting values
+
+3 . Fit StateAction Function (experience)
 
     Get States Array
+        i.e. make a big array of states x num experience
     Get Target Values
+        i.e. given the learner, such as sarsa or q, generate target values
     Fit(States, Target Value)
 
 
@@ -136,6 +151,8 @@ class GridState(State):
     def __init__(self, player):
         super(GridState, self).__init__()
         self.player = player
+        self.size = 16
+        self.vector_dtype = np.bool
 
     @staticmethod
     def all():
@@ -150,7 +167,7 @@ class GridState(State):
 
     def as_vector(self):
         ''' Represent as a vector '''
-        vec = np.zeros(3, dtype=np.bool)
+        vec = np.zeros(self.size, dtype=self.vector_dtype)
         vec[4 * self.player[0] + self.player[1]] = True
         return vec
 

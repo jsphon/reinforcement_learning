@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 
+
 class ExperienceGenerator(object):
     def __init__(self, rl_system):
 
@@ -160,3 +161,31 @@ class Episode(object):
         self.states = states
         self.actions = actions
         self.rewards = rewards
+
+    def get_state_array(self):
+        """
+
+        :return: np.ndarray(num_states, state_size)
+        """
+        state_size = self.states[0].size
+        num_states = len(self.states)
+        dtype = self.states[0].vector_dtype
+        result = np.ndarray((num_states, state_size), dtype=dtype)
+        for i in range(num_states):
+            result[i, :] = self.states[i].as_vector()
+        return result
+
+
+    def get_action_array(self):
+        """
+        :return np.ndarray(num_states)
+        """
+        return self.actions
+
+    def get_reward_array(self):
+        """
+
+        :return np.ndarray(num_states):
+        """
+        return self.rewards
+
