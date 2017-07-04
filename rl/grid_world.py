@@ -4,8 +4,13 @@ import pandas as pd
 import copy
 from rl.core import RLSystem, Model, State
 from rl.reward_function import RewardFunction
-from rl.value import StateValueFunction
+from rl.value import ActionValueFunction
 from rl.policy import EpsilonGreedyPolicy
+
+from keras.layers.core import Dense, Activation
+from keras.models import Sequential
+from keras.optimizers import RMSprop
+import numpy as np
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
@@ -37,6 +42,10 @@ Steps
     For each root node:
         generate target value
 
+
+
+
+
 2. Initialise StateAction Function (experience)
  - convert episode states to vectors
  - get rewards
@@ -60,7 +69,7 @@ class GridWorld(RLSystem):
         super(GridWorld, self).__init__()
         self.policy = EpsilonGreedyPolicy()
         self.reward_function = GridRewardFunction()
-        self.value_function = TabularValueFunction(self.policy)
+        self.action_value_function = GridActionValueFunction()
         self.model = GridModel()
 
         self.num_actions = 4
@@ -85,6 +94,37 @@ class GridWorld(RLSystem):
                 state.player = (i, j)
                 rewards[i, j] = self.reward_function.get_reward(None, None, state)
         return rewards
+
+
+class GridActionValueFunction(ActionValueFunction):
+    def __init__(self):
+        model = Sequential()
+        model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(16,)))
+        model.add(Activation('relu'))
+        # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
+
+        model.add(Dense(150, kernel_initializer='lecun_uniform'))
+        model.add(Activation('relu'))
+        # model.add(Dropout(0.2))
+
+        model.add(Dense(4, kernel_initializer='lecun_uniform'))
+        model.add(Activation('linear'))  # linear output so we can have range of real-valued outputs
+
+        rms = RMSprop()
+        model.compile(loss='mse', optimizer=rms)
+        self.model = model
+
+    def __call__(self, state):
+        return self.model.predict(state)
+
+    #
+    # def get_value(self, state):
+    #     return self.model.predict(state)
+
+    def fit(self, x, y, **kwargs):
+        self.model.fit(x, y, **kwargs)
+
+
 
 
 class GridRewardFunction(RewardFunction):
@@ -136,14 +176,15 @@ class GridModel(Model):
         new_position = (state.player[0], min(state.player[1] + 1, 3))
         state.update_player(new_position)
 
-class TabularValueFunction(StateValueFunction):
 
-    def __init__(self, policy):
-        super(StateValueFunction, self).__init__(policy)
-        self._values = np.zeros((4, 4), dtype=np.float)
-
-    def __call__(self, state):
-        return self._values[state.player[0], state.player[1]]
+# class TabularValueFunction(StateValueFunction):
+#
+#     def __init__(self, policy):
+#         super(StateValueFunction, self).__init__(policy)
+#         self._values = np.zeros((4, 4), dtype=np.float)
+#
+#     def __call__(self, state):
+#         return self._values[state.player[0], state.player[1]]
 
 
 class GridState(State):
