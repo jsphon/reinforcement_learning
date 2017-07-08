@@ -6,7 +6,7 @@ import numpy as np
 from rl.core import RLSystem, State
 from rl.experience import Episode
 from rl.grid_world import GridWorld, GridState
-from rl.learner import RewardLearner, QLearner
+from rl.learner import RewardLearner, QLearner, WQLearner
 from rl.policy import Policy
 from rl.value import ActionValueFunction
 
@@ -47,7 +47,7 @@ class RewardLearnerTests(np.testing.TestCase):
         mock_system = MockSystem()
         learner = RewardLearner(mock_system)
 
-        states = [MockState1(), MockState1A(), MockState2()]
+        states = [MockState1(), MockState2A(), MockState3()]
         actions = [0, 0]
         rewards = [0, 0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
@@ -55,7 +55,7 @@ class RewardLearnerTests(np.testing.TestCase):
         targets = learner.get_targets(episode)
         logging.info('get targets = %s' % str(targets))
 
-        expected = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        expected = np.array([[0.0, 0.0], [0.0, 0.0]])
         np.testing.assert_almost_equal(expected, targets)
 
 
@@ -89,24 +89,24 @@ class QLearnerTests(unittest.TestCase):
         mock_system = MockSystem()
         learner = QLearner(mock_system)
 
-        states = [MockState1(), MockState1A(), MockState2()]
+        states = [MockState1(), MockState2A(), MockState3()]
         actions = [0, 0]
         rewards = [0, 0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
         targets = learner.get_targets(episode)
 
-        expected = np.array([1, 2, 3])
+        expected = np.array([1, 2])
         np.testing.assert_almost_equal(expected, targets[0])
 
-        expected = np.array([0, 0, 0])
+        expected = np.array([0, 0])
         np.testing.assert_almost_equal(expected, targets[1])
 
     def test_get_targets2(self):
         mock_system = MockSystem()
         learner = QLearner(mock_system)
 
-        states = [MockState1(), MockState1B(), MockState2()]
+        states = [MockState1(), MockState2B(), MockState3()]
         actions = [1, 0]
         rewards = [0, 10]
         episode = Episode(states=states, actions=actions, rewards=rewards)
@@ -116,20 +116,41 @@ class QLearnerTests(unittest.TestCase):
         # Elements 0 and 2 come from MockState1's action value (1 and 3)
         # Element 1 is the reward at 1 (0) plus the best action value
         # from MockState1B (1). So it should be 1
-        expected = np.array([1, 1, 3])
+        expected = np.array([1, 1])
         np.testing.assert_almost_equal(expected, targets[0])
 
         # Elements 1 and 2 come from MockState1B's action value (1 and 0)
         # Element 0 comes from the sum of the 2nd reward (10) and MockState2's
         # best action value (0)
-        expected = np.array([10, 1, 0])
+        expected = np.array([10, 1])
         np.testing.assert_almost_equal(expected, targets[1])
+
+
+class TestWQLearner(unittest.TestCase):
+
+    def test_get_targets(self):
+        mock_system = MockSystem()
+        learner = WQLearner(mock_system)
+
+        states = [MockState1(), MockState2A()]
+        actions = [0]
+        rewards = [0]
+        episode = Episode(states=states, actions=actions, rewards=rewards)
+
+        targets = learner.get_targets(episode)
+
+        # We took action0, so target[0] should be
+        # reward + max(Q(next state)) = 0 + 1 = 1
+        # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
+
+        expected = np.array([1, 2])
+        np.testing.assert_almost_equal(expected, targets[0])
 
 
 class MockSystem(RLSystem):
     def __init__(self):
         super(MockSystem, self).__init__()
-        self.num_actions = 3
+        self.num_actions = 2
         self.model = MockModel()
         self.policy = MockPolicy(self.num_actions)
         self.action_value_function = MockActionValueFunction(self.policy)
@@ -138,7 +159,7 @@ class MockSystem(RLSystem):
 class MockPolicy(Policy):
 
     def __call__(self, state):
-        return np.array([1.0, 0.0, 0.0])
+        return np.array([1.0, 0.0])
 
 
 class MockActionValueFunction(ActionValueFunction):
@@ -146,15 +167,13 @@ class MockActionValueFunction(ActionValueFunction):
     def __call__(self, state_vector):
 
         if np.array_equal(state_vector, MockState1().as_array()):
-            return np.array([1, 2, 3])
-        elif np.array_equal(state_vector, MockState1A().as_array()):
-            return np.array([1, 0, 0])
-        elif np.array_equal(state_vector, MockState1B().as_array()):
-            return np.array([0, 1, 0])
-        elif np.array_equal(state_vector, MockState1C().as_array()):
-            return np.array([0, 0, 1])
-        elif np.array_equal(state_vector, MockState2().as_array()):
-            return np.array([0, 0, 0])
+            return np.array([1, 2])
+        elif np.array_equal(state_vector, MockState2A().as_array()):
+            return np.array([1, 0])
+        elif np.array_equal(state_vector, MockState2B().as_array()):
+            return np.array([0, 1])
+        elif np.array_equal(state_vector, MockState3().as_array()):
+            return np.array([0, 0])
         else:
             raise ValueError('State not expected %s' % str(state_vector))
 
@@ -165,17 +184,15 @@ class MockModel(object):
 
         if isinstance(state, MockState1):
             if action == 0:
-                return MockState1A()
+                return MockState2A()
             elif action == 1:
-                return MockState1B()
-            elif action == 2:
-                return MockState1C()
+                return MockState2B()
             else:
-                raise ValueError('Expect 0, 1 or 2')
-        elif isinstance(state, (MockState1A, MockState1B, MockState1C)):
-            return MockState2()
-        elif isinstance(state, MockState2):
-            return MockState2()
+                raise ValueError('Expect 0 or 1')
+        elif isinstance(state, (MockState2A, MockState2B)):
+            return MockState3()
+        elif isinstance(state, MockState3):
+            return MockState3()
         else:
             raise ValueError('object %s not expected' % str(state))
 
@@ -189,33 +206,22 @@ class MockState(State):
 
 class MockState1(MockState):
     def as_array(self):
-        return np.array([False, False, False], np.bool).reshape(1, 3)
+        return np.array([False, False], np.bool).reshape(1, 2)
 
 
-class MockState1A(MockState):
+class MockState2A(MockState):
     def as_array(self):
-        return np.array([True, False, False], np.bool).reshape(1, 3)
+        return np.array([True, False], np.bool).reshape(1, 2)
 
 
-class MockState1B(MockState):
+class MockState2B(MockState):
     def as_array(self):
-        return np.array([False, True, False], np.bool).reshape(1, 3)
+        return np.array([False, True], np.bool).reshape(1, 2)
 
 
-class MockState1C(MockState):
+class MockState3(MockState):
     def as_array(self):
-        return np.array([False, False, True], np.bool).reshape(1, 3)
-
-
-class MockState2(MockState):
-    def as_array(self):
-        return np.array([True, True, True], np.bool).reshape(1, 3)
-
-
-def get_expected_vector(player):
-    result = np.zeros(16, dtype=np.bool)
-    result[4 * player[0] + player[1]] = True
-    return result
+        return np.array([True, True], np.bool).reshape(1, 2)
 
 
 if __name__ == '__main__':
