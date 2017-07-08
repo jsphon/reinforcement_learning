@@ -55,6 +55,7 @@ class QLearner(Learner):
 
             state_vector = state.as_array().reshape(1, -1)
             targets[i, :] = self.rl_system.action_value_function(state_vector)
+            logging.info('targets[%s] = %s' % (i, str(targets[i,:])))
             targets[i, action] = rewards[i] + self.gamma * next_state_action_values.max()
 
         return targets
