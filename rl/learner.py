@@ -44,19 +44,29 @@ class QLearner(Learner):
 
     def get_targets(self, episode):
         targets = np.zeros((len(episode.states)-1, self.rl_system.num_actions))
-        rewards = episode.get_reward_array()
 
         for i, state in enumerate(episode.states[:-1]):
-            action = episode.actions[i]
-            next_state = self.rl_system.model.apply_action(state, action)
+            targets[i, :] = self.get_state_targets(state, episode.actions[i], episode.rewards[i])
 
-            next_state_vector = next_state.as_array().reshape((1, -1))
-            next_state_action_values = self.rl_system.action_value_function(next_state_vector)
+        return targets
 
-            state_vector = state.as_array().reshape(1, -1)
-            targets[i, :] = self.rl_system.action_value_function(state_vector)
-            logging.info('targets[%s] = %s' % (i, str(targets[i,:])))
-            targets[i, action] = rewards[i] + self.gamma * next_state_action_values.max()
+    def get_state_targets(self, state, action, reward):
+        """
+        Return the targets for the state
+        :param state:
+        :param action:
+        :param reward:
+        :return: np.ndarray(num_actions)
+        """
+        next_state = self.rl_system.model.apply_action(state, action)
+
+        next_state_vector = next_state.as_array().reshape((1, -1))
+        next_state_action_values = self.rl_system.action_value_function(next_state_vector)
+
+        state_vector = state.as_array().reshape(1, -1)
+        targets = self.rl_system.action_value_function(state_vector).ravel()
+
+        targets[action] = reward + self.gamma * next_state_action_values.max()
 
         return targets
 
@@ -84,14 +94,7 @@ class WQLearner(Learner):
         targets = np.zeros((len(episode.states), self.rl_system.num_actions))
 
         for i, state in enumerate(episode.states):
-
-            for action in range(self.rl_system.num_actions):
-                next_state = self.rl_system.model.apply_action(state, action)
-                next_state_vector = next_state.as_array()
-                action_reward = self.rl_system.reward_function(state, action, next_state)
-                next_state_action_values = self.rl_system.action_value_function(next_state_vector)
-                action_target = action_reward + self.gamma * next_state_action_values.max()
-                targets[i, action] = action_target
+            targets[i, :] = self.get_state_targets(state)
 
         return targets
 
