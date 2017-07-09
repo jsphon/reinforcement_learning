@@ -62,6 +62,19 @@ class QLearner(Learner):
 
 
 class WQLearner(Learner):
+    """
+    Wide Q learner.
+
+    The basic Q Learner sets targets for a single action using
+
+    targets = Q(s) # An ndarray with <num_actions> elements
+    targets[action] = reward(action) + max(Q(next_state | action))          (***)
+
+    i.e. The basic Q learner fits on <num_aciton> targets, but only 1 of the values is updated.
+
+    The Wide Q Learner fits (***) for all actions. Thus making the fitting operation more efficient.
+
+    """
 
     def __init__(self, rl_system, gamma=1.0):
         self.rl_system = rl_system
@@ -69,25 +82,31 @@ class WQLearner(Learner):
 
     def get_targets(self, episode):
         targets = np.zeros((len(episode.states), self.rl_system.num_actions))
-        rewards = episode.get_reward_array()
 
         for i, state in enumerate(episode.states):
-            action = episode.actions[i]
-
-            next_state_action_values = np.ndarray((self.rl_system.num_actions, self.rl_system.num_actions))
 
             for action in range(self.rl_system.num_actions):
                 next_state = self.rl_system.model.apply_action(state, action)
-                next_state_vector = next_state.as_vector().reshape((1, -1))
-                next_state_action_values[action, :] = self.rl_system.action_value_function(next_state_vector)
+                next_state_vector = next_state.as_array()
+                action_reward = self.rl_system.reward_function(state, action, next_state)
+                next_state_action_values = self.rl_system.action_value_function(next_state_vector)
+                action_target = action_reward + self.gamma * next_state_action_values.max()
+                targets[i, action] = action_target
 
-            #CONTINUE TOOO TIRED
+        return targets
 
-            next_state_vector = next_state.as_vector().reshape((1, -1))
+    def get_state_targets(self, state):
+        """
+        Return the targets for the state
+        :param state:
+        :return: np.ndarray(num_actions)
+        """
+        targets = np.ndarray(self.rl_system.num_actions)
+        for action in range(self.rl_system.num_actions):
+            next_state = self.rl_system.model.apply_action(state, action)
+            next_state_vector = next_state.as_array()
+            action_reward = self.rl_system.reward_function(state, action, next_state)
             next_state_action_values = self.rl_system.action_value_function(next_state_vector)
-
-            state_vector = state.as_vector().reshape(1, -1)
-            targets[i, :] = self.rl_system.action_value_function(state_vector)
-            targets[i, action] = rewards[i] + self.gamma * next_state_action_values.max()
-
+            action_target = action_reward + self.gamma * next_state_action_values.max()
+            targets[action] = action_target
         return targets

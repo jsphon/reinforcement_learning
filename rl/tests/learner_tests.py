@@ -9,6 +9,7 @@ from rl.grid_world import GridWorld, GridState
 from rl.learner import RewardLearner, QLearner, WQLearner
 from rl.policy import Policy
 from rl.value import ActionValueFunction
+from rl.reward_function import RewardFunction
 
 N = 1000
 
@@ -128,6 +129,31 @@ class QLearnerTests(unittest.TestCase):
 
 class TestWQLearner(unittest.TestCase):
 
+    def test_get_state_targets1(self):
+
+        mock_system = MockSystem()
+        learner = WQLearner(mock_system)
+
+        targets = learner.get_state_targets(MockState1())
+
+        expected = np.array([12, 23])
+        np.testing.assert_almost_equal(expected, targets)
+
+    def test_get_state_targets2A(self):
+
+        mock_system = MockSystem()
+        learner = WQLearner(mock_system)
+
+        #Expectations
+        # Action 0
+        #  33 + 1.0 * 0 = 33
+        # Action 1
+        # 33 + 1.0 * 0 = 33
+        expected = np.array([33, 33])
+        targets = learner.get_state_targets(MockState2A())
+
+        np.testing.assert_almost_equal(expected, targets)
+
     def test_get_targets(self):
         mock_system = MockSystem()
         learner = WQLearner(mock_system)
@@ -139,12 +165,17 @@ class TestWQLearner(unittest.TestCase):
 
         targets = learner.get_targets(episode)
 
-        # We took action0, so target[0] should be
-        # reward + max(Q(next state)) = 0 + 1 = 1
+        # target[0] should be
+        # reward + max(Q(next state=MockState2A)) = 11 + max(1, 0) = 12
+        # target[1] should be
+        # reward(action1) + max(Q(next state)) = 22 + max(0, 1) = 1
         # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
 
-        expected = np.array([1, 2])
+        expected = np.array([12, 23])
         np.testing.assert_almost_equal(expected, targets[0])
+
+        expected = np.array([33, 33])
+        np.testing.assert_almost_equal(expected, targets[1])
 
 
 class MockSystem(RLSystem):
@@ -154,12 +185,25 @@ class MockSystem(RLSystem):
         self.model = MockModel()
         self.policy = MockPolicy(self.num_actions)
         self.action_value_function = MockActionValueFunction(self.policy)
+        self.reward_function = MockRewardFunction()
 
 
 class MockPolicy(Policy):
 
     def __call__(self, state):
         return np.array([1.0, 0.0])
+
+
+class MockRewardFunction(RewardFunction):
+
+    def __call__(self, old_state, action, new_state):
+
+        if isinstance(new_state, MockState2A):
+            return 11
+        elif isinstance(new_state, MockState2B):
+            return 22
+        elif isinstance(new_state, MockState3):
+            return 33
 
 
 class MockActionValueFunction(ActionValueFunction):
