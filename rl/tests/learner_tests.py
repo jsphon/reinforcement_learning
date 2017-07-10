@@ -6,7 +6,7 @@ import numpy as np
 from rl.core import RLSystem, State
 from rl.experience import Episode
 from rl.grid_world import GridWorld, GridState
-from rl.learner import RewardLearner, QLearner, WQLearner
+from rl.learner import RewardLearner, QLearner, WQLearner, SarsaLearner
 from rl.policy import Policy
 from rl.value import ActionValueFunction
 from rl.reward_function import RewardFunction
@@ -17,9 +17,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class RewardLearnerTests(np.testing.TestCase):
-
     def test_learn_episode(self):
-
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
         rewards = [-1, -1]
@@ -44,7 +42,6 @@ class RewardLearnerTests(np.testing.TestCase):
         np.testing.assert_allclose([0, 0, 0, 0], y[2], atol=0.5)
 
     def test_get_targets(self):
-
         mock_system = MockSystem()
         learner = RewardLearner(mock_system)
 
@@ -61,7 +58,6 @@ class RewardLearnerTests(np.testing.TestCase):
 
 
 class QLearnerTests(unittest.TestCase):
-
     def test_learn_episode(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -128,9 +124,7 @@ class QLearnerTests(unittest.TestCase):
 
 
 class TestWQLearner(unittest.TestCase):
-
     def test_get_state_targets1(self):
-
         mock_system = MockSystem()
         learner = WQLearner(mock_system)
 
@@ -140,11 +134,10 @@ class TestWQLearner(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets)
 
     def test_get_state_targets2A(self):
-
         mock_system = MockSystem()
         learner = WQLearner(mock_system)
 
-        #Expectations
+        # Expectations
         # Action 0
         #  33 + 1.0 * 0 = 33
         # Action 1
@@ -178,6 +171,90 @@ class TestWQLearner(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets[1])
 
 
+class SarsaTests(unittest.TestCase):
+
+    def test_get_state_targets1(self):
+        mock_system = MockSystem()
+        learner = SarsaLearner(mock_system, gamma=0.9)
+
+        targets = learner.get_state_targets(state=MockState1(),
+                                            action=0,
+                                            reward=11)
+
+        # Expected0 = reward(action|state) + gamma * Q(next_state|next_action)
+        #           = 11 + 0.9 * 1
+        #           = 11.9
+        # Expected1 = Q(MockState1(), action=1)
+        #           = 2
+        expected = np.array([11.9, 2.0])
+        np.testing.assert_almost_equal(expected, targets)
+
+    def test_get_state_targets2A(self):
+        mock_system = MockSystem()
+        learner = SarsaLearner(mock_system, gamma=0.9)
+
+        targets = learner.get_state_targets(state=MockState2A(),
+                                            action=0,
+                                            reward=1)
+
+        # Expected0 = reward(action|state) + gamma * Q(next_state|next_action)
+        #           = 1 + 0.9 * 0
+        #           = 1.0
+        # Expected1 = Q(MockState2A(), action=1)
+        #           = 0.0
+        expected = np.array([1.0, 0.0])
+        np.testing.assert_almost_equal(expected, targets)
+
+    def test_get_state_targets2B(self):
+        mock_system = MockSystem()
+        learner = SarsaLearner(mock_system, gamma=0.9)
+
+        targets = learner.get_state_targets(state=MockState2B(),
+                                            action=0,
+                                            reward=2)
+
+        # Expected0 = reward(action|state) + gamma * Q(next_state|next_action)
+        #           = 2 + 0.9 * 0
+        #           = 2.0
+        # Expected1 = Q(MockState2B(), action=1)
+        #           = 1.0
+        expected = np.array([2.0, 1.0])
+        np.testing.assert_almost_equal(expected, targets)
+
+    def test_get_targets1(self):
+
+        states = [MockState1(), MockState2A(), MockState3()]
+        rewards = [11, 33]
+        actions = [0, 0]
+        episode = Episode(states, actions, rewards)
+        learner = SarsaLearner(MockSystem(), gamma=0.9)
+
+        targets = learner.get_targets(episode)
+        # [11.0 * 0.9 * 1.0, 2.0]
+        expected0 = np.array([11.9, 2.0])
+        np.testing.assert_almost_equal(expected0, targets[0])
+
+        # [33.0 * 0.9 * 0.0, 0.0]
+        expected0 = np.array([33.0, 0.0])
+        np.testing.assert_almost_equal(expected0, targets[1])
+
+    def test_get_targets2(self):
+        states = [MockState1(), MockState2B(), MockState3()]
+        rewards = [22, 33]
+        actions = [1, 0]
+        episode = Episode(states, actions, rewards)
+        learner = SarsaLearner(MockSystem(), gamma=0.9)
+
+        targets = learner.get_targets(episode)
+        # [2.0, 22.0 + 0.9 * 0]
+        expected0 = np.array([1.0, 22.0])
+        np.testing.assert_almost_equal(expected0, targets[0])
+
+        # [33 + 0.9 * 0.0, 1.0]
+        expected0 = np.array([33.0, 1.0])
+        np.testing.assert_almost_equal(expected0, targets[1])
+
+
 class MockSystem(RLSystem):
     def __init__(self):
         super(MockSystem, self).__init__()
@@ -189,13 +266,11 @@ class MockSystem(RLSystem):
 
 
 class MockPolicy(Policy):
-
     def __call__(self, state):
         return np.array([1.0, 0.0])
 
 
 class MockRewardFunction(RewardFunction):
-
     def __call__(self, old_state, action, new_state):
 
         if isinstance(new_state, MockState2A):
@@ -207,23 +282,21 @@ class MockRewardFunction(RewardFunction):
 
 
 class MockActionValueFunction(ActionValueFunction):
-
     def __call__(self, state_vector):
 
         if np.array_equal(state_vector, MockState1().as_array()):
-            return np.array([1, 2])
+            return np.array([1., 2.])
         elif np.array_equal(state_vector, MockState2A().as_array()):
-            return np.array([1, 0])
+            return np.array([1., 0.])
         elif np.array_equal(state_vector, MockState2B().as_array()):
-            return np.array([0, 1])
+            return np.array([0., 1.])
         elif np.array_equal(state_vector, MockState3().as_array()):
-            return np.array([0, 0])
+            return np.array([0., 0.])
         else:
             raise ValueError('State not expected %s' % str(state_vector))
 
 
 class MockModel(object):
-
     def apply_action(self, state, action):
 
         if isinstance(state, MockState1):

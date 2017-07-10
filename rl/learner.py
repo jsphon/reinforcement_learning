@@ -1,6 +1,28 @@
 import numpy as np
 import logging
 
+"""
+NOTES
+
+The Q learner's get_state_targets function need input (state, action, reward)
+Sarsa will be the same
+
+The Wide Q Learner only needs state, as it peeks into ALL next actions
+
+Next:
+
+How to generalise from:
+ - Q to WQ, Sarsa to WSarsa?
+
+Implement
+ - Expected Sarsa
+ - n-step Sarsa
+ - n-step Expected Sarsa
+ - n-step importance sampling (low priority)
+ - n-step tree backup
+
+"""
+
 
 class Learner:
     """
@@ -35,6 +57,43 @@ class RewardLearner(Learner):
             targets[i, action] = reward
         return targets
 
+
+class SarsaLearner(Learner):
+
+    def __init__(self, rl_system, gamma=1.0):
+        self.rl_system = rl_system
+        self.gamma = gamma
+
+    def get_targets(self, episode):
+        targets = np.zeros((len(episode.states) - 1, self.rl_system.num_actions))
+
+        for i, state in enumerate(episode.states[:-1]):
+            targets[i, :] = self.get_state_targets(state, episode.actions[i], episode.rewards[i])
+
+        return targets
+
+    def get_state_targets(self, state, action, reward):
+        """
+        Return the targets for the state
+        :param state:
+        :param action:
+        :param reward:
+        :return: np.ndarray(num_actions)
+        """
+        next_state = self.rl_system.model.apply_action(state, action)
+
+        next_state_vector = next_state.as_array().reshape((1, -1))
+        next_state_action_values = self.rl_system.action_value_function(next_state_vector)
+
+        next_state_action_probs = self.rl_system.policy(next_state_vector)
+        next_state_action = np.argmax(next_state_action_probs)
+
+        state_vector = state.as_array().reshape(1, -1)
+        targets = self.rl_system.action_value_function(state_vector).ravel()
+
+        targets[action] = reward + self.gamma * next_state_action_values[next_state_action]
+
+        return targets
 
 class QLearner(Learner):
 
