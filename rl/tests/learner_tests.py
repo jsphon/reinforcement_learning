@@ -6,7 +6,7 @@ import numpy as np
 from rl.core import RLSystem, State
 from rl.experience import Episode
 from rl.grid_world import GridWorld, GridState
-from rl.learner import RewardLearner, QLearner, WQLearner, SarsaLearner
+from rl.learner import RewardLearner, QLearner, WQLearner, SarsaLearner, ExpectedSarsaLearner
 from rl.policy import Policy
 from rl.value import ActionValueFunction
 from rl.reward_function import RewardFunction
@@ -169,6 +169,21 @@ class TestWQLearner(unittest.TestCase):
 
         expected = np.array([33, 33])
         np.testing.assert_almost_equal(expected, targets[1])
+
+
+class ExpectedSarsaTests(unittest.TestCase):
+
+    def test_calculate_action_target(self):
+        mock_system = MockSystem()
+        learner = ExpectedSarsaLearner(mock_system, gamma=0.9)
+
+        reward = 123
+        action_values = np.array([456, 789])
+        targets = learner.calculate_action_target(reward, action_values)
+
+        # pi = mock_system.policy(action_values) # ([ 1.0, 0.0 ])
+        expected = 123 + 0.9 * ( 1.0 * 456 + 0.0 * 789 )
+        np.testing.assert_array_almost_equal(expected, targets)
 
 
 class SarsaTests(unittest.TestCase):

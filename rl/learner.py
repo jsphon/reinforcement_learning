@@ -94,11 +94,30 @@ class NarrowLearner(Learner):
 
 
 class SarsaLearner(NarrowLearner):
+    '''
+    target = R_{t+1} + \gamma * Q(S_{t+1}, A_{t+1})
+
+    '''
 
     def calculate_action_target(self, reward, next_state_action_values):
-        next_state_action_probabilities = self.rl_system.policy(next_state_action_values)
-        next_state_action = np.argmax(next_state_action_probabilities)
+        pi = self.rl_system.policy(next_state_action_values)
+        # Note that using np.argmax(pi) is the greedy policy
+        # TODO: This is sarse with greedy policy. Need to fix this so that
+        # we can pick with greedy policy, softmax policy etc...
+        next_state_action = np.argmax(pi)
         return reward + self.gamma * next_state_action_values[next_state_action]
+
+
+class ExpectedSarsaLearner(NarrowLearner):
+    '''
+    target = R_{t+1} + \gamma * \E Q(S_{t+1}, A_{t+1})
+           = R_{t+1} + \gamma * \sum_{a} \pi(a | S_{t+1} Q(S_{t+1}, a)
+
+    '''
+    def calculate_action_target(self, reward, next_state_action_values):
+        pi = self.rl_system.policy(next_state_action_values)
+        expectation = np.dot(pi, next_state_action_values)
+        return reward + self.gamma * expectation
 
 
 class QLearner(NarrowLearner):
