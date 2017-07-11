@@ -72,9 +72,6 @@ class NarrowLearner(Learner):
 
         return targets
 
-
-class SarsaLearner(NarrowLearner):
-
     def get_state_targets(self, state, action, reward):
         """
         Return the targets for the state
@@ -88,38 +85,26 @@ class SarsaLearner(NarrowLearner):
         next_state_vector = next_state.as_array().reshape((1, -1))
         next_state_action_values = self.rl_system.action_value_function(next_state_vector)
 
-        next_state_action_probs = self.rl_system.policy(next_state_vector)
-        next_state_action = np.argmax(next_state_action_probs)
-
         state_vector = state.as_array().reshape(1, -1)
         targets = self.rl_system.action_value_function(state_vector).ravel()
 
-        targets[action] = reward + self.gamma * next_state_action_values[next_state_action]
+        targets[action] = self.calculate_action_target(reward, next_state_action_values)
 
         return targets
+
+
+class SarsaLearner(NarrowLearner):
+
+    def calculate_action_target(self, reward, next_state_action_values):
+        next_state_action_probabilities = self.rl_system.policy(next_state_action_values)
+        next_state_action = np.argmax(next_state_action_probabilities)
+        return reward + self.gamma * next_state_action_values[next_state_action]
 
 
 class QLearner(NarrowLearner):
 
-    def get_state_targets(self, state, action, reward):
-        """
-        Return the targets for the state
-        :param state:
-        :param action:
-        :param reward:
-        :return: np.ndarray(num_actions)
-        """
-        next_state = self.rl_system.model.apply_action(state, action)
-
-        next_state_vector = next_state.as_array().reshape((1, -1))
-        next_state_action_values = self.rl_system.action_value_function(next_state_vector)
-
-        state_vector = state.as_array().reshape(1, -1)
-        targets = self.rl_system.action_value_function(state_vector).ravel()
-
-        targets[action] = calculate_q_target(reward, self.gamma, next_state_action_values)
-
-        return targets
+    def calculate_action_target(self, reward, next_state_action_values):
+        return calculate_q_target(reward, self.gamma, next_state_action_values)
 
 
 class WQLearner(Learner):
