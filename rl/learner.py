@@ -11,17 +11,51 @@ The Wide Q Learner only needs state, as it peeks into ALL next actions
 
 Next:
 
-How to generalise from:
- - Q to WQ, Sarsa to WSarsa?
-
 Implement
- - Expected Sarsa
+ - Vectorized Expected Sarsa
+ - Vectorized Sarsa
+
  - n-step Sarsa
  - n-step Expected Sarsa
- - n-step importance sampling (low priority)
  - n-step tree backup
 
 """
+
+
+class LearnerMixin(object):
+
+    def calculate_action_target(self, reward, next_state_action_values):
+        raise NotImplemented()
+
+
+class QLearnerMixin(LearnerMixin):
+
+    def calculate_action_target(self, reward, next_state_action_values):
+        return reward + self.gamma * next_state_action_values.max()
+
+
+class SarsaLearnerMixin(LearnerMixin):
+
+    def calculate_action_target(self, reward, next_state_action_values):
+        pi = self.rl_system.policy(next_state_action_values)
+        # Note that using np.argmax(pi) is the greedy policy
+        # TODO: This is sarse with greedy policy. Need to fix this so that
+        # we can pick with greedy policy, softmax policy etc...
+        next_state_action = np.argmax(pi)
+        return reward + self.gamma * next_state_action_values[next_state_action]
+
+
+class ExpecterSarsaLearnerMixin(LearnerMixin):
+    '''
+    target = R_{t+1} + \gamma * \E Q(S_{t+1}, A_{t+1})
+           = R_{t+1} + \gamma * \sum_{a} \pi(a | S_{t+1} Q(S_{t+1}, a)
+
+    '''
+
+    def calculate_action_target(self, reward, next_state_action_values):
+        pi = self.rl_system.policy(next_state_action_values)
+        expectation = np.dot(pi, next_state_action_values)
+        return reward + self.gamma * expectation
 
 
 class Learner:
@@ -58,7 +92,7 @@ class RewardLearner(Learner):
         return targets
 
 
-class NarrowLearner(Learner):
+class NarrowLearner(Learner, LearnerMixin):
 
     def __init__(self, rl_system, gamma=1.0):
         self.rl_system = rl_system
@@ -93,53 +127,26 @@ class NarrowLearner(Learner):
         return targets
 
 
-class SarsaLearner(NarrowLearner):
+class SarsaLearner(NarrowLearner, SarsaLearnerMixin):
     '''
     target = R_{t+1} + \gamma * Q(S_{t+1}, A_{t+1})
 
     '''
 
-    def calculate_action_target(self, reward, next_state_action_values):
-        pi = self.rl_system.policy(next_state_action_values)
-        # Note that using np.argmax(pi) is the greedy policy
-        # TODO: This is sarse with greedy policy. Need to fix this so that
-        # we can pick with greedy policy, softmax policy etc...
-        next_state_action = np.argmax(pi)
-        return reward + self.gamma * next_state_action_values[next_state_action]
+    pass
 
 
-class ExpectedSarsaLearner(NarrowLearner):
-    '''
-    target = R_{t+1} + \gamma * \E Q(S_{t+1}, A_{t+1})
-           = R_{t+1} + \gamma * \sum_{a} \pi(a | S_{t+1} Q(S_{t+1}, a)
+class ExpectedSarsaLearner(NarrowLearner, ExpecterSarsaLearnerMixin):
 
-    '''
-    def calculate_action_target(self, reward, next_state_action_values):
-        pi = self.rl_system.policy(next_state_action_values)
-        expectation = np.dot(pi, next_state_action_values)
-        return reward + self.gamma * expectation
+    pass
 
 
-class QLearner(NarrowLearner):
+class QLearner(NarrowLearner, QLearnerMixin):
 
-    def calculate_action_target(self, reward, next_state_action_values):
-        return calculate_q_target(reward, self.gamma, next_state_action_values)
+    pass
 
 
-class WQLearner(Learner):
-    """
-    Wide Q learner.
-
-    The basic Q Learner sets targets for a single action using
-
-    targets = Q(s) # An ndarray with <num_actions> elements
-    targets[action] = reward(action) + max(Q(next_state | action))          (***)
-
-    i.e. The basic Q learner fits on <num_aciton> targets, but only 1 of the values is updated.
-
-    The Wide Q Learner fits (***) for all actions. Thus making the fitting operation more efficient.
-
-    """
+class VectorLearner(LearnerMixin):
 
     def __init__(self, rl_system, gamma=1.0):
         self.rl_system = rl_system
@@ -169,7 +176,27 @@ class WQLearner(Learner):
         next_state_vector = next_state.as_array()
         action_reward = self.rl_system.reward_function(state, action, next_state)
         next_state_action_values = self.rl_system.action_value_function(next_state_vector)
-        return calculate_q_target(action_reward, self.gamma, next_state_action_values)
+        return self.calculate_action_target(action_reward, next_state_action_values)
 
-def calculate_q_target(reward, gamma, next_state_action_values):
-    return reward + gamma * next_state_action_values.max()
+
+class VectorSarsaLearner(VectorLearner, SarsaLearnerMixin):
+
+    pass
+
+
+class VectorQLearner(VectorLearner, QLearnerMixin):
+    """
+    Wide Q learner.
+
+    The basic Q Learner sets targets for a single action using
+
+    targets = Q(s) # An ndarray with <num_actions> elements
+    targets[action] = reward(action) + max(Q(next_state | action))          (***)
+
+    i.e. The basic Q learner fits on <num_aciton> targets, but only 1 of the values is updated.
+
+    The Wide Q Learner fits (***) for all actions. Thus making the fitting operation more efficient.
+
+    """
+
+    pass

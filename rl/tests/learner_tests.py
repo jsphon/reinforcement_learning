@@ -6,7 +6,7 @@ import numpy as np
 from rl.core import RLSystem, State
 from rl.experience import Episode
 from rl.grid_world import GridWorld, GridState
-from rl.learner import RewardLearner, QLearner, WQLearner, SarsaLearner, ExpectedSarsaLearner
+from rl.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, VectorSarsaLearner
 from rl.policy import Policy
 from rl.value import ActionValueFunction
 from rl.reward_function import RewardFunction
@@ -123,10 +123,40 @@ class QLearnerTests(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets[1])
 
 
-class TestWQLearner(unittest.TestCase):
+class TestVectorSarsaLearner(unittest.TestCase):
+
+    def test_get_targets(self):
+        mock_system = MockSystem()
+        learner = VectorSarsaLearner(mock_system)
+
+        states = [MockState1(), MockState2A()]
+        actions = [0]
+        rewards = [0]
+        episode = Episode(states=states, actions=actions, rewards=rewards)
+
+        targets = learner.get_targets(episode)
+
+        # target[0] should be
+        # reward + Q(next state=MockState2A)[0] = 11 + [1, 0][0] = 12
+        # target[1] should be
+        # reward(action1) + Q(next state)[0] = 22 + [0, 1][0] = 22
+        # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
+        # Reward of 33 for the new state, then action reward is always zero
+        # So target[1] = [0, 0]
+
+        expected = np.array([12, 22])
+        np.testing.assert_almost_equal(expected, targets[0])
+
+        expected = np.array([33, 33])
+        np.testing.assert_almost_equal(expected, targets[1])
+
+
+
+class TestVectorQLearner(unittest.TestCase):
+
     def test_get_state_targets1(self):
         mock_system = MockSystem()
-        learner = WQLearner(mock_system)
+        learner = VectorQLearner(mock_system)
 
         targets = learner.get_state_targets(MockState1())
 
@@ -135,7 +165,7 @@ class TestWQLearner(unittest.TestCase):
 
     def test_get_state_targets2A(self):
         mock_system = MockSystem()
-        learner = WQLearner(mock_system)
+        learner = VectorQLearner(mock_system)
 
         # Expectations
         # Action 0
@@ -149,7 +179,7 @@ class TestWQLearner(unittest.TestCase):
 
     def test_get_targets(self):
         mock_system = MockSystem()
-        learner = WQLearner(mock_system)
+        learner = VectorQLearner(mock_system)
 
         states = [MockState1(), MockState2A()]
         actions = [0]
@@ -288,7 +318,10 @@ class MockPolicy(Policy):
 class MockRewardFunction(RewardFunction):
     def __call__(self, old_state, action, new_state):
 
-        if isinstance(new_state, MockState2A):
+        if isinstance(old_state, MockState3) and isinstance(new_state, MockState3):
+            # Terminal State
+            return 0
+        elif isinstance(new_state, MockState2A):
             return 11
         elif isinstance(new_state, MockState2B):
             return 22
