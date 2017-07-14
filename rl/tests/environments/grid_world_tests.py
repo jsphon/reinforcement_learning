@@ -26,6 +26,12 @@ class GridActionValueFunctionTests(unittest.TestCase):
         result = f(state)
         self.assertEqual((1, 4), result.shape)
 
+    def test_on_list(self):
+        states = [GridState(player=(0, 0)), GridState(player=(0, 1))]
+        f = GridActionValueFunction()
+        result = f.on_list(states)
+        self.assertEqual((2, 4), result.shape)
+
 
 class GridStateTests(unittest.TestCase):
 

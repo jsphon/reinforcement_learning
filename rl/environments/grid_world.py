@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 import copy
@@ -97,6 +96,7 @@ class GridWorld(RLSystem):
 
 
 class GridActionValueFunction(ActionValueFunction):
+
     def __init__(self):
         model = Sequential()
         model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(16,)))
@@ -115,16 +115,26 @@ class GridActionValueFunction(ActionValueFunction):
         self.model = model
 
     def __call__(self, state):
-        return self.model.predict(state)
+        """
 
-    #
-    # def get_value(self, state):
-    #     return self.model.predict(state)
+        :param state:
+        :return: np.ndarray(num_actions)
+        """
+        arr = state.as_array()
+        return self.model.predict(arr)
+
+    def on_list(self, states):
+
+        state_size = states[0].size
+        num_states = len(states)
+        dtype = states[0].array_dtype
+        arr = np.ndarray((num_states, state_size), dtype=dtype)
+        for i in range(num_states):
+            arr[i, :] = states[i].as_array()
+        return self.model.predict(arr)
 
     def fit(self, x, y, **kwargs):
         self.model.fit(x, y, **kwargs)
-
-
 
 
 class GridRewardFunction(RewardFunction):
@@ -157,7 +167,7 @@ class GridModel(Model):
         elif action == 3:
             self.move_right(result)
         else:
-            raise Exception
+            raise Exception('Unexpected action %s' % str(action))
         return result
 
     def move_up(self, state):
@@ -177,26 +187,35 @@ class GridModel(Model):
         state.update_player(new_position)
 
 
-# class TabularValueFunction(StateValueFunction):
-#
-#     def __init__(self, policy):
-#         super(StateValueFunction, self).__init__(policy)
-#         self._values = np.zeros((4, 4), dtype=np.float)
-#
-#     def __call__(self, state):
-#         return self._values[state.player[0], state.player[1]]
-
-
 class GridState(State):
 
     def __init__(self, player):
         super(GridState, self).__init__()
         self.player = player
         self.size = 16
-        self.vector_dtype = np.bool
+        self.array_dtype = np.bool
+
+    def __repr__(self):
+        return '<GridState player=%s>' % str(self.player)
+
+    @staticmethod
+    def enumerate(self):
+
+        states = []
+        for i in range(4):
+            for j in range(4):
+                player = (i, j)
+                state = GridState(player)
+                if not state.is_terminal:
+                    states.append(state)
+        return states
 
     @staticmethod
     def all():
+        """
+        Get all posible states
+        :return:
+        """
         states = []
         for i in range(4):
             for j in range(4):
@@ -206,10 +225,10 @@ class GridState(State):
     def copy(self):
         return GridState(copy.copy(self.player))
 
-    def as_vector(self):
-        ''' Represent as a vector '''
-        vec = np.zeros(self.size, dtype=self.vector_dtype)
-        vec[4 * self.player[0] + self.player[1]] = True
+    def as_array(self):
+        ''' Represent as an array '''
+        vec = np.zeros((1, self.size), dtype=self.array_dtype)
+        vec[0, 4 * self.player[0] + self.player[1]] = True
         return vec
 
     def as_string(self):
