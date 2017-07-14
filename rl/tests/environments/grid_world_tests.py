@@ -2,11 +2,10 @@
 Test for Example 4.1 of Sutton
 """
 
-
 import unittest
 
-from rl.grid_world import GridState
-from rl.grid_world import GridRewardFunction, GridWorld, TabularValueFunction
+from rl.environments.grid_world import GridRewardFunction, GridWorld#, TabularValueFunction
+from rl.environments.grid_world import GridState, GridActionValueFunction
 from rl.policy import EquiProbableRandomPolicy
 from rl.value import ValueFunction
 
@@ -18,31 +17,14 @@ class GridWorldTests(unittest.TestCase):
     def test___init__(self):
         world = GridWorld()
 
-    def test_evaluate_policy(self):
-        world = GridWorld()
-        world.policy = EquiProbableRandomPolicy(4)
-        result = world.evaluate_policy()
 
-        self.assertIsInstance(result, ValueFunction)
+class GridActionValueFunctionTests(unittest.TestCase):
 
-
-class TransitionProbabilityTests(unittest.TestCase):
-
-    def test_xxx(self):
-        pass
-
-
-class TabularValueFunctionTests(unittest.TestCase):
-
-    def test_xxx(self):
-
-        policy = EquiProbableRandomPolicy(num_actions=4)
-        tvf = TabularValueFunction(policy)
-        state = GridState((0, 0))
-
-        result = tvf(state)
-
-        self.assertEqual(0, result)
+    def test___call__(self):
+        state = GridState(player=(0, 0))
+        f = GridActionValueFunction()
+        result = f(state)
+        self.assertEqual((1, 4), result.shape)
 
 
 class GridStateTests(unittest.TestCase):
@@ -77,6 +59,7 @@ class GridStateTests(unittest.TestCase):
                 pos = (i, j)
                 matches = [x for x in all_states if x.player==pos]
                 self.assertEqual(1, len(matches))
+
 
 if __name__ == '__main__':
     unittest.main()
