@@ -4,12 +4,12 @@ import unittest
 import numpy as np
 
 from rl.core import RLSystem, State
+from rl.environments.grid_world import GridWorld, GridState
 from rl.experience import Episode
-from rl.grid_world import GridWorld, GridState
 from rl.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, VectorSarsaLearner
 from rl.policy import Policy
-from rl.value import ActionValueFunction
 from rl.reward_function import RewardFunction
+from rl.value import ActionValueFunction
 
 N = 1000
 
@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class RewardLearnerTests(np.testing.TestCase):
+
     def test_learn_episode(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -26,14 +27,14 @@ class RewardLearnerTests(np.testing.TestCase):
 
         grid_world = GridWorld()
 
-        y = grid_world.action_value_function(episode.get_state_array())
+        y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Reward Learner initial targets are:')
         logging.info('\n' + str(y))
 
         learner = RewardLearner(grid_world)
         learner.learn_episode(episode)
 
-        y = grid_world.action_value_function(episode.get_state_array())
+        y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Reward Learner fitted targets are:')
         logging.info('\n' + str(y))
 
@@ -58,6 +59,7 @@ class RewardLearnerTests(np.testing.TestCase):
 
 
 class QLearnerTests(unittest.TestCase):
+
     def test_learn_episode(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -67,14 +69,14 @@ class QLearnerTests(unittest.TestCase):
 
         grid_world = GridWorld()
 
-        y = grid_world.action_value_function(episode.get_state_array())
+        y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Q Learning initial targets are:')
         logging.info('\n' + str(y))
 
         learner = QLearner(grid_world)
         learner.learn_episode(episode)
 
-        y = grid_world.action_value_function(episode.get_state_array())
+        y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Q Learning fitted targets are:')
         logging.info('\n' + str(y))
 
@@ -330,18 +332,18 @@ class MockRewardFunction(RewardFunction):
 
 
 class MockActionValueFunction(ActionValueFunction):
-    def __call__(self, state_vector):
+    def __call__(self, state):
 
-        if np.array_equal(state_vector, MockState1().as_array()):
+        if isinstance(state, MockState1):
             return np.array([1., 2.])
-        elif np.array_equal(state_vector, MockState2A().as_array()):
+        elif isinstance(state, MockState2A):
             return np.array([1., 0.])
-        elif np.array_equal(state_vector, MockState2B().as_array()):
+        elif isinstance(state, MockState2B):
             return np.array([0., 1.])
-        elif np.array_equal(state_vector, MockState3().as_array()):
+        elif isinstance(state, MockState3):
             return np.array([0., 0.])
         else:
-            raise ValueError('State not expected %s' % str(state_vector))
+            raise ValueError('State not expected %s' % str(state))
 
 
 class MockModel(object):

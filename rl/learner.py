@@ -13,7 +13,6 @@ Next:
 
 Implement
  - Vectorized Expected Sarsa
- - Vectorized Sarsa
 
  - n-step Sarsa
  - n-step Expected Sarsa
@@ -54,6 +53,7 @@ class ExpecterSarsaLearnerMixin(LearnerMixin):
 
     def calculate_action_target(self, reward, next_state_action_values):
         pi = self.rl_system.policy(next_state_action_values)
+        print('pi is %s' % pi)
         expectation = np.dot(pi, next_state_action_values)
         return reward + self.gamma * expectation
 
@@ -116,12 +116,14 @@ class NarrowLearner(Learner, LearnerMixin):
         """
         next_state = self.rl_system.model.apply_action(state, action)
 
-        next_state_vector = next_state.as_array().reshape((1, -1))
-        next_state_action_values = self.rl_system.action_value_function(next_state_vector)
+        #next_state_vector = next_state.as_array().reshape((1, -1))
+        next_state_action_values = self.rl_system.action_value_function(next_state)
 
-        state_vector = state.as_array().reshape(1, -1)
-        targets = self.rl_system.action_value_function(state_vector).ravel()
+        #state_vector = state.as_array().reshape(1, -1)
+        targets = self.rl_system.action_value_function(state).ravel()
 
+        print(reward)
+        print(next_state_action_values)
         targets[action] = self.calculate_action_target(reward, next_state_action_values)
 
         return targets
@@ -173,9 +175,8 @@ class VectorLearner(LearnerMixin):
 
     def get_state_action_target(self, state, action):
         next_state = self.rl_system.model.apply_action(state, action)
-        next_state_vector = next_state.as_array()
         action_reward = self.rl_system.reward_function(state, action, next_state)
-        next_state_action_values = self.rl_system.action_value_function(next_state_vector)
+        next_state_action_values = self.rl_system.action_value_function(next_state)
         return self.calculate_action_target(action_reward, next_state_action_values)
 
 
