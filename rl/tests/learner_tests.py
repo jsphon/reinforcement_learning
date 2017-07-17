@@ -313,7 +313,8 @@ class MockSystem(RLSystem):
 
 
 class MockPolicy(Policy):
-    def __call__(self, state):
+
+    def calculate_action_value_probabilities(self, action_values):
         return np.array([1.0, 0.0])
 
 

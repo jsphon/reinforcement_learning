@@ -128,7 +128,15 @@ class ExperienceGenerator(object):
 
         return arr_states, arr_action_rewards, arr_new_states, arr_new_states_terminal
 
-    def generate_episode(self, max_len):
+    def generate_episodes(self, num_episodes, max_len=128):
+
+        episodes = []
+        for _ in range(num_episodes):
+            episode = self.generate_episode(max_len=max_len)
+            episodes.append(episode)
+        return episodes
+
+    def generate_episode(self, max_len=128):
         states = []
         actions = []
         rewards = []

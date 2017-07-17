@@ -21,7 +21,7 @@ class PolicyTests(unittest.TestCase):
         :return:
         """
         policy = Policy(rl_system=MagicMock(num_actions=2))
-        policy.calculate_probabilities = MagicMock(return_value=np.array([0.5, 0.5]))
+        policy.calculate_state_probabilities = MagicMock(return_value=np.array([0.5, 0.5]))
 
         num_true = 0
         n = 1000
@@ -68,7 +68,7 @@ class EquiprobableRandomPolicyTests(unittest.TestCase):
         rl_system = MagicMock()
         rl_system.num_actions = 4
         policy = EquiProbableRandomPolicy(rl_system)
-        result = policy.calculate_probabilities(state=None)
+        result = policy.calculate_state_probabilities(state=None)
 
         expected = np.array([0.25, 0.25, 0.25, 0.25])
         np.testing.assert_array_equal(expected, result)
@@ -93,7 +93,7 @@ class EpsilonGreedyPolicyTests(unittest.TestCase):
 
         # 90% chance of choosing the third action
         # 5% chance of choosing the first or second action
-        result = policy.calculate_probabilities(state=_state)
+        result = policy.calculate_state_probabilities(state=_state)
         expected = np.array([0.05, 0.05, 0.9])
 
         np.testing.assert_almost_equal(expected, result)
@@ -119,7 +119,7 @@ class SoftmaxPolicyTests(unittest.TestCase):
         rl_system.num_actions = 3
 
         policy = SoftmaxPolicy(rl_system)
-        result = policy.calculate_probabilities(_state)
+        result = policy.calculate_state_probabilities(_state)
         # From https://stackoverflow.com/questions/34968722/softmax-function-python
         expected = [0.8360188, 0.11314284, 0.05083836]
         np.testing.assert_almost_equal(expected, result)

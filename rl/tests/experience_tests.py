@@ -22,6 +22,16 @@ class ExperienceGeneratorTests(unittest.TestCase):
 
         self.assertIsInstance(episode, Episode)
 
+    def test_generate_episodes(self):
+
+        world = GridWorld()
+        experience_generator = ExperienceGenerator(world)
+        episodes = experience_generator.generate_episodes(10)
+
+        self.assertEqual(10, len(episodes))
+        for episode in episodes:
+            self.assertIsInstance(episode, Episode)
+
 
 class EpisodeTests(unittest.TestCase):
 
