@@ -53,7 +53,9 @@ class ExpecterSarsaLearnerMixin(LearnerMixin):
 
     def calculate_action_target(self, reward, next_state_action_values):
         pi = self.rl_system.policy.calculate_action_value_probabilities(next_state_action_values)
-        print('pi is %s' % pi)
+        num_actions = self.rl_system.num_actions
+        pi = pi.reshape((1, num_actions))
+        next_state_action_values = next_state_action_values.reshape((num_actions, 1))
         expectation = np.dot(pi, next_state_action_values)
         return reward + self.gamma * expectation
 
