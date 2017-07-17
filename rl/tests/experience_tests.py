@@ -1,43 +1,29 @@
-import unittest
 import logging
+import unittest
 
-from rl.grid_world import GridState
-from rl.grid_world import GridRewardFunction, GridWorld, TabularValueFunction, GridState
+import numpy as np
+
+from rl.environments.grid_world import GridWorld, GridState
+from rl.experience import ExperienceGenerator, Episode
 from rl.policy import EquiProbableRandomPolicy
 from rl.value import ValueFunction
-from rl.experience import ExperienceGenerator, Episode
-import numpy as np
 
 N = 1000
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-class GridWorldTests(unittest.TestCase):
-
-    def test___init__(self):
-        world = GridWorld()
-
-    def test_evaluate_policy(self):
-        world = GridWorld()
-        world.policy = EquiProbableRandomPolicy(4)
-        result = world.evaluate_policy()
-
-        self.assertIsInstance(result, ValueFunction)
+class ExperienceGeneratorTests(unittest.TestCase):
 
     def test_generate_episode(self):
         world = GridWorld()
         experience_generator = ExperienceGenerator(world)
         episode = experience_generator.generate_episode(100)
 
-        logging.info(episode)
-        logging.info('hello world')
+        self.assertIsInstance(episode, Episode)
 
-        for state in episode.states:
-            logging.info(state.player)
 
-        for reward in episode.rewards:
-            logging.info(reward)
+class EpisodeTests(unittest.TestCase):
 
     def test_get_state_array(self):
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -61,8 +47,6 @@ def get_expected_vector(player):
     result = np.zeros(16, dtype=np.bool)
     result[4 * player[0] + player[1]] = True
     return result
-
-
 
 
 if __name__ == '__main__':

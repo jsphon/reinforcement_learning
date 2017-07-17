@@ -136,12 +136,10 @@ class ExperienceGenerator(object):
         state = self.model.get_new_state()
         states.append(state)
         for _ in range(max_len):
-            probabilities = self.policy(state)
-            action = np.random.choice(self.num_actions, p=probabilities)
-            logging.info('chose action %s' % action)
-            actions.append(actions)
+
+            action = self.policy.choose_action(state)
+            actions.append(action)
             new_state = self.model.apply_action(state, action)
-            logging.info('New state is %s'%str(new_state.player))
             reward = self.reward_function(state, action, new_state)
 
             states.append(new_state)
@@ -169,10 +167,10 @@ class Episode(object):
         """
         state_size = self.states[0].size
         num_states = len(self.states)
-        dtype = self.states[0].vector_dtype
+        dtype = self.states[0].array_dtype
         result = np.ndarray((num_states, state_size), dtype=dtype)
         for i in range(num_states):
-            result[i, :] = self.states[i].as_vector()
+            result[i, :] = self.states[i].as_array()
         return result
 
 
