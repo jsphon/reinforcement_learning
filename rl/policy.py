@@ -21,14 +21,14 @@ class Policy(object):
 
     def __init__(self, rl_system):
         self.rl_system = rl_system
-        self.num_actions = rl_system.num_actions
 
     def probabilities(self, state):
         raise NotImplemented()
 
     def choose_action(self, state):
         probabilities = self.calculate_probabilities(state)
-        action = np.random.choice(self.num_actions, p=probabilities)
+        num_actions = self.rl_system.num_actions
+        action = np.random.choice(num_actions, p=probabilities)
         return action
 
 
@@ -54,7 +54,8 @@ class StochasticPolicy(Policy):
 class EquiProbableRandomPolicy(StochasticPolicy):
 
     def calculate_probabilities(self, state):
-        return np.ones(self.num_actions) / self.num_actions
+        num_actions = self.rl_system.num_actions
+        return np.ones(num_actions) / num_actions
 
 
 class EpsilonGreedyPolicy(StochasticPolicy):
@@ -68,7 +69,8 @@ class EpsilonGreedyPolicy(StochasticPolicy):
         action_values = self.rl_system.action_value_function(state)
         best_action = action_values.argmax()
 
-        probabilities = np.ones(self.num_actions) * (self.epsilon) / (self.num_actions-1)
+        num_actions = self.rl_system.num_actions
+        probabilities = np.ones(num_actions) * (self.epsilon) / (num_actions-1)
         probabilities[best_action] = 1.0 - self.epsilon
 
         return probabilities
