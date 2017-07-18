@@ -72,12 +72,8 @@ initial_states = GridState.all()
 
 grid_world = GridWorld()
 
-for initial_state in initial_states:
-    generator = ExperienceGenerator(grid_world)
-    episode = generator.generate_episode(10)
-    #episode = Episode(grid_world)
-    #episode.current_state = initial_state
-    #episode.play(max_epochs=10)
+generator = ExperienceGenerator(grid_world)
+episode = generator.generate_episode()
 
 learner = ExpectedSarsaLearner(grid_world)
-#learner.learn_episode(episode)
+learner.learn_episode(episode)

@@ -4,7 +4,9 @@ from keras.optimizers import RMSprop
 import numpy as np
 import pandas as pd
 
-from rl.core import RLSystem, EpsilonGreedyPolicy, RewardFunction, ValueFunction, Model, Episode, State
+from rl.core import RLSystem, RewardFunction, Model, Episode, State
+from rl.policy import EpsilonGreedyPolicy
+from rl.value import ValueFunction
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)

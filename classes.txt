@@ -1,48 +1,10 @@
-From https://en.wikipedia.org/wiki/Reinforcement_learning:
-
-The basic reinforcement learning model consists of:
-
-a set of environment and agent states {\displaystyle S} S;
-a set of actions {\displaystyle A} A of the agent;
-policies of transitioning from states to actions;
-rules that determine the scalar immediate reward of a transition; and
-rules that describe what the agent observes.
-
-System
-
- - contains all the other components
-
- Q Function
- Environment
- State
- Experience
-
-Q Function (Neural Network, use Keras?)
-
- - Maps states to numpy array of rewards (one reward per action)
-
-Environment
-
-Offline functions
-
- - Maps (State, Action) to (New State, Reward)
-
-Online Functions
-
- - Maps (Current State, action) to (New State, action).
-
-Actor
-
- - has as statef
-
-
 Q Trainer
 
  - Accepts experience of (old state, action, reward, new_state)
  - Trains onto target reward + gamma * maxQ
   where maxQ = max(Q(new_state))
 
- - For better vectorisation, we could have have as our experience
+ - For better vectorisation, we could have as our experience
   - (old state, rewards, new_states), where rewards and new_states are
    lists with one value per action.
   - thus, calling Q(new_states) will give a rectangular result of
@@ -51,17 +13,18 @@ Q Trainer
      rewards + gamma * maxQs
     for training
 
-= Elements Of Reinforcement Learning =
+= Reinforcement Learning System =
+
+ - Contains the elements of reinforcement learning:
 
 == Model ==
 
- - Maps (old_state, action) to (new_state, reward)
+ - Maps (old_state, action) to new_state
  - May or may not be deterministic
 
 === Example Model: Grid ===
 
- - Maps (position, actions) to (new position)
- - How can we cleanly design an environment where actions can be what-ifs, or applied?
+ - Maps (position, actions) to new_position
 
 == Reward Function ==
 
@@ -76,7 +39,14 @@ Q Trainer
  - How the agent reacts to states.
  i.e. maps states to actions
 
-= Experience Collector =
+== Value Function ==
+
+ - Calculates the value of each action that a state can take.
+
+Defn: Action/Reward Vector
+
+Suppose we have n possible actions. Then the action/reward vector a\in\R^n is a vector where
+a[i] is the reward from action a.
 
 == Live ==
 
@@ -92,12 +62,14 @@ repeat
 
 This method leaves a lot of unhelpful values in the action/reward vector.
 
-Defn: Action/Reward Vector
+= Experience Generator =
 
-Suppose we have n possible actions. Then the action/reward vector a\in\R^n is a vector where
-a[i] is the reward from action a.
+ - Used to generate lots of experience.
+ - It can follow a random policy, which will save us calling the value function
+ - It can use action rewards to explore the state space, which will save us calling the value function
+ - It can use the value function to choose a policy
 
-== Action Complete ==
+== Model Based Experience Generator ==
 
 Given a state, gather experience for each action.
 
@@ -109,21 +81,36 @@ for each action:
 
 new_state = random choice of new states
 
+= Training Algorithm / Trainer=
 
+ - Contains a system(s) and tries to train it
+ - Uses an experience generator to generate experience
+ - Can the experience generator be live?
 
+== Live Trainer ==
 
+ Step through live model.
+ At each step, update the q function.
 
-Experience
+class Experience
 
  - History of (old_state, action, reward, new_state)
 
-Episode
+class Episode
 
  - A game from beginning to end
  - Contains a list of state, action, reward
 
+class XXXEpisode
 
-(Is this a class?)CurrentState
+ - Also contains action_states, which is the "next state" for each action at every epoch
+   i.e. state array of shape [num_epochs, num_actions]
+   These forward looking states are used by the value function to calculate the target values
+   of a given action i.e.
+   target value = reward + value_function(next_state)
+
+
+class State
 
  - The state of the model
  - Represented as a numpy array. External interface of this must be 1d numpy array
@@ -131,3 +118,6 @@ Episode
 
  = Examples =
   - Grid world
+   - fixed initial state
+   - random initial state
+   - stochastic wind

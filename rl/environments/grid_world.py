@@ -66,7 +66,7 @@ class GridWorld(RLSystem):
 
     def __init__(self):
         super(GridWorld, self).__init__()
-        self.policy = EpsilonGreedyPolicy()
+        self.policy = EpsilonGreedyPolicy(self)
         self.reward_function = GridRewardFunction()
         self.action_value_function = GridActionValueFunction()
         self.model = GridModel()

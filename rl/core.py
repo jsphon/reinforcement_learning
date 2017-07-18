@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 from rl.lib.timer import Timer
@@ -34,7 +32,7 @@ class RLSystem(object):
     def __init__(self):
         self.policy = None
         self.reward_function = None
-        self.value_function = None
+        self.action_value_function = None
         self.model = None
         self.get_new_state = None
         self.num_actions = 0
@@ -44,13 +42,13 @@ class RLSystem(object):
 
         self.experience_generator = ExperienceGenerator(self)
 
-    def evaluate_policy(self):
-
-        value_function_class = type(self.value_function)
-        result = value_function_class(self.policy)
-
-        states = self.state_class.all()
-        return result
+    # def evaluate_policy(self):
+    #
+    #     value_function_class = type(self.action_value_function)
+    #     result = value_function_class(self.policy)
+    #
+    #     states = self.state_class.all()
+    #     return result
 
     def initialise_value_function(self, epochs=100):
         states, action_rewards = self.experience_generator.generate_initial_training_data(epochs)
@@ -231,39 +229,6 @@ class ExperienceGenerator(object):
         return arr_states, arr_action_rewards, arr_new_states, arr_new_states_terminal
 
 
-# class RewardFunction(object):
-#     def get_reward(self, old_state, action, new_state):
-#         raise NotImplemented()
-
-
-# class ValueFunction(object):
-#
-#     def __init__(self, policy):
-#         self.policy = policy
-#
-#
-# class StateValueFunction(ValueFunction):
-#     """
-#     Known as v_{\pi}(s) in the literature.
-#     """
-#     def __call__(self, state):
-#         pass
-#
-#
-# class ActionValueFunction(ValueFunction):
-#     """
-#     Known as q(s, a) in the literature.
-#     """
-#
-#     def __call__(self, state, action):
-#         pass
-#
-#
-# class ValueFunction(object):
-#     def get_value(self, state):
-#         raise NotImplemented()
-
-
 class Model(object):
     def apply_action(self, state, action):
         ''' Might predict the next state and reward'''
@@ -274,66 +239,12 @@ class State(object):
     def __init__(self):
         self.is_terminal = False
         self.size = 0
-        self.vector_dtype = np.float
+        self.array_dtype = np.float
 
+    def as_array(self):
+        """
+        For input to the reward function fitting
+        :return:
+        """
+        raise NotImplemented()
 
-class Episode(object):
-    """
-    A reinforcement learning episde
-    """
-
-    def __init__(self, rl_system, epsilon=0.0):
-        self.rl_system = rl_system
-        self.current_state = None
-        self.epsilon = epsilon
-
-        self.state_history = None
-        self.reward_history = None
-        self.action_history = None
-
-        self.total_reward = None
-
-    def initialise(self):
-        self.current_state = self.rl_system.model.get_new_state()
-
-    def choose_action(self, state):
-        action_values = self.rl_system.value_function.get_value(state.as_vector().reshape(1, -1))
-        chosen_action = self.rl_system.policy.choose_action(action_values)
-        return chosen_action
-
-    def take_action(self, action):
-        print('Taking action %s' % action)
-        next_state = self.rl_system.model.apply_action(self.current_state, action)
-        self.current_state = next_state
-
-    def play(self, max_epochs=10):
-        current_state = self.rl_system.model.get_new_state()
-
-        action_history = list()
-        action_history.append(None)
-        state_history = list()
-        state_history.append(current_state.as_vector())
-
-        reward_history = [0]
-
-        total_reward = 0
-        count = 0
-        while not current_state.is_terminal and count < max_epochs:
-            action = self.choose_action(current_state)
-            next_state = self.rl_system.model.apply_action(current_state, action)
-            reward = self.rl_system.reward_function.get_reward(current_state, action, next_state)
-            total_reward += reward
-
-            action_history.append(action)
-            state_history.append(next_state)
-            reward_history.append(reward)
-
-            current_state = next_state
-            count += 1
-
-        self.action_history = action_history
-        self.state_history = state_history
-        self.reward_history = reward_history
-        self.total_reward = total_reward
-
-        # print('Total reward %s' % total_reward)

@@ -69,3 +69,14 @@ Double Q Learning
 https://rubenfiszel.github.io/posts/rl4j/2016-08-24-Reinforcement-Learning-and-DQN.html#doubleq
 
 Experience Replay
+
+
+=== ARCHITECTURES ===
+
+We can have multiple agents in a system. Which could be cooperative or competing.
+
+We can have different levels of abtraction, with high level agents directing lower level agents.
+
+Actions could be:
+ - one hot vectors, or integers, describing situations when we can take 1 of n possible actions.
+ - a vector of real numbers
