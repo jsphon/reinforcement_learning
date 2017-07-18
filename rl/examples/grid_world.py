@@ -1,16 +1,4 @@
 import numpy as np
-import pandas as pd
-
-import copy
-from rl.core import RLSystem, Model, State
-from rl.reward_function import RewardFunction
-from rl.value import ActionValueFunction
-from rl.policy import EpsilonGreedyPolicy
-
-from keras.layers.core import Dense, Activation
-from keras.models import Sequential
-from keras.optimizers import RMSprop
-import numpy as np
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
@@ -63,8 +51,8 @@ Steps
 '''
 
 from rl.environments.grid_world import GridState, GridWorld
-from rl.learner import ExpectedSarsaLearner
-from rl.experience import ExperienceGenerator
+from rl.core.learner import ExpectedSarsaLearner
+from rl.core.experience import ExperienceGenerator
 import logging
 logging.basicConfig(level=logging.DEBUG)
 

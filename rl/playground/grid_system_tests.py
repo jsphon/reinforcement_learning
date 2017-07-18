@@ -1,9 +1,8 @@
 import unittest
-import numpy as np
-from rl.environment import rand_pair
-import rl.environment as rle
-from rl import grid_system
 
+import numpy as np
+
+from rl.playground import grid_system
 
 N = 1000
 

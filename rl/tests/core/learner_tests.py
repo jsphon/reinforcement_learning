@@ -4,12 +4,12 @@ import unittest
 import numpy as np
 
 from rl.core import RLSystem, State
+from rl.core.experience import Episode
+from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, VectorSarsaLearner
+from rl.core.policy import Policy
+from rl.core.reward_function import RewardFunction
+from rl.core.value_function import ActionValueFunction
 from rl.environments.grid_world import GridWorld, GridState
-from rl.experience import Episode
-from rl.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, VectorSarsaLearner
-from rl.policy import Policy
-from rl.reward_function import RewardFunction
-from rl.value import ActionValueFunction
 
 N = 1000
 

@@ -1,15 +1,17 @@
-import pandas as pd
-
 import copy
-from rl.core import RLSystem, Model, State
-from rl.reward_function import RewardFunction
-from rl.value import ActionValueFunction
-from rl.policy import EpsilonGreedyPolicy
 
+import numpy as np
+import pandas as pd
 from keras.layers.core import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import RMSprop
-import numpy as np
+
+from rl.core.model import Model
+from rl.core.policy import EpsilonGreedyPolicy
+from rl.core.reward_function import RewardFunction
+from rl.core.rl_system import RLSystem
+from rl.core.state import State
+from rl.core.value_function import ActionValueFunction
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)

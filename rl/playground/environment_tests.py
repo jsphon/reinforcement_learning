@@ -1,8 +1,9 @@
 import unittest
-import numpy as np
-from rl.environment import rand_pair
-import rl.environment as rle
 
+import numpy as np
+
+import rl.playground.environment as rle
+from rl.playground.environment import rand_pair
 
 N = 1000
 

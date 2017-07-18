@@ -7,8 +7,8 @@ import unittest
 
 import numpy as np
 from mock import MagicMock
-from rl.policy import EquiProbableRandomPolicy, EpsilonGreedyPolicy, SoftmaxPolicy, Policy
 
+from rl.core.policy import EquiProbableRandomPolicy, EpsilonGreedyPolicy, SoftmaxPolicy, Policy
 
 logging.basicConfig(level=logging.DEBUG)
 

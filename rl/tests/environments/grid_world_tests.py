@@ -6,8 +6,6 @@ import unittest
 
 from rl.environments.grid_world import GridRewardFunction, GridWorld#, TabularValueFunction
 from rl.environments.grid_world import GridState, GridActionValueFunction
-from rl.policy import EquiProbableRandomPolicy
-from rl.value import ValueFunction
 
 N = 1000
 

@@ -3,10 +3,8 @@ import unittest
 
 import numpy as np
 
+from rl.core.experience import ExperienceGenerator, Episode
 from rl.environments.grid_world import GridWorld, GridState
-from rl.experience import ExperienceGenerator, Episode
-from rl.policy import EquiProbableRandomPolicy
-from rl.value import ValueFunction
 
 N = 1000
 
