@@ -78,21 +78,46 @@ class GridWorld(RLSystem):
 
         self.state_class = GridState
 
-    def get_value_grid(self, state):
+    def get_value_grid(self):
         values = np.ndarray((4, 4))
+
         for i in range(4):
             for j in range(4):
-                state.player = (i, j)
-                v = self.value_function.get_value(state.as_vector().reshape(1, 64))
+                state = self.state_class(player=(i, j))
+                v = self.action_value_function(state)
                 values[i, j] = v.max()
         return values
 
-    def get_reward_grid(self, state):
-        #state = GridState.new()
+    def get_action_grid(self):
+
+        actions = np.ndarray((4, 4), dtype=np.int8)
+
+        for i in range(4):
+            for j in range(4):
+                state = self.state_class(player=(i, j))
+                actions[i, j] = self.policy.choose_action(state)
+
+        return actions
+
+    def get_action_grid_string(self):
+
+        action_to_char = {
+            0: '^', 1: 'v', 2: '<', 3: '>'
+        }
+
+        s_actions = np.ndarray((4, 4), dtype=np.dtype('U1'))
+        actions = self.get_action_grid()
+        for i in range(actions.shape[0]):
+            for j in range(actions.shape[1]):
+                s_actions[i, j] = action_to_char[actions[i, j]]
+        rows = [''.join(row) for row in s_actions]
+        return '\n'.join(rows)
+
+    def get_reward_grid(self):
         rewards = np.ndarray((4, 4))
         for i in range(4):
             for j in range(4):
-                state.player = (i, j)
+                state = GridState(player=(i, j))
                 rewards[i, j] = self.reward_function.get_reward(None, None, state)
         return rewards
 
@@ -146,7 +171,7 @@ class GridRewardFunction(RewardFunction):
 
     def get_reward(self, old_state, action, new_state):
         if new_state.player in ((0, 0), (3, 3)):
-            return -0
+            return 0
         else:
             return -1
 

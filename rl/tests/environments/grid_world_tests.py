@@ -3,21 +3,74 @@ Test for Example 4.1 of Sutton
 """
 
 import unittest
+import logging
 
-from rl.environments.grid_world import GridRewardFunction, GridWorld#, TabularValueFunction
+from rl.environments.grid_world import GridRewardFunction, GridWorld
 from rl.environments.grid_world import GridState, GridActionValueFunction
+from rl.core.policy import EpsilonGreedyPolicy
+import numpy as np
+
+logging.basicConfig(level=logging.DEBUG)
 
 N = 1000
 
 
 class GridWorldTests(unittest.TestCase):
+    def setUp(self):
+        self.world = GridWorld()
 
     def test___init__(self):
         world = GridWorld()
 
+    def test_get_value_grid(self):
+        result = self.world.get_value_grid()
+        self.assertEqual((4, 4), result.shape)
+        logging.info(result)
+
+    def test_get_action_grid(self):
+        self.world.policy.epsilon = 0.0
+        result = self.world.get_action_grid()
+        logging.info(result)
+        self.assertEqual((4, 4), result.shape)
+
+    def test_get_action_grid_string(self):
+        self.world.policy.epsilon = 0.0
+        result = self.world.get_action_grid_string()
+        logging.info('\n' + result)
+
+    def test_get_action_grid_string2(self):
+        self.world.policy.epsilon = 0.0
+        self.world.get_action_grid = lambda:np.array([
+            [0, 1, 2, 3],
+            [3, 2, 1, 0],
+            [0, 0, 1, 1],
+            [2, 2, 3, 3]
+        ])
+
+        result = self.world.get_action_grid_string()
+        expected = r"""
+^v<>
+><v^
+^^vv
+<<>>
+""".strip()
+        self.assertEqual(expected, result)
+
+    def test_get_reward_grid(self):
+        result = self.world.get_reward_grid()
+
+        expected = np.array(
+            [
+                [0, -1, -1, -1],
+                [-1, -1, -1, -1],
+                [-1, -1, -1, -1],
+                [-1, -1, -1, 0]
+            ])
+
+        np.testing.assert_array_equal(expected, result)
+
 
 class GridActionValueFunctionTests(unittest.TestCase):
-
     def test___call__(self):
         state = GridState(player=(0, 0))
         f = GridActionValueFunction()
@@ -32,11 +85,9 @@ class GridActionValueFunctionTests(unittest.TestCase):
 
 
 class GridStateTests(unittest.TestCase):
-
     def test_reward_function(self):
 
         for position in ((0, 0), (3, 3)):
-
             state = GridState(position)
             reward_function = GridRewardFunction()
 
@@ -61,7 +112,7 @@ class GridStateTests(unittest.TestCase):
         for i in range(4):
             for j in range(4):
                 pos = (i, j)
-                matches = [x for x in all_states if x.player==pos]
+                matches = [x for x in all_states if x.player == pos]
                 self.assertEqual(1, len(matches))
 
 
