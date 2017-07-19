@@ -65,3 +65,16 @@ episode = generator.generate_episode()
 
 learner = ExpectedSarsaLearner(grid_world)
 learner.learn_episode(episode)
+
+for _ in range(1000):
+    episode = generator.generate_episode()
+    learner.learn_episode(episode)
+
+print('=== Reward Function ===')
+print(grid_world.get_reward_grid())
+
+print('=== Value Function ===')
+print(grid_world.get_value_grid())
+
+print('=== Greedy Actions ===')
+print(grid_world.get_action_grid_string())
