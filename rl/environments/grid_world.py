@@ -98,14 +98,17 @@ class GridWorld(RLSystem):
         for i in range(4):
             for j in range(4):
                 state = self.state_class(player=(i, j))
-                actions[i, j] = self.policy.choose_action(state)
+                if state.is_terminal:
+                    actions[i, j] = -1
+                else:
+                    actions[i, j] = self.policy.choose_action(state)
 
         return actions
 
     def get_action_grid_string(self):
 
         action_to_char = {
-            0: '^', 1: 'v', 2: '<', 3: '>'
+            0: '^', 1: 'v', 2: '<', 3: '>', -1:'.'
         }
 
         s_actions = np.ndarray((4, 4), dtype=np.dtype('U1'))

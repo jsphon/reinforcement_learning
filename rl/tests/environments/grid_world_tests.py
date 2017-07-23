@@ -35,6 +35,9 @@ class GridWorldTests(unittest.TestCase):
         logging.info(result)
         self.assertEqual((4, 4), result.shape)
 
+        self.assertEqual(-1, result[0, 0])
+        self.assertEqual(-1, result[3, 3])
+
     def test_get_action_grid_string(self):
         self.world.policy.epsilon = 0.0
         result = self.world.get_action_grid_string()
