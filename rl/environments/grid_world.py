@@ -180,7 +180,7 @@ class GridModel(Model):
 
     def __init__(self):
         super(GridModel, self).__init__()
-        self.get_new_state = new_fixed_grid_state
+        self.get_new_state = new_random_grid_state
         self.num_actions = 4
 
     def apply_action(self, state, action):
@@ -292,15 +292,6 @@ def new_random_grid_state():
     Create a new grid state with random values
     :return:
     """
-    values = pd.DataFrame(np.random.randint(0, 3, (4, 2))).drop_duplicates().values
-    if len(values) == 4:
-        player = tuple(values[0])
-        wall = tuple(values[1])
-        pit = tuple(values[2])
-        goal = tuple(values[3])
-
-        grid = GridState(player, wall, pit, goal)
-        return grid
-    else:
-        return new_random_grid_state()
-
+    player = np.random.randint(0, 4, 2).tolist()
+    grid = GridState(player=player)
+    return grid
