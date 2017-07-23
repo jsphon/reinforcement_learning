@@ -1,5 +1,4 @@
 import numpy as np
-import logging
 
 """
 NOTES
@@ -69,10 +68,27 @@ class Learner:
         self.rl_system = rl_system
 
     def learn_episode(self, episode, **kwargs):
+        state_array, targets = self.get_training_arrays(episode)
+        self.rl_system.action_value_function.fit(state_array, targets, **kwargs)
+
+    def learn_episodes(self, episodes, **kwargs):
+        state_arrays_lst = []
+        targets_lst = []
+        for episode in episodes:
+            state_arrays_lst.append(episode.get_state_array()[:-1])
+            targets_lst.append(self.get_targets(episode))
+        state_array = np.concatenate(state_arrays_lst, axis=0)
+        targets = np.concatenate(targets_lst, axis=0)
+        self.rl_system.action_value_function.fit(state_array, targets, **kwargs)
+
+    def get_training_arrays(self, episode):
+        """
+        Return the episode's state and target arrays as arrays
+        :return:
+        """
         state_array = episode.get_state_array()[:-1]
         targets = self.get_targets(episode)
-        logging.info('Targets are:\n%s' % str(targets))
-        self.rl_system.action_value_function.fit(state_array, targets, **kwargs)
+        return state_array, targets
 
     def get_targets(self, episode):
         """
@@ -117,11 +133,19 @@ class NarrowLearner(Learner, LearnerMixin):
         :return: np.ndarray(num_actions)
         """
         next_state = self.rl_system.model.apply_action(state, action)
-        next_state_action_values = self.rl_system.action_value_function(next_state)
         targets = self.rl_system.action_value_function(state).ravel()
-        targets[action] = self.calculate_action_target(reward, next_state_action_values)
+
+        if next_state.is_terminal:
+            targets[action] = reward
+        else:
+            next_state_action_values = self.rl_system.action_value_function(next_state)
+            targets[action] = self.calculate_action_target(reward, next_state_action_values)
 
         return targets
+
+
+class NarrowRewardLearner(NarrowLearner, RewardLearnerMixin):
+    pass
 
 
 class SarsaLearner(NarrowLearner, SarsaLearnerMixin):

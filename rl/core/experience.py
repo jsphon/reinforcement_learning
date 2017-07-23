@@ -181,7 +181,6 @@ class Episode(object):
             result[i, :] = self.states[i].as_array()
         return result
 
-
     def get_action_array(self):
         """
         :return np.ndarray(num_states)
