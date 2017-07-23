@@ -10,7 +10,7 @@ from rl.environments.grid_world import GridState, GridActionValueFunction
 from rl.core.policy import EpsilonGreedyPolicy
 import numpy as np
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 N = 1000
 
@@ -19,13 +19,15 @@ class GridWorldTests(unittest.TestCase):
     def setUp(self):
         self.world = GridWorld()
 
-    def test___init__(self):
-        world = GridWorld()
-
     def test_get_value_grid(self):
         result = self.world.get_value_grid()
         self.assertEqual((4, 4), result.shape)
         logging.info(result)
+
+        # elements (0, 0) and (3, 3) are the terminal states, so should have value np.nan
+        msg = 'Element (0, 0) is %s' % str(result[0, 0])
+        self.assertTrue(np.isnan(result[0, 0]), msg)
+        self.assertTrue(np.isnan(result[3, 3]))
 
     def test_get_action_grid(self):
         self.world.policy.epsilon = 0.0

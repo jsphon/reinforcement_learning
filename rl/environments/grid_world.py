@@ -84,8 +84,11 @@ class GridWorld(RLSystem):
         for i in range(4):
             for j in range(4):
                 state = self.state_class(player=(i, j))
-                v = self.action_value_function(state)
-                values[i, j] = v.max()
+                if state.is_terminal:
+                    values[i, j] = np.nan
+                else:
+                    v = self.action_value_function(state)
+                    values[i, j] = v.max()
         return values
 
     def get_action_grid(self):
@@ -218,9 +221,11 @@ class GridState(State):
 
     def __init__(self, player):
         super(GridState, self).__init__()
-        self.player = player
+        self.player = None
         self.size = 16
         self.array_dtype = np.bool
+
+        self.update_player(player)
 
     def __repr__(self):
         return '<GridState player=%s>' % str(self.player)
