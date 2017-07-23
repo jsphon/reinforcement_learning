@@ -144,10 +144,6 @@ class NarrowLearner(Learner, LearnerMixin):
         return targets
 
 
-class NarrowRewardLearner(NarrowLearner, RewardLearnerMixin):
-    pass
-
-
 class SarsaLearner(NarrowLearner, SarsaLearnerMixin):
     '''
     target = R_{t+1} + \gamma * Q(S_{t+1}, A_{t+1})

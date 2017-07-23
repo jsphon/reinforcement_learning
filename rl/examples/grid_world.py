@@ -51,7 +51,7 @@ Steps
 '''
 
 from rl.environments.grid_world import GridState, GridWorld
-from rl.core.learner import ExpectedSarsaLearner
+from rl.core.learner import QLearner
 from rl.core.experience import ExperienceGenerator
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -59,16 +59,18 @@ logging.basicConfig(level=logging.DEBUG)
 initial_states = GridState.all()
 
 grid_world = GridWorld()
-
 generator = ExperienceGenerator(grid_world)
 episode = generator.generate_episode()
 
-learner = ExpectedSarsaLearner(grid_world)
+learner = QLearner(grid_world)
 learner.learn_episode(episode)
 
-for _ in range(1000):
+for i in range(100):
     episode = generator.generate_episode()
-    learner.learn_episode(episode)
+    learner.learn_episode(episode, verbose=0)
+
+    print('=== Value Function %i ===' % i)
+    print(grid_world.get_value_grid())
 
 print('=== Reward Function ===')
 print(grid_world.get_reward_grid())
