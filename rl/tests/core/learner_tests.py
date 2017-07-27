@@ -5,7 +5,8 @@ import numpy as np
 
 from rl.core import RLSystem, State
 from rl.core.experience import Episode
-from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, VectorSarsaLearner
+from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, \
+    VectorSarsaLearner
 from rl.core.policy import Policy
 from rl.core.reward_function import RewardFunction
 from rl.core.value_function import ActionValueFunction
@@ -17,7 +18,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class RewardLearnerTests(np.testing.TestCase):
-
     def test_learn_episode(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -59,7 +59,6 @@ class RewardLearnerTests(np.testing.TestCase):
 
 
 class QLearnerTests(unittest.TestCase):
-
     def test_learn_episode(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
@@ -126,7 +125,6 @@ class QLearnerTests(unittest.TestCase):
 
 
 class TestVectorSarsaLearner(unittest.TestCase):
-
     def test_get_targets(self):
         mock_system = MockSystem()
         learner = VectorSarsaLearner(mock_system)
@@ -153,9 +151,7 @@ class TestVectorSarsaLearner(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets[1])
 
 
-
 class TestVectorQLearner(unittest.TestCase):
-
     def test_get_state_targets1(self):
         mock_system = MockSystem()
         learner = VectorQLearner(mock_system)
@@ -204,7 +200,6 @@ class TestVectorQLearner(unittest.TestCase):
 
 
 class ExpectedSarsaTests(unittest.TestCase):
-
     def test_calculate_action_target(self):
         mock_system = MockSystem()
         learner = ExpectedSarsaLearner(mock_system, gamma=0.9)
@@ -214,12 +209,13 @@ class ExpectedSarsaTests(unittest.TestCase):
         targets = learner.calculate_action_target(reward, action_values)
 
         # pi = mock_system.policy(action_values) # ([ 1.0, 0.0 ])
-        expected = 123 + 0.9 * ( 1.0 * 456 + 0.0 * 789 )
+        expected = 123 + 0.9 * (1.0 * 456 + 0.0 * 789)
         np.testing.assert_array_almost_equal(expected, targets)
+        logging.info('Expected Sarsa Result shape is %s' % str(targets.shape))
+        self.fail()
 
 
 class SarsaTests(unittest.TestCase):
-
     def test_get_state_targets1(self):
         mock_system = MockSystem()
         learner = SarsaLearner(mock_system, gamma=0.9)
@@ -269,7 +265,6 @@ class SarsaTests(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets)
 
     def test_get_targets1(self):
-
         states = [MockState1(), MockState2A(), MockState3()]
         rewards = [11, 33]
         actions = [0, 0]
@@ -313,7 +308,6 @@ class MockSystem(RLSystem):
 
 
 class MockPolicy(Policy):
-
     def calculate_action_value_probabilities(self, action_values):
         return np.array([1.0, 0.0])
 
