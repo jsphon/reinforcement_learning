@@ -124,18 +124,6 @@ class SoftmaxPolicyTests(unittest.TestCase):
         expected = [0.8360188, 0.11314284, 0.05083836]
         np.testing.assert_almost_equal(expected, result)
 
-    def test_calculate_probabilities_grid_world(self):
-        from rl.environments.grid_world import GridWorld, GridState
-
-        state = GridState(player=(1, 1))
-        grid_world = GridWorld()
-        p = grid_world.policy.calculate_state_probabilities(state)
-        logging.info('GridWorld Probabilities: %s' % str(p))
-
-        grid_world.policy = SoftmaxPolicy(grid_world)
-        p = grid_world.policy.calculate_state_probabilities(state)
-        action = grid_world.policy.choose_action(state)
-
 
 if __name__ == '__main__':
     unittest.main()

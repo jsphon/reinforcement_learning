@@ -154,9 +154,14 @@ class GridActionValueFunction(ActionValueFunction):
         :return: np.ndarray(num_actions)
         """
         arr = state.as_array()
-        return self.model.predict(arr)
+        return self.model.predict(arr).ravel()
 
     def on_list(self, states):
+        """
+
+        :param states:
+        :return: np.ndarray(len(states), num_actions)
+        """
 
         state_size = states[0].size
         num_states = len(states)

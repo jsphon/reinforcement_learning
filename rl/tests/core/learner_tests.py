@@ -199,22 +199,6 @@ class TestVectorQLearner(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets[1])
 
 
-class ExpectedSarsaTests(unittest.TestCase):
-    def test_calculate_action_target(self):
-        mock_system = MockSystem()
-        learner = ExpectedSarsaLearner(mock_system, gamma=0.9)
-
-        reward = 123
-        action_values = np.array([456, 789])
-        targets = learner.calculate_action_target(reward, action_values)
-
-        # pi = mock_system.policy(action_values) # ([ 1.0, 0.0 ])
-        expected = 123 + 0.9 * (1.0 * 456 + 0.0 * 789)
-        np.testing.assert_array_almost_equal(expected, targets)
-        logging.info('Expected Sarsa Result shape is %s' % str(targets.shape))
-        self.fail()
-
-
 class SarsaTests(unittest.TestCase):
     def test_get_state_targets1(self):
         mock_system = MockSystem()
