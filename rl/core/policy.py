@@ -1,6 +1,5 @@
-
-
 import numpy as np
+
 
 # Policies can be deterministic or stochastic.
 # For deterministic policies, there is only one state taken, so we only need \pi(s) to tell
@@ -56,14 +55,12 @@ class StochasticPolicy(Policy):
 
 
 class EquiProbableRandomPolicy(StochasticPolicy):
-
     def calculate_action_value_probabilities(self, action_values):
         num_actions = self.rl_system.num_actions
         return np.ones(num_actions) / num_actions
 
 
 class EpsilonGreedyPolicy(StochasticPolicy):
-
     def __init__(self, rl_system, epsilon=0.1):
         super(EpsilonGreedyPolicy, self).__init__(rl_system)
         self.epsilon = epsilon
@@ -72,16 +69,15 @@ class EpsilonGreedyPolicy(StochasticPolicy):
         best_action = action_values.argmax()
 
         num_actions = self.rl_system.num_actions
-        probabilities = np.ones(num_actions) * (self.epsilon) / (num_actions-1)
+        probabilities = np.ones(num_actions) * (self.epsilon) / (num_actions - 1)
         probabilities[best_action] = 1.0 - self.epsilon
 
         return probabilities
 
 
 class SoftmaxPolicy(StochasticPolicy):
-
     def calculate_action_value_probabilities(self, action_values):
-        return softmax((action_values))
+        return softmax(action_values)
 
 
 def softmax(x):
