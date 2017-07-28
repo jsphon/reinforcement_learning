@@ -1,59 +1,16 @@
+import logging
+
 import numpy as np
+
+from rl.core.experience import ExperienceGenerator
+from rl.core.learner import QLearner, SarsaLearner, ExpectedSarsaLearner
+from rl.environments.grid_world import GridState, GridWorld
+from rl.core.policy import SoftmaxPolicy
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
 np.set_printoptions(suppress=True)
 
-'''
-
-Steps
-
-1 . Generate Experience
-
-    Generate n Episodes
-
-        for i in range(n):
-
-            Generate Sample Episode
-
-    Simple Generate Sample Episode
-
-        Initialise State
-
-        while not terminal state:
-            choose action
-            take action
-
-1 b.
-
-    Generate root nodes
-    For each root node:
-        generate target value
-
-
-
-
-
-2. Initialise StateAction Function (experience)
- - convert episode states to vectors
- - get rewards
- - fit the 1 step rewards against the target values so that we get decent starting values
-
-3 . Fit StateAction Function (experience)
-
-    Get States Array
-        i.e. make a big array of states x num experience
-    Get Target Values
-        i.e. given the learner, such as sarsa or q, generate target values
-    Fit(States, Target Value)
-
-
-'''
-
-from rl.environments.grid_world import GridState, GridWorld
-from rl.core.learner import QLearner, SarsaLearner, ExpectedSarsaLearner
-from rl.core.experience import ExperienceGenerator
-import logging
 logging.basicConfig(level=logging.DEBUG)
 
 initial_states = GridState.all()
@@ -64,13 +21,11 @@ episode = generator.generate_episode()
 
 learner = QLearner(grid_world)
 learner = SarsaLearner(grid_world)
-learner = ExpectedSarsaLearner(grid_world)
-learner.learn_episode(episode)
 
-from rl.core.policy import SoftmaxPolicy
+learner = ExpectedSarsaLearner(grid_world)
 learner.rl_system.policy = SoftmaxPolicy(grid_world)
 
-for i in range(200):
+for i in range(500):
     episode = generator.generate_episode()
     learner.learn_episode(episode, verbose=0)
 
@@ -84,4 +39,4 @@ print('=== Value Function ===')
 print(grid_world.get_value_grid())
 
 print('=== Greedy Actions ===')
-print(grid_world.get_action_grid_string())
+print(grid_world.get_greedy_action_grid_string())
