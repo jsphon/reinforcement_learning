@@ -65,7 +65,6 @@ Steps
 
 
 class GridWorld(RLSystem):
-
     def __init__(self):
         super(GridWorld, self).__init__()
         self.policy = EpsilonGreedyPolicy(self)
@@ -91,33 +90,33 @@ class GridWorld(RLSystem):
                     values[i, j] = v.max()
         return values
 
-    def get_action_grid(self):
+    def get_greedy_action_grid_string(self):
+
+        action_to_char = {
+            0: '^', 1: 'v', 2: '<', 3: '>', -1: '.'
+        }
+
+        s_actions = np.ndarray((4, 4), dtype=np.dtype('U1'))
+        actions = self.get_greedy_action_grid()
+        for i in range(actions.shape[0]):
+            for j in range(actions.shape[1]):
+                s_actions[i, j] = action_to_char[actions[i, j]]
+        rows = [''.join(row) for row in s_actions]
+        return '\n'.join(rows)
+
+    def get_greedy_action_grid(self):
 
         actions = np.ndarray((4, 4), dtype=np.int8)
-
+        policy = EpsilonGreedyPolicy(rl_system=self, epsilon=0)
         for i in range(4):
             for j in range(4):
                 state = self.state_class(player=(i, j))
                 if state.is_terminal:
                     actions[i, j] = -1
                 else:
-                    actions[i, j] = self.policy.choose_action(state)
+                    actions[i, j] = policy.choose_action(state)
 
         return actions
-
-    def get_action_grid_string(self):
-
-        action_to_char = {
-            0: '^', 1: 'v', 2: '<', 3: '>', -1:'.'
-        }
-
-        s_actions = np.ndarray((4, 4), dtype=np.dtype('U1'))
-        actions = self.get_action_grid()
-        for i in range(actions.shape[0]):
-            for j in range(actions.shape[1]):
-                s_actions[i, j] = action_to_char[actions[i, j]]
-        rows = [''.join(row) for row in s_actions]
-        return '\n'.join(rows)
 
     def get_reward_grid(self):
         rewards = np.ndarray((4, 4))
@@ -129,7 +128,6 @@ class GridWorld(RLSystem):
 
 
 class GridActionValueFunction(ActionValueFunction):
-
     def __init__(self):
         model = Sequential()
         model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(16,)))
@@ -176,7 +174,6 @@ class GridActionValueFunction(ActionValueFunction):
 
 
 class GridRewardFunction(RewardFunction):
-
     def __call__(self, old_state, action, new_state):
         return self.get_reward(old_state, action, new_state)
 
@@ -188,7 +185,6 @@ class GridRewardFunction(RewardFunction):
 
 
 class GridModel(Model):
-
     def __init__(self):
         super(GridModel, self).__init__()
         self.get_new_state = new_random_grid_state
@@ -226,7 +222,6 @@ class GridModel(Model):
 
 
 class GridState(State):
-
     def __init__(self, player):
         super(GridState, self).__init__()
         self.player = None

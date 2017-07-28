@@ -10,7 +10,7 @@ from rl.environments.grid_world import GridState, GridActionValueFunction
 from rl.core.policy import EpsilonGreedyPolicy
 import numpy as np
 
-#logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 N = 1000
 
@@ -29,30 +29,27 @@ class GridWorldTests(unittest.TestCase):
         self.assertTrue(np.isnan(result[0, 0]), msg)
         self.assertTrue(np.isnan(result[3, 3]))
 
-    def test_get_action_grid(self):
-        self.world.policy.epsilon = 0.0
-        result = self.world.get_action_grid()
+    def test_get_greedy_action_grid(self):
+        result = self.world.get_greedy_action_grid()
         logging.info(result)
         self.assertEqual((4, 4), result.shape)
 
         self.assertEqual(-1, result[0, 0])
         self.assertEqual(-1, result[3, 3])
 
-    def test_get_action_grid_string(self):
-        self.world.policy.epsilon = 0.0
-        result = self.world.get_action_grid_string()
+    def test_get_greedy_action_grid_string(self):
+        result = self.world.get_greedy_action_grid_string()
         logging.info('\n' + result)
 
-    def test_get_action_grid_string2(self):
-        self.world.policy.epsilon = 0.0
-        self.world.get_action_grid = lambda:np.array([
+    def test_get_greedy_action_grid_string2(self):
+        self.world.get_greedy_action_grid = lambda: np.array([
             [0, 1, 2, 3],
             [3, 2, 1, 0],
             [0, 0, 1, 1],
             [2, 2, 3, 3]
         ])
 
-        result = self.world.get_action_grid_string()
+        result = self.world.get_greedy_action_grid_string()
         expected = r"""
 ^v<>
 ><v^
@@ -80,7 +77,7 @@ class GridActionValueFunctionTests(unittest.TestCase):
         state = GridState(player=(0, 0))
         f = GridActionValueFunction()
         result = f(state)
-        self.assertEqual((4, ), result.shape)
+        self.assertEqual((4,), result.shape)
 
     def test_on_list(self):
         states = [GridState(player=(0, 0)), GridState(player=(0, 1))]
