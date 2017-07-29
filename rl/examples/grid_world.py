@@ -27,7 +27,7 @@ learner.rl_system.policy = SoftmaxPolicy(grid_world)
 
 for i in range(500):
     episode = generator.generate_episode()
-    learner.learn_episode(episode, verbose=0)
+    learner.learn(episode, verbose=0)
 
     print('=== Value Function %i ===' % i)
     print(grid_world.get_value_grid())

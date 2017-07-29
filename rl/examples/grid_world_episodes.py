@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from rl.core.experience import ExperienceGenerator
+from rl.core.experience import ExperienceGenerator, EpisodeList
 from rl.core.learner import ExpectedSarsaLearner
 from rl.environments.grid_world import GridState, GridWorld
 
@@ -32,13 +32,14 @@ print(grid_world.get_value_grid())
 
 learner.gamma = 1.0
 for i in range(20):
-    episodes = []
+    episodes = EpisodeList()
     print('Generating episodes')
     for _ in range(100):
         episode = generator.generate_episode()
         episodes.append(episode)
     print('fitting model')
-    learner.learn_episodes(episodes, epochs=1, verbose=0)
+    #learner.learn_episodes(episodes, epochs=1, verbose=0)
+    learner.learn(episodes, epochs=1, verbose=0)
     print('=== Value Function %s ===' % i)
     print(grid_world.get_value_grid())
 

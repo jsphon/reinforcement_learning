@@ -161,36 +161,87 @@ class ExperienceGenerator(object):
         return Episode(states, actions, rewards)
 
 
-class Episode(object):
+class Experience(object):
+
+    def get_training_states(self):
+
+        raise NotImplemented()
+
+
+class Episode(Experience):
 
     def __init__(self, states, actions, rewards):
         self.states = states
         self.actions = actions
         self.rewards = rewards
 
-    def get_state_array(self):
+    def get_training_array_length(self):
+        return len(self.states)-1
+
+    def get_training_states(self):
+        return self.states[:-1]
+
+    def get_training_array(self):
         """
 
         :return: np.ndarray(num_states, state_size)
         """
         state_size = self.states[0].size
-        num_states = len(self.states)
+        num_training_states = len(self.states)-1
         dtype = self.states[0].array_dtype
-        result = np.ndarray((num_states, state_size), dtype=dtype)
-        for i in range(num_states):
+        result = np.ndarray((num_training_states, state_size), dtype=dtype)
+        for i in range(num_training_states):
             result[i, :] = self.states[i].as_array()
         return result
 
-    def get_action_array(self):
+    def get_training_actions(self):
         """
         :return np.ndarray(num_states)
         """
         return self.actions
 
-    def get_reward_array(self):
+    def get_training_rewards(self):
         """
 
         :return np.ndarray(num_states):
         """
         return self.rewards
+
+
+class EpisodeList(Experience):
+
+    def __init__(self, episodes=None):
+        self.episodes = episodes or []
+
+    def append(self, episode):
+        self.episodes.append(episode)
+
+    def get_training_array_length(self):
+        return sum(episode.get_training_array_length() for episode in self.episodes)
+
+    def get_training_actions(self):
+        actions_lst = []
+        for episode in self.episodes:
+            actions_lst.append(episode.get_training_actions())
+        return np.concatenate(actions_lst, axis=0)
+
+    def get_training_rewards(self):
+        rewards_lst = []
+        for episode in self.episodes:
+            rewards_lst.append(episode.get_training_rewards())
+        return np.concatenate(rewards_lst, axis=0)
+
+    def get_training_states(self):
+        result = []
+        for episode in self.episodes:
+            result.extend(episode.get_training_states())
+        return result
+
+    def get_training_array(self):
+        state_arrays_lst = []
+
+        for episode in self.episodes:
+            state_arrays_lst.append(episode.get_training_array())
+        return np.concatenate(state_arrays_lst, axis=0)
+
 
