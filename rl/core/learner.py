@@ -59,7 +59,7 @@ class ExpecterSarsaLearnerMixin(LearnerMixin):
         return reward + self.gamma * expectation
 
 
-class Learner:
+class Learner(object):
     """
 
     """
@@ -71,29 +71,6 @@ class Learner:
         training_array = experience.get_training_array()
         target_array = self.get_target_array(experience)
         self.rl_system.action_value_function.fit(training_array, target_array, **kwargs)
-
-    # def learn_episode(self, episode, **kwargs):
-    #     state_array, targets = self.get_training_arrays(episode)
-    #     self.rl_system.action_value_function.fit(state_array, targets, **kwargs)
-    #
-    # def learn_episodes(self, episodes, **kwargs):
-    #     state_arrays_lst = []
-    #     targets_lst = []
-    #     for episode in episodes:
-    #         state_arrays_lst.append(episode.get_state_array()[:-1])
-    #         targets_lst.append(self.get_targets(episode))
-    #     state_array = np.concatenate(state_arrays_lst, axis=0)
-    #     targets = np.concatenate(targets_lst, axis=0)
-    #     self.rl_system.action_value_function.fit(state_array, targets, **kwargs)
-
-    # def get_training_arrays(self, episode):
-    #     """
-    #     Return the episode's state and target arrays as arrays
-    #     :return:
-    #     """
-    #     state_array = episode.get_state_array()[:-1]
-    #     targets = self.get_targets(episode)
-    #     return state_array, targets
 
     def get_target_array(self, experience):
         """
@@ -108,8 +85,8 @@ class RewardLearner(Learner):
 
     def get_target_array(self, experience):
         targets = np.zeros((len(experience.states) - 1, self.rl_system.num_actions))
-        rewards = experience.get_reward_array()
-        actions = experience.get_action_array()
+        rewards = experience.get_training_rewards()
+        actions = experience.get_training_actions()
         for i, (action, reward) in enumerate(zip(actions, rewards)):
             targets[i, action] = reward
         return targets

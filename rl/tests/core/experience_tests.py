@@ -35,18 +35,17 @@ class EpisodeTests(unittest.TestCase):
 
     def test_get_state_array(self):
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
-        rewards = [-1, -1, 0]
-        actions = [1, 2, 3]
+        rewards = [-1, -1]
+        actions = [1, 2]
         episode = Episode(states, actions, rewards)
 
         e0 = get_expected_vector((1, 1))
         e1 = get_expected_vector((2, 2))
-        e2 = get_expected_vector((3, 3))
-        expected = np.c_[e0, e1, e2].T
+        expected = np.c_[e0, e1].T
 
         logging.info(expected)
 
-        state_array = episode.get_state_array()
+        state_array = episode.get_training_array()
 
         np.testing.assert_array_equal(expected, state_array)
 

@@ -163,8 +163,16 @@ class ExperienceGenerator(object):
 
 class Experience(object):
 
-    def get_training_states(self):
+    def get_training_array(self):
+        raise NotImplemented()
 
+    def get_training_states(self):
+        raise NotImplemented()
+
+    def get_training_actions(self):
+        raise NotImplemented()
+
+    def get_training_rewards(self):
         raise NotImplemented()
 
 
@@ -182,10 +190,6 @@ class Episode(Experience):
         return self.states[:-1]
 
     def get_training_array(self):
-        """
-
-        :return: np.ndarray(num_states, state_size)
-        """
         state_size = self.states[0].size
         num_training_states = len(self.states)-1
         dtype = self.states[0].array_dtype
@@ -195,16 +199,9 @@ class Episode(Experience):
         return result
 
     def get_training_actions(self):
-        """
-        :return np.ndarray(num_states)
-        """
         return self.actions
 
     def get_training_rewards(self):
-        """
-
-        :return np.ndarray(num_states):
-        """
         return self.rewards
 
 

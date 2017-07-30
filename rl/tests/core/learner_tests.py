@@ -18,7 +18,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class RewardLearnerTests(np.testing.TestCase):
-    def test_learn_episode(self):
+
+    def test_learn(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
         rewards = [-1, -1]
@@ -32,7 +33,7 @@ class RewardLearnerTests(np.testing.TestCase):
         logging.info('\n' + str(y))
 
         learner = RewardLearner(grid_world)
-        learner.learn_episode(episode)
+        learner.learn(episode)
 
         y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Reward Learner fitted targets are:')
@@ -42,7 +43,7 @@ class RewardLearnerTests(np.testing.TestCase):
         np.testing.assert_allclose([0, 0, -1, 0], y[1], atol=0.5)
         np.testing.assert_allclose([0, 0, 0, 0], y[2], atol=0.5)
 
-    def test_get_targets(self):
+    def test_get_target_array(self):
         mock_system = MockSystem()
         learner = RewardLearner(mock_system)
 
@@ -51,7 +52,7 @@ class RewardLearnerTests(np.testing.TestCase):
         rewards = [0, 0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_targets(episode)
+        targets = learner.get_target_array(episode)
         logging.info('get targets = %s' % str(targets))
 
         expected = np.array([[0.0, 0.0], [0.0, 0.0]])
@@ -59,7 +60,8 @@ class RewardLearnerTests(np.testing.TestCase):
 
 
 class QLearnerTests(unittest.TestCase):
-    def test_learn_episode(self):
+
+    def test_learn(self):
         np.random.seed(1)
         states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
         rewards = [-1, -1]
@@ -73,7 +75,7 @@ class QLearnerTests(unittest.TestCase):
         logging.info('\n' + str(y))
 
         learner = QLearner(grid_world)
-        learner.learn_episode(episode)
+        learner.learn(episode)
 
         y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Q Learning fitted targets are:')
@@ -92,7 +94,7 @@ class QLearnerTests(unittest.TestCase):
         rewards = [0, 0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_targets(episode)
+        targets = learner.get_target_array(episode)
 
         expected = np.array([1, 2])
         np.testing.assert_almost_equal(expected, targets[0])
@@ -109,7 +111,7 @@ class QLearnerTests(unittest.TestCase):
         rewards = [0, 10]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_targets(episode)
+        targets = learner.get_target_array(episode)
 
         # Elements 0 and 2 come from MockState1's action value (1 and 3)
         # Element 1 is the reward at 1 (0) plus the best action value
@@ -255,7 +257,7 @@ class SarsaTests(unittest.TestCase):
         episode = Episode(states, actions, rewards)
         learner = SarsaLearner(MockSystem(), gamma=0.9)
 
-        targets = learner.get_targets(episode)
+        targets = learner.get_target_array(episode)
         # [11.0 * 0.9 * 1.0, 2.0]
         expected0 = np.array([11.9, 2.0])
         np.testing.assert_almost_equal(expected0, targets[0])
@@ -271,7 +273,7 @@ class SarsaTests(unittest.TestCase):
         episode = Episode(states, actions, rewards)
         learner = SarsaLearner(MockSystem(), gamma=0.9)
 
-        targets = learner.get_targets(episode)
+        targets = learner.get_target_array(episode)
         # [2.0, 22.0 + 0.9 * 0]
         expected0 = np.array([1.0, 22.0])
         np.testing.assert_almost_equal(expected0, targets[0])
