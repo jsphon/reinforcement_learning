@@ -68,7 +68,7 @@ class Learner(object):
         self.rl_system = rl_system
 
     def learn(self, experience, **kwargs):
-        training_array = experience.get_training_array()
+        training_array = experience.get_training_states_array()
         target_array = self.get_target_array(experience)
         self.rl_system.action_value_function.fit(training_array, target_array, **kwargs)
 
@@ -84,7 +84,7 @@ class Learner(object):
 class RewardLearner(Learner):
 
     def get_target_array(self, experience):
-        targets = np.zeros((len(experience.states) - 1, self.rl_system.num_actions))
+        targets = np.zeros((experience.get_training_array_length(), self.rl_system.num_actions))
         rewards = experience.get_training_rewards()
         actions = experience.get_training_actions()
         for i, (action, reward) in enumerate(zip(actions, rewards)):

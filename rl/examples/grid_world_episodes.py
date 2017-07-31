@@ -2,8 +2,9 @@ import logging
 
 import numpy as np
 
-from rl.core.experience import ExperienceGenerator, EpisodeList
-from rl.core.learner import ExpectedSarsaLearner
+from rl.lib.timer import Timer
+from rl.core.experience import ExperienceGenerator
+from rl.core.learner import ExpectedSarsaLearner, QLearner, SarsaLearner
 from rl.environments.grid_world import GridState, GridWorld
 
 np.set_printoptions(precision=1)
@@ -18,30 +19,24 @@ grid_world = GridWorld()
 
 generator = ExperienceGenerator(grid_world)
 
+learner = QLearner(grid_world)
+learner = SarsaLearner(grid_world)
 # learner = QLearner(grid_world)
-# learner = RewardLearner(grid_world)
-# learner = QLearner(grid_world)
-learner = ExpectedSarsaLearner(grid_world)
-
-from rl.core.policy import SoftmaxPolicy
-
-learner.rl_system.policy = SoftmaxPolicy(grid_world)
+# learner = ExpectedSarsaLearner(grid_world)
+#
+# from rl.core.policy import SoftmaxPolicy
+#
+# learner.rl_system.policy = SoftmaxPolicy(grid_world)
 
 print('=== Initial Value Function ===')
 print(grid_world.get_value_grid())
 
 learner.gamma = 1.0
 for i in range(20):
-    episodes = EpisodeList()
-    print('Generating episodes')
-    for _ in range(100):
-        episode = generator.generate_episode()
-        episodes.append(episode)
-    print('fitting model')
-    #learner.learn_episodes(episodes, epochs=1, verbose=0)
-    learner.learn(episodes, epochs=1, verbose=0)
-    print('=== Value Function %s ===' % i)
-    print(grid_world.get_value_grid())
+    with Timer('Generating Episodes'):
+        episodes = generator.generate_episodes(100, max_len=10)
+    with Timer('Learning Model'):
+        learner.learn(episodes, epochs=1, verbose=0)
 
 print('=== Reward Function ===')
 print(grid_world.get_reward_grid())

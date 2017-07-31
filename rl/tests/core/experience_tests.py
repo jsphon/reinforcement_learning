@@ -45,7 +45,7 @@ class EpisodeTests(unittest.TestCase):
 
         logging.info(expected)
 
-        state_array = episode.get_training_array()
+        state_array = episode.get_training_states_array()
 
         np.testing.assert_array_equal(expected, state_array)
 
