@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from rl.core.experience import ExperienceGenerator, Episode
-from rl.environments.grid_world import GridWorld, GridState
+from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
 
 N = 1000
 
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 class ExperienceGeneratorTests(unittest.TestCase):
 
     def test_generate_episode(self):
-        world = GridWorld()
+        world = SimpleGridWorld()
         experience_generator = ExperienceGenerator(world)
         episode = experience_generator.generate_episode(100)
 
@@ -22,7 +22,7 @@ class ExperienceGeneratorTests(unittest.TestCase):
 
     def test_generate_episodes(self):
 
-        world = GridWorld()
+        world = SimpleGridWorld()
         experience_generator = ExperienceGenerator(world)
         episodes = experience_generator.generate_episodes(10)
 
@@ -34,7 +34,7 @@ class ExperienceGeneratorTests(unittest.TestCase):
 class EpisodeTests(unittest.TestCase):
 
     def test_get_state_array(self):
-        states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
+        states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
         rewards = [-1, -1]
         actions = [1, 2]
         episode = Episode(states, actions, rewards)

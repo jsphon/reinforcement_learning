@@ -4,7 +4,7 @@ import numpy as np
 
 from rl.core.experience import ExperienceGenerator
 from rl.core.learner import QLearner, SarsaLearner, ExpectedSarsaLearner
-from rl.environments.grid_world import GridState, GridWorld
+from rl.environments.simple_grid_world import SimpleGridWorld
 from rl.core.policy import SoftmaxPolicy
 
 np.set_printoptions(precision=1)
@@ -13,9 +13,7 @@ np.set_printoptions(suppress=True)
 
 logging.basicConfig(level=logging.DEBUG)
 
-initial_states = GridState.all()
-
-grid_world = GridWorld()
+grid_world = SimpleGridWorld()
 generator = ExperienceGenerator(grid_world)
 episode = generator.generate_episode()
 

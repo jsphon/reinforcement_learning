@@ -1,7 +1,6 @@
 import copy
 
 import numpy as np
-import pandas as pd
 from keras.layers.core import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import RMSprop
@@ -9,79 +8,29 @@ from keras.optimizers import RMSprop
 from rl.core.model import Model
 from rl.core.policy import EpsilonGreedyPolicy
 from rl.core.reward_function import RewardFunction
-from rl.core.rl_system import RLSystem
 from rl.core.state import State
 from rl.core.value_function import ActionValueFunction
-
-np.set_printoptions(precision=1)
-np.set_printoptions(linewidth=200)
-np.set_printoptions(suppress=True)
-
-'''
-
-Steps
-
-1 . Generate Experience
-
-    Generate n Episodes
-
-        for i in range(n):
-
-            Generate Sample Episode
-
-    Simple Generate Sample Episode
-
-        Initialise State
-
-        while not terminal state:
-            choose action
-            take action
-
-1 b.
-
-    Generate root nodes
-    For each root node:
-        generate target value
+from rl.environments.base_grid_world import BaseGridWorld
 
 
+class SimpleGridWorld(BaseGridWorld):
 
-
-
-2. Initialise StateAction Function (experience)
- - convert episode states to vectors
- - get rewards
- - fit the 1 step rewards against the target values so that we get decent starting values
-
-3 . Fit StateAction Function (experience)
-
-    Get States Array
-        i.e. make a big array of states x num experience
-    Get Target Values
-        i.e. given the learner, such as sarsa or q, generate target values
-    Fit(States, Target Value)
-
-
-'''
-
-
-class GridWorld(RLSystem):
     def __init__(self):
-        super(GridWorld, self).__init__()
-        self.policy = EpsilonGreedyPolicy(self)
-        self.reward_function = GridRewardFunction()
-        self.action_value_function = GridActionValueFunction()
-        self.model = GridModel()
+        super(SimpleGridWorld, self).__init__()
 
-        self.num_actions = 4
-        self.state_size = 64
+        self.reward_function = SimpleGridWorldRewardFunction()
+        self.model = SimpleGridModel()
 
-        self.state_class = GridState
+        self.state_class = SimpleGridState
+        self.shape = (4, 4)
+
+        self.action_value_function = GridActionValueFunction(self.shape, self.num_actions)
 
     def get_value_grid(self):
-        values = np.ndarray((4, 4))
+        values = np.ndarray(self.shape)
 
-        for i in range(4):
-            for j in range(4):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 state = self.state_class(player=(i, j))
                 if state.is_terminal:
                     values[i, j] = np.nan
@@ -96,7 +45,7 @@ class GridWorld(RLSystem):
             0: '^', 1: 'v', 2: '<', 3: '>', -1: '.'
         }
 
-        s_actions = np.ndarray((4, 4), dtype=np.dtype('U1'))
+        s_actions = np.ndarray(self.shape, dtype=np.dtype('U1'))
         actions = self.get_greedy_action_grid()
         for i in range(actions.shape[0]):
             for j in range(actions.shape[1]):
@@ -106,10 +55,10 @@ class GridWorld(RLSystem):
 
     def get_greedy_action_grid(self):
 
-        actions = np.ndarray((4, 4), dtype=np.int8)
+        actions = np.ndarray(self.shape, dtype=np.int8)
         policy = EpsilonGreedyPolicy(rl_system=self, epsilon=0)
-        for i in range(4):
-            for j in range(4):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 state = self.state_class(player=(i, j))
                 if state.is_terminal:
                     actions[i, j] = -1
@@ -119,18 +68,22 @@ class GridWorld(RLSystem):
         return actions
 
     def get_reward_grid(self):
-        rewards = np.ndarray((4, 4))
-        for i in range(4):
-            for j in range(4):
-                state = GridState(player=(i, j))
+        rewards = np.ndarray(self.shape)
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                state = SimpleGridState(player=(i, j))
                 rewards[i, j] = self.reward_function.get_reward(None, None, state)
         return rewards
 
 
 class GridActionValueFunction(ActionValueFunction):
-    def __init__(self):
+
+    def __init__(self, shape, num_actions):
+
+        input_size = shape[0] * shape[1]
+
         model = Sequential()
-        model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(16,)))
+        model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(input_size,)))
         model.add(Activation('relu'))
         # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
 
@@ -138,7 +91,7 @@ class GridActionValueFunction(ActionValueFunction):
         model.add(Activation('relu'))
         # model.add(Dropout(0.2))
 
-        model.add(Dense(4, kernel_initializer='lecun_uniform'))
+        model.add(Dense(num_actions, kernel_initializer='lecun_uniform'))
         model.add(Activation('linear'))  # linear output so we can have range of real-valued outputs
 
         rms = RMSprop()
@@ -173,7 +126,7 @@ class GridActionValueFunction(ActionValueFunction):
         self.model.fit(x, y, **kwargs)
 
 
-class GridRewardFunction(RewardFunction):
+class SimpleGridWorldRewardFunction(RewardFunction):
     def __call__(self, old_state, action, new_state):
         return self.get_reward(old_state, action, new_state)
 
@@ -184,11 +137,11 @@ class GridRewardFunction(RewardFunction):
             return -1
 
 
-class GridModel(Model):
+class SimpleGridModel(Model):
+
     def __init__(self):
-        super(GridModel, self).__init__()
-        self.get_new_state = new_random_grid_state
-        self.num_actions = 4
+        super(SimpleGridModel, self).__init__()
+        self.get_new_state = new_random_simple_grid_state
 
     def apply_action(self, state, action):
         result = state.copy()
@@ -221,9 +174,9 @@ class GridModel(Model):
         state.update_player(new_position)
 
 
-class GridState(State):
+class SimpleGridState(State):
     def __init__(self, player):
-        super(GridState, self).__init__()
+        super(SimpleGridState, self).__init__()
         self.player = None
         self.size = 16
         self.array_dtype = np.bool
@@ -231,34 +184,10 @@ class GridState(State):
         self.update_player(player)
 
     def __repr__(self):
-        return '<GridState player=%s>' % str(self.player)
-
-    @staticmethod
-    def enumerate(self):
-
-        states = []
-        for i in range(4):
-            for j in range(4):
-                player = (i, j)
-                state = GridState(player)
-                if not state.is_terminal:
-                    states.append(state)
-        return states
-
-    @staticmethod
-    def all():
-        """
-        Get all posible states
-        :return:
-        """
-        states = []
-        for i in range(4):
-            for j in range(4):
-                states.append(GridState((i, j)))
-        return states
+        return '<SimpleGridState player=%s>' % str(self.player)
 
     def copy(self):
-        return GridState(copy.copy(self.player))
+        return SimpleGridState(copy.copy(self.player))
 
     def as_array(self):
         ''' Represent as an array '''
@@ -291,15 +220,15 @@ def new_fixed_grid_state():
     """
 
     player = (0, 1)
-    grid = GridState(player)
+    grid = SimpleGridState(player)
     return grid
 
 
-def new_random_grid_state():
+def new_random_simple_grid_state():
     """
     Create a new grid state with random values
     :return:
     """
     player = np.random.randint(0, 4, 2).tolist()
-    grid = GridState(player=player)
+    grid = SimpleGridState(player=player)
     return grid

@@ -10,7 +10,7 @@ from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearne
 from rl.core.policy import Policy
 from rl.core.reward_function import RewardFunction
 from rl.core.value_function import ActionValueFunction
-from rl.environments.grid_world import GridWorld, GridState
+from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
 
 N = 1000
 
@@ -21,12 +21,12 @@ class RewardLearnerTests(np.testing.TestCase):
 
     def test_learn(self):
         np.random.seed(1)
-        states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
+        states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
         rewards = [-1, -1]
         actions = [1, 2]
         episode = Episode(states, actions, rewards)
 
-        grid_world = GridWorld()
+        grid_world = SimpleGridWorld()
 
         y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Reward Learner initial targets are:')
@@ -63,12 +63,12 @@ class QLearnerTests(unittest.TestCase):
 
     def test_learn(self):
         np.random.seed(1)
-        states = [GridState((1, 1)), GridState((2, 2)), GridState((3, 3))]
+        states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
         rewards = [-1, -1]
         actions = [1, 2]
         episode = Episode(states, actions, rewards)
 
-        grid_world = GridWorld()
+        grid_world = SimpleGridWorld()
 
         y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Q Learning initial targets are:')

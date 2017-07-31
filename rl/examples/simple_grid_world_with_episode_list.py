@@ -5,7 +5,7 @@ import numpy as np
 from rl.lib.timer import Timer
 from rl.core.experience import ExperienceGenerator
 from rl.core.learner import ExpectedSarsaLearner, QLearner, SarsaLearner
-from rl.environments.grid_world import GridState, GridWorld
+from rl.environments.simple_grid_world import SimpleGridState, SimpleGridWorld
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
@@ -13,9 +13,8 @@ np.set_printoptions(suppress=True)
 
 logging.basicConfig(level=logging.DEBUG)
 
-initial_states = GridState.all()
 
-grid_world = GridWorld()
+grid_world = SimpleGridWorld()
 
 generator = ExperienceGenerator(grid_world)
 

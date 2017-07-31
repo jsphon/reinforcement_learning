@@ -5,9 +5,8 @@ Test for Example 4.1 of Sutton
 import unittest
 import logging
 
-from rl.environments.grid_world import GridRewardFunction, GridWorld
-from rl.environments.grid_world import GridState, GridActionValueFunction
-from rl.core.policy import EpsilonGreedyPolicy
+from rl.environments.simple_grid_world import SimpleGridWorldRewardFunction, SimpleGridWorld
+from rl.environments.simple_grid_world import SimpleGridState, GridActionValueFunction
 import numpy as np
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -17,7 +16,7 @@ N = 1000
 
 class GridWorldTests(unittest.TestCase):
     def setUp(self):
-        self.world = GridWorld()
+        self.world = SimpleGridWorld()
 
     def test_get_value_grid(self):
         result = self.world.get_value_grid()
@@ -74,14 +73,14 @@ class GridWorldTests(unittest.TestCase):
 
 class GridActionValueFunctionTests(unittest.TestCase):
     def test___call__(self):
-        state = GridState(player=(0, 0))
-        f = GridActionValueFunction()
+        state = SimpleGridState(player=(0, 0))
+        f = GridActionValueFunction(shape=(4, 4), num_actions=4)
         result = f(state)
         self.assertEqual((4,), result.shape)
 
     def test_on_list(self):
-        states = [GridState(player=(0, 0)), GridState(player=(0, 1))]
-        f = GridActionValueFunction()
+        states = [SimpleGridState(player=(0, 0)), SimpleGridState(player=(0, 1))]
+        f = GridActionValueFunction(shape=(4, 4), num_actions=4)
         result = f.on_list(states)
         self.assertEqual((2, 4), result.shape)
 
@@ -90,8 +89,8 @@ class GridStateTests(unittest.TestCase):
     def test_reward_function(self):
 
         for position in ((0, 0), (3, 3)):
-            state = GridState(position)
-            reward_function = GridRewardFunction()
+            state = SimpleGridState(position)
+            reward_function = SimpleGridWorldRewardFunction()
 
             result = reward_function(None, None, state)
 
@@ -102,20 +101,12 @@ class GridStateTests(unittest.TestCase):
         all_states = [(i, j) for i in range(3) for j in range(4)]
         non_terminal_states = [x for x in all_states if x not in ((0, 0), (3, 3))]
         for position in non_terminal_states:
-            state = GridState(position)
-            reward_function = GridRewardFunction()
+            state = SimpleGridState(position)
+            reward_function = SimpleGridWorldRewardFunction()
 
             result = reward_function(None, None, state)
 
             self.assertEqual(-1, result)
-
-    def test_all(self):
-        all_states = GridState.all()
-        for i in range(4):
-            for j in range(4):
-                pos = (i, j)
-                matches = [x for x in all_states if x.player == pos]
-                self.assertEqual(1, len(matches))
 
 
 if __name__ == '__main__':
