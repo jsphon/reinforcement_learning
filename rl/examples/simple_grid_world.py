@@ -6,6 +6,7 @@ from rl.core.experience import ExperienceGenerator
 from rl.core.learner import QLearner, SarsaLearner, ExpectedSarsaLearner
 from rl.environments.simple_grid_world import SimpleGridWorld
 from rl.core.policy import SoftmaxPolicy
+from rl.lib.timer import Timer
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
@@ -23,12 +24,13 @@ learner = SarsaLearner(grid_world)
 learner = ExpectedSarsaLearner(grid_world)
 learner.rl_system.policy = SoftmaxPolicy(grid_world)
 
-for i in range(500):
-    episode = generator.generate_episode()
-    learner.learn(episode, verbose=0)
+with Timer('training') as t:
+    for i in range(100):
+        episode = generator.generate_episode()
+        learner.learn(episode, verbose=0)
 
-    print('=== Value Function %i ===' % i)
-    print(grid_world.get_value_grid())
+        print('=== Value Function %i ===' % i)
+        print(grid_world.get_value_grid())
 
 print('=== Reward Function ===')
 print(grid_world.get_reward_grid())

@@ -147,17 +147,20 @@ class QLearner(NarrowLearner, QLearnerMixin):
     pass
 
 
-class VectorLearner(LearnerMixin):
+class VectorLearner(Learner):
 
     def __init__(self, rl_system, gamma=1.0):
         self.rl_system = rl_system
         self.gamma = gamma
 
-    def get_targets(self, episode):
+    def get_target_array(self, episode):
         targets = np.zeros((len(episode.states), self.rl_system.num_actions))
 
         for i, state in enumerate(episode.states):
-            targets[i, :] = self.get_state_targets(state)
+            if state.is_terminal:
+                targets[i, :] = 0
+            else:
+                targets[i, :] = self.get_state_targets(state)
 
         return targets
 

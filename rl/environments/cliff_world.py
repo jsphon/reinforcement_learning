@@ -17,11 +17,10 @@ np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
 np.set_printoptions(suppress=True)
 
-from rl.environments.base_grid_world import SimpleGridWorld
+from rl.environments.simple_grid_world import SimpleGridWorld
 
 
 class CliffWorld(SimpleGridWorld):
-
     def __init__(self):
         super(CliffWorld, self).__init__()
         self.policy = EpsilonGreedyPolicy(self)
@@ -34,10 +33,10 @@ class CliffWorld(SimpleGridWorld):
         self.state_class = GridState
 
     def get_value_grid(self):
-        values = np.ndarray((4, 4))
+        values = np.ndarray(self.shape)
 
-        for i in range(4):
-            for j in range(4):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 state = self.state_class(player=(i, j))
                 if state.is_terminal:
                     values[i, j] = np.nan
@@ -52,7 +51,7 @@ class CliffWorld(SimpleGridWorld):
             0: '^', 1: 'v', 2: '<', 3: '>', -1: '.'
         }
 
-        s_actions = np.ndarray((4, 4), dtype=np.dtype('U1'))
+        s_actions = np.ndarray((self.shape[0], self.shape[1]), dtype=np.dtype('U1'))
         actions = self.get_greedy_action_grid()
         for i in range(actions.shape[0]):
             for j in range(actions.shape[1]):
@@ -62,10 +61,10 @@ class CliffWorld(SimpleGridWorld):
 
     def get_greedy_action_grid(self):
 
-        actions = np.ndarray((4, 4), dtype=np.int8)
+        actions = np.ndarray(self.shape, dtype=np.int8)
         policy = EpsilonGreedyPolicy(rl_system=self, epsilon=0)
-        for i in range(4):
-            for j in range(4):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 state = self.state_class(player=(i, j))
                 if state.is_terminal:
                     actions[i, j] = -1
@@ -75,22 +74,26 @@ class CliffWorld(SimpleGridWorld):
         return actions
 
     def get_reward_grid(self):
-        rewards = np.ndarray((4, 4))
-        for i in range(4):
-            for j in range(4):
+        rewards = np.ndarray(self.shape)
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 state = GridState(player=(i, j))
                 rewards[i, j] = self.reward_function.get_reward(None, None, state)
         return rewards
 
 
+
+
 class GridActionValueFunction(ActionValueFunction):
     def __init__(self):
         model = Sequential()
-        model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(16,)))
+        #model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
+        model.add(Dense(1640, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
         model.add(Activation('relu'))
         # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
 
-        model.add(Dense(150, kernel_initializer='lecun_uniform'))
+        #model.add(Dense(150, kernel_initializer='lecun_uniform'))
+        model.add(Dense(1500, kernel_initializer='lecun_uniform'))
         model.add(Activation('relu'))
         # model.add(Dropout(0.2))
 
@@ -134,8 +137,16 @@ class GridRewardFunction(RewardFunction):
         return self.get_reward(old_state, action, new_state)
 
     def get_reward(self, old_state, action, new_state):
-        if new_state.player in ((0, 0), (3, 3)):
-            return 0
+        if new_state.player == (0, 11):
+            print('Reached the end')
+            return 100
+        elif walked_off_cliff(new_state):
+            #print('Walking off cliff at %s' % str(new_state.player))
+            return -100
+        elif old_state.player==new_state.player:
+            # Lose rewards for walking into wall
+            #print('Walked into a wall at %s'%str(new_state.player))
+            return -2
         else:
             return -1
 
@@ -143,22 +154,23 @@ class GridRewardFunction(RewardFunction):
 class GridModel(Model):
     def __init__(self):
         super(GridModel, self).__init__()
-        self.get_new_state = new_random_grid_state
+        self.get_new_state = new_fixed_grid_state
         self.num_actions = 4
 
     def apply_action(self, state, action):
-        result = state.copy()
+        next_state = state.copy()
         if action == 0:
-            self.move_up(result)
+            self.move_up(next_state)
         elif action == 1:
-            self.move_down(result)
+            self.move_down(next_state)
         elif action == 2:
-            self.move_left(result)
+            self.move_left(next_state)
         elif action == 3:
-            self.move_right(result)
+            self.move_right(next_state)
         else:
             raise Exception('Unexpected action %s' % str(action))
-        return result
+        #print('walked to %s'%str(next_state.player))
+        return next_state
 
     def move_up(self, state):
         new_position = (max(state.player[0] - 1, 0), state.player[1])
@@ -173,18 +185,25 @@ class GridModel(Model):
         state.update_player(new_position)
 
     def move_right(self, state):
-        new_position = (state.player[0], min(state.player[1] + 1, 3))
+        new_position = (state.player[0], min(state.player[1] + 1, 11))
         state.update_player(new_position)
 
 
+def walked_off_cliff(new_state):
+    return (new_state.player[0] == 0) \
+           and (new_state.player[1] > 0)
+
+
 class GridState(State):
-    def __init__(self, player):
+
+    def __init__(self, player, visited_states = None):
         super(GridState, self).__init__()
         self.player = None
-        self.size = 16
+        self.size = 4 * 12
+        self.shape = (4, 12)
         self.array_dtype = np.bool
-
         self.update_player(player)
+        self.visited_states = visited_states or []
 
     def __repr__(self):
         return '<GridState player=%s>' % str(self.player)
@@ -193,8 +212,8 @@ class GridState(State):
     def enumerate(self):
 
         states = []
-        for i in range(4):
-            for j in range(4):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 player = (i, j)
                 state = GridState(player)
                 if not state.is_terminal:
@@ -209,17 +228,18 @@ class GridState(State):
         """
         states = []
         for i in range(4):
-            for j in range(4):
+            for j in range(12):
                 states.append(GridState((i, j)))
         return states
 
     def copy(self):
-        return GridState(copy.copy(self.player))
+        r = GridState(copy.copy(self.player), visited_states=copy.copy(self.visited_states))
+        return r
 
     def as_array(self):
         ''' Represent as an array '''
         vec = np.zeros((1, self.size), dtype=self.array_dtype)
-        vec[0, 4 * self.player[0] + self.player[1]] = True
+        vec[0, 12 * self.player[0] + self.player[1]] = True
         return vec
 
     def as_string(self):
@@ -229,14 +249,14 @@ class GridState(State):
         return s
 
     def as_2d_array(self):
-        r = np.empty((4, 4), dtype='<U2')
+        r = np.empty((4, 12), dtype='<U2')
         r[:] = ' '
         r[self.player[0], self.player[1]] = 'P'
         return r
 
     def update_player(self, player):
         self.player = player
-        if player in ((0, 0), (3, 3)):
+        if (player[0] == 0) and (player[1] > 0):
             self.is_terminal = True
 
 
@@ -246,16 +266,6 @@ def new_fixed_grid_state():
     :return:
     """
 
-    player = (0, 1)
+    player = (0, 0)
     grid = GridState(player)
-    return grid
-
-
-def new_random_grid_state():
-    """
-    Create a new grid state with random values
-    :return:
-    """
-    player = np.random.randint(0, 4, 2).tolist()
-    grid = GridState(player=player)
     return grid

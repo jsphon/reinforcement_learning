@@ -65,6 +65,28 @@ class Experience(object):
         raise NotImplemented()
 
 
+class StatesList(object):
+
+    def __init__(self, states=None):
+        self.states = states or []
+
+    def __getitem__(self, arg):
+        return self.states[arg]
+
+    def append(self, state):
+        self.states.append(state)
+
+
+    def get_training_states_array(self):
+        state_size = self.states[0].size
+        num_training_states = len(self.states)
+        dtype = self.states[0].array_dtype
+        result = np.ndarray((num_training_states, state_size), dtype=dtype)
+        for i in range(num_training_states):
+            result[i, :] = self.states[i].as_array()
+        return result
+
+
 class Episode(Experience):
     def __init__(self, states, actions, rewards):
         self.states = states
