@@ -17,7 +17,7 @@ np.set_printoptions(suppress=True)
 logging.basicConfig(level=logging.DEBUG)
 
 grid_world = CliffWorld()
-grid_world.policy.epsilon = 0.1
+grid_world.policy.epsilon = 0.5
 
 generator = ExperienceGenerator(grid_world)
 episode = generator.generate_episode()
@@ -31,16 +31,21 @@ for i in range(grid_world.shape[0]):
 #learner = QLearner(grid_world)
 #learner = SarsaLearner(grid_world)
 learner = VectorQLearner(grid_world)
+learner = VectorSarsaLearner(grid_world)
 
 
-for _ in range(1):
-    learner.learn(states, epochs=10, verbose=0)
+def learn_once():
+    for _ in range(1):
+        learner.learn(states, epochs=10, verbose=0)
 
-    print('=== Value Function ===')
-    print(grid_world.get_value_grid())
+        print('=== Value Function ===')
+        print(grid_world.get_value_grid())
 
-    print('=== Greedy Actions ===')
-    actions = grid_world.get_greedy_action_grid_string()
-    print(textwrap.indent(actions, ' '))
+        print('=== Greedy Actions ===')
+        actions = grid_world.get_greedy_action_grid_string()
+        print(textwrap.indent(actions, ' '))
+
+for _ in range(100):
+    learn_once()
 
 print( learner.get_target_array(StatesList([GridState((1, 11))])) )

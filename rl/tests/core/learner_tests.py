@@ -7,6 +7,7 @@ from rl.core import RLSystem, State
 from rl.core.experience import Episode
 from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, \
     VectorSarsaLearner
+from rl.core import learner
 from rl.core.policy import Policy
 from rl.core.reward_function import RewardFunction
 from rl.core.value_function import ActionValueFunction
@@ -199,6 +200,16 @@ class TestVectorQLearner(unittest.TestCase):
 
         expected = np.array([33, 33])
         np.testing.assert_almost_equal(expected, targets[1])
+
+
+class SarsaLearnerMixinTests(unittest.TestCase):
+
+    def test_calculate_action_target(self):
+
+        mock_system = MockSystem()
+        mixin = learner.SarsaLearnerMixin()
+        learner.rl_system = mock_system
+        CONtINUE HERE
 
 
 class SarsaTests(unittest.TestCase):

@@ -45,6 +45,15 @@ class CliffWorld(SimpleGridWorld):
                     values[i, j] = v.max()
         return values
 
+    def is_terminal_grid(self):
+        values = np.ndarray(self.shape, dtype=np.bool)
+
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                state = self.state_class(player=(i, j))
+                values[i, j] = state.is_terminal
+        return values
+
     def get_greedy_action_grid_string(self):
 
         action_to_char = {
@@ -88,12 +97,12 @@ class GridActionValueFunction(ActionValueFunction):
     def __init__(self):
         model = Sequential()
         #model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
-        model.add(Dense(1640, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
+        model.add(Dense(160, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
         model.add(Activation('relu'))
         # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
 
         #model.add(Dense(150, kernel_initializer='lecun_uniform'))
-        model.add(Dense(1500, kernel_initializer='lecun_uniform'))
+        model.add(Dense(150, kernel_initializer='lecun_uniform'))
         model.add(Activation('relu'))
         # model.add(Dropout(0.2))
 
@@ -137,18 +146,16 @@ class GridRewardFunction(RewardFunction):
         return self.get_reward(old_state, action, new_state)
 
     def get_reward(self, old_state, action, new_state):
-        if new_state.player == (0, 11):
-            print('Reached the end')
-            return 100
-        elif walked_off_cliff(new_state):
+        if walked_off_cliff(new_state):
             #print('Walking off cliff at %s' % str(new_state.player))
             return -100
-        elif old_state.player==new_state.player:
-            # Lose rewards for walking into wall
-            #print('Walked into a wall at %s'%str(new_state.player))
-            return -2
         else:
             return -1
+
+
+def walked_off_cliff(new_state):
+    return (new_state.player[0] == 0) \
+           and (0 < new_state.player[1] < 11)
 
 
 class GridModel(Model):
@@ -187,11 +194,6 @@ class GridModel(Model):
     def move_right(self, state):
         new_position = (state.player[0], min(state.player[1] + 1, 11))
         state.update_player(new_position)
-
-
-def walked_off_cliff(new_state):
-    return (new_state.player[0] == 0) \
-           and (new_state.player[1] > 0)
 
 
 class GridState(State):
