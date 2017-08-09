@@ -27,14 +27,14 @@ learner = QLearner(grid_world)
 
 with Timer('training') as t:
 
-    for i in range(10):
+    for i in range(100):
         #grid_world.policy.epsilon *= 0.99
         #grid_world.policy.epsilon = max(grid_world.policy.epsilon, 0.05)
         #grid_world.policy.epsilon = 0.1
         print('=======ESPILON %s==========' % grid_world.policy.epsilon )
 
         #episode = generator.generate_episode()
-        episodes = generator.generate_episodes(num_episodes=10, max_len=150)
+        episodes = generator.generate_episodes(num_episodes=100, max_len=150)
         average_reward = np.mean([sum(episode.rewards) for episode in episodes])
 
         with Timer('Learning'):

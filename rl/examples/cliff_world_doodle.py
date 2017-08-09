@@ -30,22 +30,22 @@ for i in range(grid_world.shape[0]):
 
 #learner = QLearner(grid_world)
 #learner = SarsaLearner(grid_world)
-learner = VectorQLearner(grid_world)
+#learner = VectorQLearner(grid_world)
 learner = VectorSarsaLearner(grid_world)
 
 
 def learn_once():
-    for _ in range(1):
-        learner.learn(states, epochs=10, verbose=0)
 
-        print('=== Value Function ===')
-        print(grid_world.get_value_grid())
+    learner.learn(states, epochs=10, verbose=0)
 
-        print('=== Greedy Actions ===')
-        actions = grid_world.get_greedy_action_grid_string()
-        print(textwrap.indent(actions, ' '))
+    print('=== Value Function ===')
+    print(grid_world.get_value_grid())
 
-for _ in range(100):
+    print('=== Greedy Actions ===')
+    actions = grid_world.get_greedy_action_grid_string()
+    print(textwrap.indent(actions, ' '))
+
+for _ in range(1000):
     learn_once()
 
 print( learner.get_target_array(StatesList([GridState((1, 11))])) )
