@@ -1,12 +1,15 @@
 import logging
 import unittest
+from mock import MagicMock
+from collections import defaultdict
 
 import numpy as np
 
+import scipy.stats
 from rl.core import RLSystem, State
 from rl.core.experience import Episode
 from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, \
-    VectorSarsaLearner
+    VectorSarsaLearner, SarsaLearnerMixin
 from rl.core import learner
 from rl.core.policy import Policy
 from rl.core.reward_function import RewardFunction
@@ -18,8 +21,37 @@ N = 1000
 logging.basicConfig(level=logging.DEBUG)
 
 
-class RewardLearnerTests(np.testing.TestCase):
+class SarsaLearningMixinTests(unittest.TestCase):
 
+    def test_calculate_action_target(self):
+        """
+        Test that calculate_action_target returns targets with the correct distributions
+
+        """
+        rl_system = MagicMock()
+        _learner = SarsaLearnerMixin()
+        _learner.rl_system = rl_system
+        _learner.gamma = 1.0
+
+        probabilities = np.array([0.5, 0.3, 0.2])
+        rl_system.policy.calculate_action_value_probabilities.return_value = probabilities
+
+        N = 1000
+        results = defaultdict(int)
+        counts = np.zeros(3)
+        for _ in range(N):
+            result = _learner.calculate_action_target(0, [0, 1, 2])
+            counts[result] += 1
+
+        f_exp = N * probabilities
+        f_obs = [results[1], results[2], results[3]]
+        logging.info(f_obs)
+        chi = scipy.stats.chisquare(f_obs, f_exp)
+        logging.info(chi)
+        self.assertTrue(chi.pvalue > 0.01)
+
+
+class RewardLearnerTests(np.testing.TestCase):
     def test_learn(self):
         np.random.seed(1)
         states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
@@ -61,7 +93,6 @@ class RewardLearnerTests(np.testing.TestCase):
 
 
 class QLearnerTests(unittest.TestCase):
-
     def test_learn(self):
         np.random.seed(1)
         states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
@@ -200,16 +231,6 @@ class TestVectorQLearner(unittest.TestCase):
 
         expected = np.array([33, 33])
         np.testing.assert_almost_equal(expected, targets[1])
-
-
-class SarsaLearnerMixinTests(unittest.TestCase):
-
-    def test_calculate_action_target(self):
-
-        mock_system = MockSystem()
-        mixin = learner.SarsaLearnerMixin()
-        learner.rl_system = mock_system
-        CONtINUE HERE
 
 
 class SarsaTests(unittest.TestCase):

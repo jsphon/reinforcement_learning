@@ -36,11 +36,8 @@ class SarsaLearnerMixin(LearnerMixin):
 
     def calculate_action_target(self, reward, next_state_action_values):
         pi = self.rl_system.policy.calculate_action_value_probabilities(next_state_action_values)
-        # Note that using np.argmax(pi) is the greedy policy
-        # TODO: This is sarse with greedy policy. Need to fix this so that
-        # we can pick with greedy policy, softmax policy etc...
-        next_state_action = np.argmax(pi)
-        return reward + self.gamma * next_state_action_values[next_state_action]
+        action = np.random.choice(len(pi), p=pi)
+        return reward + self.gamma * next_state_action_values[action]
 
 
 class ExpecterSarsaLearnerMixin(LearnerMixin):
