@@ -36,7 +36,7 @@ learner = VectorSarsaLearner(grid_world)
 
 def learn_once():
 
-    learner.learn(states, epochs=10, verbose=0)
+    learner.learn(states, epochs=1, verbose=0)
 
     print('=== Value Function ===')
     print(grid_world.get_value_grid())
