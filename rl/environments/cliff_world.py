@@ -91,61 +91,15 @@ class CliffWorld(SimpleGridWorld):
         return rewards
 
 
-class GridActionValueFunction(ActionValueFunction):
-
-    def __init__(self):
-        from collections import defaultdict
-        self.values = defaultdict(self.new_value)
-        self.learning_rate = 0.1
-
-    def new_value(self):
-        return np.zeros(4)
-
-    def __call__(self, state):
-        """
-
-        :param state:
-        :return: np.ndarray(num_actions)
-        """
-        key = self.state_to_key(state)
-        #print('key is %s' % str(key))
-        return self.values[key]
-
-    def state_to_key(self, state):
-        arr = state.as_array().ravel()
-        return tuple(arr)
-
-    def fit(self, x, y, **kwargs):
-        for i in range(x.shape[0]):
-            _x = x[i]
-            key = tuple(_x)
-            _y = y[i]
-            current_value = self.values[key]
-            change = (_y - current_value)
-            self.values[key] += self.learning_rate * change
-
 # class GridActionValueFunction(ActionValueFunction):
 #
 #     def __init__(self):
-#         model = Sequential()
-#         #model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
+#         from collections import defaultdict
+#         self.values = defaultdict(self.new_value)
+#         self.learning_rate = 0.1
 #
-#         # Have one for each state/action
-#         model.add(Dense(4*48, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
-#         model.add(Activation('relu'))
-#         # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
-#
-#         #model.add(Dense(150, kernel_initializer='lecun_uniform'))
-#         #model.add(Dense(48, kernel_initializer='lecun_uniform'))
-#         #model.add(Activation('relu'))
-#         # model.add(Dropout(0.2))
-#
-#         model.add(Dense(4, kernel_initializer='lecun_uniform'))
-#         model.add(Activation('linear'))  # linear output so we can have range of real-valued outputs
-#
-#         rms = RMSprop()
-#         model.compile(loss='mse', optimizer=rms)
-#         self.model = model
+#     def new_value(self):
+#         return np.zeros(4)
 #
 #     def __call__(self, state):
 #         """
@@ -153,26 +107,72 @@ class GridActionValueFunction(ActionValueFunction):
 #         :param state:
 #         :return: np.ndarray(num_actions)
 #         """
-#         arr = state.as_array()
-#         return self.model.predict(arr).ravel()
+#         key = self.state_to_key(state)
+#         #print('key is %s' % str(key))
+#         return self.values[key]
 #
-#     def on_list(self, states):
-#         """
-#
-#         :param states:
-#         :return: np.ndarray(len(states), num_actions)
-#         """
-#
-#         state_size = states[0].size
-#         num_states = len(states)
-#         dtype = states[0].array_dtype
-#         arr = np.ndarray((num_states, state_size), dtype=dtype)
-#         for i in range(num_states):
-#             arr[i, :] = states[i].as_array()
-#         return self.model.predict(arr)
+#     def state_to_key(self, state):
+#         arr = state.as_array().ravel()
+#         return tuple(arr)
 #
 #     def fit(self, x, y, **kwargs):
-#         self.model.fit(x, y, **kwargs)
+#         for i in range(x.shape[0]):
+#             _x = x[i]
+#             key = tuple(_x)
+#             _y = y[i]
+#             current_value = self.values[key]
+#             change = (_y - current_value)
+#             self.values[key] += self.learning_rate * change
+
+class GridActionValueFunction(ActionValueFunction):
+
+    def __init__(self):
+        model = Sequential()
+        #model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
+
+        # Have one for each state/action
+        model.add(Dense(4*48, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
+        model.add(Activation('relu'))
+        # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
+
+        #model.add(Dense(150, kernel_initializer='lecun_uniform'))
+        #model.add(Dense(48, kernel_initializer='lecun_uniform'))
+        #model.add(Activation('relu'))
+        # model.add(Dropout(0.2))
+
+        model.add(Dense(4, kernel_initializer='lecun_uniform'))
+        model.add(Activation('linear'))  # linear output so we can have range of real-valued outputs
+
+        rms = RMSprop()
+        model.compile(loss='mse', optimizer=rms)
+        self.model = model
+
+    def __call__(self, state):
+        """
+
+        :param state:
+        :return: np.ndarray(num_actions)
+        """
+        arr = state.as_array()
+        return self.model.predict(arr).ravel()
+
+    def on_list(self, states):
+        """
+
+        :param states:
+        :return: np.ndarray(len(states), num_actions)
+        """
+
+        state_size = states[0].size
+        num_states = len(states)
+        dtype = states[0].array_dtype
+        arr = np.ndarray((num_states, state_size), dtype=dtype)
+        for i in range(num_states):
+            arr[i, :] = states[i].as_array()
+        return self.model.predict(arr)
+
+    def fit(self, x, y, **kwargs):
+        self.model.fit(x, y, **kwargs)
 
 
 class GridRewardFunction(RewardFunction):
