@@ -8,87 +8,84 @@ import numpy as np
 import scipy.stats
 from rl.core import RLSystem, State
 from rl.core.experience import Episode
-from rl.core.learner import RewardLearner, QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, \
-    VectorSarsaLearner, SarsaLearnerMixin
+from rl.core.learner import QLearner, VectorQLearner, SarsaLearner, ExpectedSarsaLearner, \
+    VectorSarsaLearner
 from rl.core.policy import Policy
 from rl.core.reward_function import RewardFunction
 from rl.core.value_function import ActionValueFunction
 from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
+from rl.core import learner
 
 N = 1000
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-class SarsaLearningMixinTests(unittest.TestCase):
+class ActionTargetTests(unittest.TestCase):
+    def test_QActionTargetCalculator(self):
+        calc = learner.QActionTargetCalculator()
 
-    def test_calculate_action_target(self):
+
+class SarsaActionTargetCalculatorTests(unittest.TestCase):
+    def test_calculate(self):
         """
         Test that calculate_action_target returns targets with the correct distributions
 
         """
         rl_system = MagicMock()
-        _learner = SarsaLearnerMixin()
-        _learner.rl_system = rl_system
-        _learner.gamma = 1.0
+        calculator = learner.SarsaActionTargetCalculator(
+            rl_system=rl_system,
+            discount_factor=1.0)
 
         probabilities = np.array([0.5, 0.3, 0.2])
         rl_system.policy.calculate_action_value_probabilities.return_value = probabilities
 
-        N = 1000
-        results = defaultdict(int)
-        counts = np.zeros(3)
+        counts = defaultdict(float)
         for _ in range(N):
-            result = _learner.calculate_action_target(0, [0, 1, 2])
+            result = calculator.calculate(0, [0, 1, 2])
+            logging.info(result)
             counts[result] += 1
 
         f_exp = N * probabilities
-        f_obs = [results[1], results[2], results[3]]
-        logging.info(f_obs)
+        f_obs = [counts[0.0], counts[1.0], counts[2.0]]
+        self.do_chi_squared_test(f_obs, f_exp)
+
+    def do_chi_squared_test(self, f_obs, f_exp):
         chi = scipy.stats.chisquare(f_obs, f_exp)
-        logging.info(chi)
         self.assertTrue(chi.pvalue > 0.01)
 
 
-class RewardLearnerTests(np.testing.TestCase):
-    def test_learn(self):
-        np.random.seed(1)
-        states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
-        rewards = [-1, -1]
-        actions = [1, 2]
-        episode = Episode(states, actions, rewards)
+class QLearnerActionTargetCalculatorTests(unittest.TestCase):
+    def test_calculate(self):
+        rl_system = MagicMock()
+        calculator = learner.QLearnerActionTargetCalculator(
+            rl_system=rl_system,
+            discount_factor=1.0)
 
-        grid_world = SimpleGridWorld()
+        reward = 1.0
+        next_state_action_values = np.array([1.0, 2.0, 3.0])
+        result = calculator.calculate(reward, next_state_action_values)
 
-        y = grid_world.action_value_function.on_list(episode.states)
-        logging.info('Reward Learner initial targets are:')
-        logging.info('\n' + str(y))
+        self.assertEqual(4.0, result)
 
-        learner = RewardLearner(grid_world)
-        learner.learn(episode)
 
-        y = grid_world.action_value_function.on_list(episode.states)
-        logging.info('Reward Learner fitted targets are:')
-        logging.info('\n' + str(y))
+class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):
 
-        np.testing.assert_allclose([0, -1, 0, 0], y[0], atol=0.5)
-        np.testing.assert_allclose([0, 0, -1, 0], y[1], atol=0.5)
-        np.testing.assert_allclose([0, 0, 0, 0], y[2], atol=0.5)
+    def test_calculate(self):
+        rl_system = MagicMock(num_actions=3)
+        probabilities = np.array([0.5, 0.3, 0.2])
+        rl_system.policy.calculate_action_value_probabilities.return_value = probabilities
 
-    def test_get_target_array(self):
-        mock_system = MockSystem()
-        learner = RewardLearner(mock_system)
+        calculator = learner.ExpecterSarsaActionTargetCalculator(
+            rl_system=rl_system,
+            discount_factor=1.0)
 
-        states = [MockState1(), MockState2A(), MockState3()]
-        actions = [0, 0]
-        rewards = [0, 0]
-        episode = Episode(states=states, actions=actions, rewards=rewards)
+        reward = 1.0
+        next_state_action_values = np.array([1.0, 2.0, 3.0])
+        result = calculator.calculate(reward, next_state_action_values)
+        expected = 1.0 + np.dot(probabilities, next_state_action_values)
 
-        targets = learner.get_target_array(episode)
-        logging.info('get targets = %s' % str(targets))
-
-        expected = np.array([[0.0, 0.0], [0.0, 0.0]])
-        np.testing.assert_almost_equal(expected, targets)
+        self.assertEqual(expected, result)
 
 
 class QLearnerTests(unittest.TestCase):

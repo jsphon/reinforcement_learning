@@ -20,40 +20,43 @@ Implement
 """
 
 
-class LearnerMixin(object):
+class ActionTargetCalculator(object):
+    def __init__(self, rl_system, discount_factor=1.0):
+        self.rl_system = rl_system
+        self.discount_factor = discount_factor
 
-    def calculate_action_target(self, reward, next_state_action_values):
+    def calculate(self, reward, next_state_action_values):
         raise NotImplemented()
 
 
-class QLearnerMixin(LearnerMixin):
+class QLearnerActionTargetCalculator(ActionTargetCalculator):
+    def calculate(self, reward, next_state_action_values):
+        return reward + self.discount_factor * next_state_action_values.max()
 
-    def calculate_action_target(self, reward, next_state_action_values):
-        return reward + self.gamma * next_state_action_values.max()
 
-
-class SarsaLearnerMixin(LearnerMixin):
-
-    def calculate_action_target(self, reward, next_state_action_values):
+class SarsaActionTargetCalculator(ActionTargetCalculator):
+    def calculate(self, reward, next_state_action_values):
         pi = self.rl_system.policy.calculate_action_value_probabilities(next_state_action_values)
         action = np.random.choice(len(pi), p=pi)
-        return reward + self.gamma * next_state_action_values[action]
+        return reward + self.discount_factor * next_state_action_values[action]
 
 
-class ExpecterSarsaLearnerMixin(LearnerMixin):
+class ExpecterSarsaActionTargetCalculator(ActionTargetCalculator):
     '''
     target = R_{t+1} + \gamma * \E Q(S_{t+1}, A_{t+1})
            = R_{t+1} + \gamma * \sum_{a} \pi(a | S_{t+1} Q(S_{t+1}, a)
 
+    where \gamma is the discount factor
+
     '''
 
-    def calculate_action_target(self, reward, next_state_action_values):
+    def calculate(self, reward, next_state_action_values):
         pi = self.rl_system.policy.calculate_action_value_probabilities(next_state_action_values)
         num_actions = self.rl_system.num_actions
         pi = pi.reshape((1, num_actions))
         next_state_action_values = next_state_action_values.reshape((num_actions, 1))
         expectation = np.dot(pi, next_state_action_values)
-        return reward + self.gamma * expectation
+        return reward + self.discount_factor * expectation
 
 
 class Learner(object):
@@ -61,8 +64,9 @@ class Learner(object):
 
     """
 
-    def __init__(self, rl_system):
+    def __init__(self, rl_system, action_target_calculator=None):
         self.rl_system = rl_system
+        self.action_target_calculator = action_target_calculator
 
     def learn(self, experience, **kwargs):
         training_array = experience.get_training_states_array()
@@ -78,22 +82,14 @@ class Learner(object):
         raise NotImplemented()
 
 
-class RewardLearner(Learner):
+class ScalarLearner(Learner):
+    """
+    Calculates action targets for a single action at a time
+    """
 
-    def get_target_array(self, experience):
-        targets = np.zeros((experience.get_training_array_length(), self.rl_system.num_actions))
-        rewards = experience.get_training_rewards()
-        actions = experience.get_training_actions()
-        for i, (action, reward) in enumerate(zip(actions, rewards)):
-            targets[i, action] = reward
-        return targets
-
-
-class NarrowLearner(Learner, LearnerMixin):
-
-    def __init__(self, rl_system, gamma=1.0):
+    def __init__(self, rl_system, action_target_calculator=None):
         self.rl_system = rl_system
-        self.gamma = gamma
+        self.action_target_calculator = action_target_calculator
 
     def get_target_array(self, experience):
         targets = np.zeros((experience.get_training_array_length(), self.rl_system.num_actions))
@@ -120,35 +116,37 @@ class NarrowLearner(Learner, LearnerMixin):
             targets[action] = reward
         else:
             next_state_action_values = self.rl_system.action_value_function(next_state)
-            targets[action] = self.calculate_action_target(reward, next_state_action_values)
+            targets[action] = self.action_target_calculator.calculate(reward, next_state_action_values)
 
         return targets
 
 
-class SarsaLearner(NarrowLearner, SarsaLearnerMixin):
+class SarsaLearner(ScalarLearner):
     '''
     target = R_{t+1} + \gamma * Q(S_{t+1}, A_{t+1})
-
     '''
 
-    pass
+    def __init__(self, rl_system, discount_factor=1.0):
+        super(SarsaLearner, self).__init__(rl_system)
+        self.action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor)
 
 
-class ExpectedSarsaLearner(NarrowLearner, ExpecterSarsaLearnerMixin):
+class ExpectedSarsaLearner(ScalarLearner):
+    def __init__(self, rl_system, discount_factor=1.0):
+        super(ExpectedSarsaLearner, self).__init__(rl_system)
+        self.action_target_calculator = ExpecterSarsaActionTargetCalculator(rl_system, discount_factor)
 
-    pass
 
-
-class QLearner(NarrowLearner, QLearnerMixin):
-
-    pass
+class QLearner(ScalarLearner):
+    def __init__(self, rl_system, discount_factor=1.0):
+        super(ExpectedSarsaLearner, self).__init__(rl_system)
+        self.action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor)
 
 
 class VectorLearner(Learner):
-
     def __init__(self, rl_system, gamma=1.0):
         self.rl_system = rl_system
-        self.gamma = gamma
+        self.discount_factor = gamma
 
     def get_target_array(self, episode):
         targets = np.zeros((len(episode.states), self.rl_system.num_actions))
@@ -179,12 +177,11 @@ class VectorLearner(Learner):
         return self.calculate_action_target(action_reward, next_state_action_values)
 
 
-class VectorSarsaLearner(VectorLearner, SarsaLearnerMixin):
-
+class VectorSarsaLearner(VectorLearner):
     pass
 
 
-class VectorQLearner(VectorLearner, QLearnerMixin):
+class VectorQLearner(VectorLearner):
     """
     Wide Q learner.
 
