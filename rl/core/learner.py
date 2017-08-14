@@ -139,7 +139,7 @@ class ExpectedSarsaLearner(ScalarLearner):
 
 class QLearner(ScalarLearner):
     def __init__(self, rl_system, discount_factor=1.0):
-        super(ExpectedSarsaLearner, self).__init__(rl_system)
+        super(QLearner, self).__init__(rl_system)
         self.action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor)
 
 

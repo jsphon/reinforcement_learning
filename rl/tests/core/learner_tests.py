@@ -89,6 +89,7 @@ class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):
 
 
 class QLearnerTests(unittest.TestCase):
+
     def test_learn(self):
         np.random.seed(1)
         states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
