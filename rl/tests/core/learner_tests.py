@@ -21,12 +21,8 @@ N = 1000
 logging.basicConfig(level=logging.DEBUG)
 
 
-class ActionTargetTests(unittest.TestCase):
-    def test_QActionTargetCalculator(self):
-        calc = learner.QActionTargetCalculator()
-
-
 class SarsaActionTargetCalculatorTests(unittest.TestCase):
+
     def test_calculate(self):
         """
         Test that calculate_action_target returns targets with the correct distributions
@@ -48,9 +44,9 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
 
         f_exp = N * probabilities
         f_obs = [counts[0.0], counts[1.0], counts[2.0]]
-        self.do_chi_squared_test(f_obs, f_exp)
+        self.do_chi_squared_htest(f_obs, f_exp)
 
-    def do_chi_squared_test(self, f_obs, f_exp):
+    def do_chi_squared_htest(self, f_obs, f_exp):
         chi = scipy.stats.chisquare(f_obs, f_exp)
         self.assertTrue(chi.pvalue > 0.01)
 
@@ -99,12 +95,8 @@ class QLearnerTests(unittest.TestCase):
 
         grid_world = SimpleGridWorld()
 
-        y = grid_world.action_value_function.on_list(episode.states)
-        logging.info('Q Learning initial targets are:')
-        logging.info('\n' + str(y))
-
-        learner = QLearner(grid_world)
-        learner.learn(episode)
+        q_learner = QLearner(grid_world)
+        q_learner.learn(episode)
 
         y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Q Learning fitted targets are:')
