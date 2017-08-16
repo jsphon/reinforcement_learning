@@ -171,8 +171,8 @@ class GridActionValueFunction(ActionValueFunction):
             arr[i, :] = states[i].as_array()
         return self.model.predict(arr)
 
-    def fit(self, x, y, **kwargs):
-        self.model.fit(x, y, **kwargs)
+    def fit(self, states, targets, **kwargs):
+        self.model.fit(states.as_array(), targets, **kwargs)
 
 
 class GridRewardFunction(RewardFunction):
@@ -181,7 +181,6 @@ class GridRewardFunction(RewardFunction):
 
     def get_reward(self, old_state, action, new_state):
         if walked_off_cliff(new_state):
-            #print('Walking off cliff at %s' % str(new_state.player))
             return -100
         else:
             return -1

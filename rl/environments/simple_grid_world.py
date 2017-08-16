@@ -122,8 +122,10 @@ class GridActionValueFunction(ActionValueFunction):
             arr[i, :] = states[i].as_array()
         return self.model.predict(arr)
 
-    def fit(self, x, y, **kwargs):
-        self.model.fit(x, y, **kwargs)
+    def fit(self, states, targets, **kwargs):
+
+        x = states.as_array()
+        self.model.fit(x, targets, **kwargs)
 
 
 class SimpleGridWorldRewardFunction(RewardFunction):
