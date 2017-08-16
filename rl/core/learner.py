@@ -21,6 +21,9 @@ Implement
 
 
 class ActionTargetCalculator(object):
+    """
+    For calculating the target for a single action
+    """
     def __init__(self, rl_system, discount_factor=1.0):
         self.rl_system = rl_system
         self.discount_factor = discount_factor
@@ -41,7 +44,7 @@ class SarsaActionTargetCalculator(ActionTargetCalculator):
         return reward + self.discount_factor * next_state_action_values[action]
 
 
-class ExpecterSarsaActionTargetCalculator(ActionTargetCalculator):
+class ExpectedSarsaActionTargetCalculator(ActionTargetCalculator):
     '''
     target = R_{t+1} + \gamma * \E Q(S_{t+1}, A_{t+1})
            = R_{t+1} + \gamma * \sum_{a} \pi(a | S_{t+1} Q(S_{t+1}, a)
@@ -60,36 +63,32 @@ class ExpecterSarsaActionTargetCalculator(ActionTargetCalculator):
 
 
 class Learner(object):
-    """
 
-    """
-
-    def __init__(self, rl_system, action_target_calculator=None):
+    def __init__(self, rl_system, target_array_calculator=None):
         self.rl_system = rl_system
-        self.action_target_calculator = action_target_calculator
+        self.target_array_calculator = target_array_calculator
 
     def learn(self, experience, **kwargs):
-        target_array = self.get_target_array(experience)
+        target_array = self.target_array_calculator.get_target_array(experience)
         self.rl_system.action_value_function.fit(
             experience.get_training_states(),
             target_array,
             **kwargs)
 
-    def get_target_array(self, experience):
-        """
-        Generates the target values for training
-        :param experience:
-        :return: np.ndarray of shape (len(episodes), num_actions)
-        """
+
+class TargetArrayCalculator(object):
+    """
+    Class for calculating the training target arrays
+
+    Each element of a target array should correspend to the target for that element's action.
+    """
+    def get_target_array(self):
         raise NotImplemented()
 
 
-class ScalarLearner(Learner):
-    """
-    Calculates action targets for a single action at a time
-    """
+class ScalarTargetArrayCalculator(TargetArrayCalculator):
 
-    def __init__(self, rl_system, action_target_calculator=None):
+    def __init__(self, rl_system, action_target_calculator):
         self.rl_system = rl_system
         self.action_target_calculator = action_target_calculator
 
@@ -132,26 +131,46 @@ class ScalarLearner(Learner):
         return targets
 
 
-class SarsaLearner(ScalarLearner):
+class SarsaTargetArrayCalculator(ScalarTargetArrayCalculator):
+
+    def __init__(self, rl_system, discount_factor=1.0):
+        super().__init__(rl_system, SarsaActionTargetCalculator(rl_system, discount_factor=discount_factor))
+
+
+class ExpectedSarsaTargetArrayCalculator(ScalarTargetArrayCalculator):
+
+    def __init__(self, rl_system, discount_factor=1.0):
+        super().__init__(rl_system, ExpectedSarsaActionTargetCalculator(rl_system, discount_factor=discount_factor))
+
+
+class QLearningTargetArrayCalculator(ScalarTargetArrayCalculator):
+
+    def __init__(self, rl_system, discount_factor=1.0):
+        super().__init__(rl_system, QLearnerActionTargetCalculator(rl_system, discount_factor=discount_factor))
+
+
+class SarsaLearner(Learner):
     '''
     target = R_{t+1} + \gamma * Q(S_{t+1}, A_{t+1})
     '''
 
     def __init__(self, rl_system, discount_factor=1.0):
-        super(SarsaLearner, self).__init__(rl_system)
-        self.action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor)
+        super().__init__(rl_system)
+        self.target_array_calculator = SarsaTargetArrayCalculator(rl_system, discount_factor=discount_factor)
 
 
-class ExpectedSarsaLearner(ScalarLearner):
+class ExpectedSarsaLearner(Learner):
+
     def __init__(self, rl_system, discount_factor=1.0):
-        super(ExpectedSarsaLearner, self).__init__(rl_system)
-        self.action_target_calculator = ExpecterSarsaActionTargetCalculator(rl_system, discount_factor)
+        super().__init__(rl_system)
+        self.target_array_calculator = ExpectedSarsaTargetArrayCalculator(rl_system, discount_factor=discount_factor)
 
 
-class QLearner(ScalarLearner):
+class QLearner(Learner):
+
     def __init__(self, rl_system, discount_factor=1.0):
-        super(QLearner, self).__init__(rl_system)
-        self.action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor)
+        super().__init__(rl_system)
+        self.target_array_calculator = QLearningTargetArrayCalculator(rl_system, discount_factor=discount_factor)
 
 
 class VectorLearner(Learner):
