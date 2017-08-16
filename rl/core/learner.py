@@ -69,15 +69,17 @@ class Learner(object):
         self.action_target_calculator = action_target_calculator
 
     def learn(self, experience, **kwargs):
-        training_array = experience.get_training_states_array()
         target_array = self.get_target_array(experience)
-        self.rl_system.action_value_function.fit(training_array, target_array, **kwargs)
+        self.rl_system.action_value_function.fit(
+            experience.get_training_states(),
+            target_array,
+            **kwargs)
 
     def get_target_array(self, experience):
         """
         Generates the target values for training
         :param experience:
-        :return: np.ndarray(len(episodes), num_actions
+        :return: np.ndarray of shape (len(episodes), num_actions)
         """
         raise NotImplemented()
 
@@ -92,7 +94,16 @@ class ScalarLearner(Learner):
         self.action_target_calculator = action_target_calculator
 
     def get_target_array(self, experience):
-        targets = np.zeros((experience.get_training_array_length(), self.rl_system.num_actions))
+        """
+        Get the training targets as an array
+        Args:
+            experience:
+
+        Returns:
+            np.ndarray: (len(experience), num_actions)
+
+        """
+        targets = np.zeros((experience.get_training_length(), self.rl_system.num_actions))
         actions = experience.get_training_actions()
         rewards = experience.get_training_rewards()
         states = experience.get_training_states()
@@ -144,6 +155,19 @@ class QLearner(ScalarLearner):
 
 
 class VectorLearner(Learner):
+    """
+
+        The basic Scalar Learner sets targets for a single action using
+
+        targets = Q(s) # An ndarray with <num_actions> elements
+        targets[action] = reward(action) + max(Q(next_state | action))          (***)
+
+        i.e. The basic static learner fits on <num_action> targets, but only 1 of the values is updated.
+
+        The VectorLearner fits (***) for all actions. Thus making the fitting operation more efficient.
+
+        """
+
     def __init__(self, rl_system, gamma=1.0):
         self.rl_system = rl_system
         self.discount_factor = gamma
@@ -174,26 +198,18 @@ class VectorLearner(Learner):
         next_state = self.rl_system.model.apply_action(state, action)
         action_reward = self.rl_system.reward_function(state, action, next_state)
         next_state_action_values = self.rl_system.action_value_function(next_state)
-        return self.calculate_action_target(action_reward, next_state_action_values)
+        return self.action_target_calculator.calculate(action_reward, next_state_action_values)
 
 
 class VectorSarsaLearner(VectorLearner):
-    pass
+
+    def __init__(self, rl_system, discount_factor=1.0):
+        super(VectorSarsaLearner, self).__init__(rl_system)
+        self.action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor)
 
 
 class VectorQLearner(VectorLearner):
-    """
-    Wide Q learner.
 
-    The basic Q Learner sets targets for a single action using
-
-    targets = Q(s) # An ndarray with <num_actions> elements
-    targets[action] = reward(action) + max(Q(next_state | action))          (***)
-
-    i.e. The basic Q learner fits on <num_aciton> targets, but only 1 of the values is updated.
-
-    The Wide Q Learner fits (***) for all actions. Thus making the fitting operation more efficient.
-
-    """
-
-    pass
+    def __init__(self, rl_system, discount_factor=1.0):
+        super(VectorQLearner, self).__init__(rl_system)
+        self.action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor)

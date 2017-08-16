@@ -106,16 +106,17 @@ class QLearnerTests(unittest.TestCase):
         np.testing.assert_allclose([0, 0, -1, 0], y[1], atol=0.5)
         np.testing.assert_allclose([0, 0, 0, 0], y[2], atol=0.5)
 
-    def test_get_targets(self):
+    def test_get_target_array(self):
+
         mock_system = MockSystem()
-        learner = QLearner(mock_system)
+        q_learner = QLearner(mock_system)
 
         states = [MockState1(), MockState2A(), MockState3()]
         actions = [0, 0]
         rewards = [0, 0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_target_array(episode)
+        targets = q_learner.get_target_array(episode)
 
         expected = np.array([1, 2])
         np.testing.assert_almost_equal(expected, targets[0])
@@ -123,16 +124,16 @@ class QLearnerTests(unittest.TestCase):
         expected = np.array([0, 0])
         np.testing.assert_almost_equal(expected, targets[1])
 
-    def test_get_targets2(self):
+    def test_get_target_array(self):
         mock_system = MockSystem()
-        learner = QLearner(mock_system)
+        q_learner = QLearner(mock_system)
 
         states = [MockState1(), MockState2B(), MockState3()]
         actions = [1, 0]
         rewards = [0, 10]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_target_array(episode)
+        targets = q_learner.get_target_array(episode)
 
         # Elements 0 and 2 come from MockState1's action value (1 and 3)
         # Element 1 is the reward at 1 (0) plus the best action value
@@ -148,16 +149,18 @@ class QLearnerTests(unittest.TestCase):
 
 
 class TestVectorSarsaLearner(unittest.TestCase):
-    def test_get_targets(self):
+
+    def test_get_target_array(self):
+
         mock_system = MockSystem()
-        learner = VectorSarsaLearner(mock_system)
+        sarsa_learner = VectorSarsaLearner(mock_system)
 
         states = [MockState1(), MockState2A()]
         actions = [0]
         rewards = [0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_targets(episode)
+        targets = sarsa_learner.get_target_array(episode)
 
         # target[0] should be
         # reward + Q(next state=MockState2A)[0] = 11 + [1, 0][0] = 12
@@ -198,7 +201,7 @@ class TestVectorQLearner(unittest.TestCase):
 
         np.testing.assert_almost_equal(expected, targets)
 
-    def test_get_targets(self):
+    def test_get_target_array(self):
         mock_system = MockSystem()
         learner = VectorQLearner(mock_system)
 
@@ -207,7 +210,7 @@ class TestVectorQLearner(unittest.TestCase):
         rewards = [0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = learner.get_targets(episode)
+        targets = learner.get_target_array(episode)
 
         # target[0] should be
         # reward + max(Q(next state=MockState2A)) = 11 + max(1, 0) = 12
@@ -223,9 +226,11 @@ class TestVectorQLearner(unittest.TestCase):
 
 
 class SarsaTests(unittest.TestCase):
+
     def test_get_state_targets1(self):
+
         mock_system = MockSystem()
-        learner = SarsaLearner(mock_system, gamma=0.9)
+        learner = SarsaLearner(mock_system, discount_factor=0.9)
 
         targets = learner.get_state_targets(state=MockState1(),
                                             action=0,
@@ -241,9 +246,9 @@ class SarsaTests(unittest.TestCase):
 
     def test_get_state_targets2A(self):
         mock_system = MockSystem()
-        learner = SarsaLearner(mock_system, gamma=0.9)
+        sarsa_learner = SarsaLearner(mock_system, discount_factor=0.9)
 
-        targets = learner.get_state_targets(state=MockState2A(),
+        targets = sarsa_learner.get_state_targets(state=MockState2A(),
                                             action=0,
                                             reward=1)
 
@@ -256,10 +261,11 @@ class SarsaTests(unittest.TestCase):
         np.testing.assert_almost_equal(expected, targets)
 
     def test_get_state_targets2B(self):
-        mock_system = MockSystem()
-        learner = SarsaLearner(mock_system, gamma=0.9)
 
-        targets = learner.get_state_targets(state=MockState2B(),
+        mock_system = MockSystem()
+        sarsa_learner = SarsaLearner(mock_system, discount_factor=0.9)
+
+        targets = sarsa_learner.get_state_targets(state=MockState2B(),
                                             action=0,
                                             reward=2)
 
@@ -276,7 +282,7 @@ class SarsaTests(unittest.TestCase):
         rewards = [11, 33]
         actions = [0, 0]
         episode = Episode(states, actions, rewards)
-        learner = SarsaLearner(MockSystem(), gamma=0.9)
+        learner = SarsaLearner(MockSystem(), discount_factor=0.9)
 
         targets = learner.get_target_array(episode)
         # [11.0 * 0.9 * 1.0, 2.0]
@@ -292,7 +298,7 @@ class SarsaTests(unittest.TestCase):
         rewards = [22, 33]
         actions = [1, 0]
         episode = Episode(states, actions, rewards)
-        learner = SarsaLearner(MockSystem(), gamma=0.9)
+        learner = SarsaLearner(MockSystem(), discount_factor=0.9)
 
         targets = learner.get_target_array(episode)
         # [2.0, 22.0 + 0.9 * 0]
