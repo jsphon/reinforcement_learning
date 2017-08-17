@@ -72,6 +72,9 @@ class Experience(object):
 
 class StatesList(list):
 
+    def get_training_length(self):
+        return len(self)
+
     def as_array(self):
         state_size = self[0].size
         num_training_states = len(self)

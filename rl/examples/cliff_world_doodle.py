@@ -45,7 +45,7 @@ def learn_once():
     actions = grid_world.get_greedy_action_grid_string()
     print(textwrap.indent(actions, ' '))
 
-for _ in range(10000):
+for _ in range(1):
     learn_once()
 
 print( learner.get_target_array(StatesList([GridState((1, 11))])) )

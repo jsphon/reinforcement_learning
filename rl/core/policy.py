@@ -65,6 +65,9 @@ class EpsilonGreedyPolicy(StochasticPolicy):
         super(EpsilonGreedyPolicy, self).__init__(rl_system)
         self.epsilon = epsilon
 
+    def __str__(self):
+        return '<EpsilonGreedyPolicy epsilon=%s>'%self.epsilon
+
     def calculate_action_value_probabilities(self, action_values):
         best_action = action_values.argmax()
 
