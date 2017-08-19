@@ -64,9 +64,15 @@ class ExpectedSarsaActionTargetCalculator(ActionTargetCalculator):
 
 class Learner(object):
 
-    def __init__(self, rl_system, target_array_calculator=None):
+    def __init__(self, rl_system, target_array_calculator):
         self.rl_system = rl_system
         self.target_array_calculator = target_array_calculator
+
+    def learn(self, experience, **kwargs):
+        self.target_array_calculator.learn(experience, **kwargs)
+
+
+class VectorLearner(Learner):
 
     def learn(self, experience, **kwargs):
         target_array = self.target_array_calculator.get_target_array(experience)
@@ -75,8 +81,11 @@ class Learner(object):
             target_array,
             **kwargs)
 
-    def learn_1d(self, experience, **kwargs):
-        target_array = self.target_array_calculator.get_target_array_1d(experience)
+
+class ScalarLearner(Learner):
+
+    def learn(self, experience, **kwargs):
+        target_array = self.target_array_calculator.get_target_array(experience)
         self.rl_system.action_value_function.fit_1d(
             experience.get_training_states(),
             experience.get_training_actions(),
@@ -91,20 +100,18 @@ class TargetArrayCalculator(object):
 
     Each element of a target array should correspend to the target for that element's action.
     """
-    def get_target_array(self):
-        raise NotImplemented()
-
-    def get_target_array_1d(self):
-        raise NotImplemented()
-
-
-class ScalarTargetArrayCalculator(TargetArrayCalculator):
 
     def __init__(self, rl_system, action_target_calculator):
         self.rl_system = rl_system
         self.action_target_calculator = action_target_calculator
 
-    def get_target_array_1d(self, experience):
+    def get_target_array(self):
+        raise NotImplemented()
+
+
+class ScalarTargetArrayCalculator(TargetArrayCalculator):
+
+    def get_target_array(self, experience):
         """
         Return a 1d array of targets for each action in experience
         Args:
@@ -125,6 +132,27 @@ class ScalarTargetArrayCalculator(TargetArrayCalculator):
             targets[i] = target_value
 
         return targets
+
+    def get_target(self, state, action, reward):
+        """
+        Return the targets for the state
+        :param state:
+        :param action:
+        :param reward:
+        :return: np.ndarray(num_actions)
+        """
+        next_state = self.rl_system.model.apply_action(state, action)
+
+        if next_state.is_terminal:
+            target = reward
+        else:
+            next_state_action_values = self.rl_system.action_value_function(next_state)
+            target = self.action_target_calculator.calculate(reward, next_state_action_values)
+
+        return target
+
+
+class VectorTargetArrayCalculator(TargetArrayCalculator):
 
     def get_target(self, state, action, reward):
         """
@@ -284,3 +312,10 @@ class VectorQLearner(VectorLearner):
     def __init__(self, rl_system, discount_factor=1.0):
         super(VectorQLearner, self).__init__(rl_system)
         self.action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor)
+
+
+def build_sarsa_learner(rl_system, discount_factor=1.0):
+    action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor=discount_factor)
+    target_array_calculator = ScalarTargetArrayCalculator(rl_system, action_target_calculator)
+    learner = ScalarLearner(rl_system, target_array_calculator=target_array_calculator)
+    return learner
