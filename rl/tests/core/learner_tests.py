@@ -84,155 +84,149 @@ class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):
         self.assertEqual(expected, result)
 
 
-class QLearnerTests(unittest.TestCase):
+class ScalarLearnerTests(unittest.TestCase):
 
-    def test_learn(self):
+    def test_build_q_learner_learn(self):
         np.random.seed(1)
         states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
-        rewards = [-1, -1]
+        rewards = [-1, -2]
         actions = [1, 2]
         episode = Episode(states, actions, rewards)
 
         grid_world = SimpleGridWorld()
 
-        q_learner = QLearner(grid_world)
+        q_learner = learner.build_q_learner(grid_world)
         q_learner.learn(episode)
 
         y = grid_world.action_value_function.on_list(episode.states)
         logging.info('Q Learning fitted targets are:')
         logging.info('\n' + str(y))
 
-        np.testing.assert_allclose([0, -1, 0, 0], y[0], atol=0.5)
-        np.testing.assert_allclose([0, 0, -1, 0], y[1], atol=0.5)
-        np.testing.assert_allclose([0, 0, 0, 0], y[2], atol=0.5)
+        # The learning rate is set to 0.1 by default, so we can calculate
+        # the expect result usign the actions and rewards above.
+        expected = np.array([
+            [0, -0.1, 0, 0],
+            [0, 0, -0.2, 0],
+            [0, 0, 0, 0 ]
+        ])
+
+        np.testing.assert_allclose(expected, y )
 
 
-class QLearningTargetArrayCalculatorTests(unittest.TestCase):
+class ScalarTargetArrayCalculatorTests(unittest.TestCase):
 
-    def setUp(self):
-
-        mock_system = MockSystem()
-        self.calculator = learner.QLearningTargetArrayCalculator(mock_system)
-
-    def test_get_target_array(self):
-
+    def test_q_learning_get_target_array(self):
         states = [MockState1(), MockState2A(), MockState3()]
         actions = [0, 0]
         rewards = [0, 0]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = self.calculator.get_target_array(episode)
+        calculator = learner.get_q_learning_target_array_calculator(MockSystem())
+        targets = calculator.get_target_array(episode)
 
-        expected = np.array([1, 2])
-        np.testing.assert_almost_equal(expected, targets[0])
+        # Get this from MockActionValueFunction
+        expected = np.array([1, 0])
+        np.testing.assert_array_almost_equal(expected, targets)
 
-        expected = np.array([0, 0])
-        np.testing.assert_almost_equal(expected, targets[1])
-
-    def test_get_target_array2(self):
-
+    def test_q_learning_get_target_array2(self):
         states = [MockState1(), MockState2B(), MockState3()]
         actions = [1, 0]
         rewards = [0, 10]
         episode = Episode(states=states, actions=actions, rewards=rewards)
 
-        targets = self.calculator.get_target_array(episode)
+        calculator = learner.get_q_learning_target_array_calculator(MockSystem())
+        targets = calculator.get_target_array(episode)
 
-        # Elements 0 and 2 come from MockState1's action value (1 and 3)
-        # Element 1 is the reward at 1 (0) plus the best action value
-        # from MockState1B (1). So it should be 1
-        expected = np.array([1, 1])
-        np.testing.assert_almost_equal(expected, targets[0])
-
-        # Elements 1 and 2 come from MockState1B's action value (1 and 0)
-        # Element 0 comes from the sum of the 2nd reward (10) and MockState2's
-        # best action value (0)
-        expected = np.array([10, 1])
-        np.testing.assert_almost_equal(expected, targets[1])
-
-
-class TestVectorSarsaLearner(unittest.TestCase):
-
-    def test_get_target_array(self):
-
-        mock_system = MockSystem()
-        sarsa_learner = VectorSarsaLearner(mock_system)
-
-        states = [MockState1(), MockState2A()]
-        actions = [0]
-        rewards = [0]
-        episode = Episode(states=states, actions=actions, rewards=rewards)
-
-        targets = sarsa_learner.get_target_array(episode)
-
-        # target[0] should be
-        # reward + Q(next state=MockState2A)[0] = 11 + [1, 0][0] = 12
-        # target[1] should be
-        # reward(action1) + Q(next state)[0] = 22 + [0, 1][0] = 22
-        # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
-        # Reward of 33 for the new state, then action reward is always zero
-        # So target[1] = [0, 0]
-
-        expected = np.array([12, 22])
-        np.testing.assert_almost_equal(expected, targets[0])
-
-        expected = np.array([33, 33])
-        np.testing.assert_almost_equal(expected, targets[1])
-
-
-class TestVectorQLearner(unittest.TestCase):
-    def test_get_state_targets1(self):
-        mock_system = MockSystem()
-        learner = VectorQLearner(mock_system)
-
-        targets = learner.get_state_targets(MockState1())
-
-        expected = np.array([12, 23])
-        np.testing.assert_almost_equal(expected, targets)
-
-    def test_get_state_targets2A(self):
-        mock_system = MockSystem()
-        learner = VectorQLearner(mock_system)
-
-        # Expectations
-        # Action 0
-        #  33 + 1.0 * 0 = 33
-        # Action 1
-        # 33 + 1.0 * 0 = 33
-        expected = np.array([33, 33])
-        targets = learner.get_state_targets(MockState2A())
+        expected = np.array([
+            0.0 + 1,
+            10.0 + 0.0
+        ])
 
         np.testing.assert_almost_equal(expected, targets)
 
-    def test_get_target_array(self):
-        mock_system = MockSystem()
-        learner = VectorQLearner(mock_system)
-
-        states = [MockState1(), MockState2A()]
-        actions = [0]
-        rewards = [0]
-        episode = Episode(states=states, actions=actions, rewards=rewards)
-
-        targets = learner.get_target_array(episode)
-
-        # target[0] should be
-        # reward + max(Q(next state=MockState2A)) = 11 + max(1, 0) = 12
-        # target[1] should be
-        # reward(action1) + max(Q(next state)) = 22 + max(0, 1) = 1
-        # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
-
-        expected = np.array([12, 23])
-        np.testing.assert_almost_equal(expected, targets[0])
-
-        expected = np.array([33, 33])
-        np.testing.assert_almost_equal(expected, targets[1])
+#
+# class TestVectorSarsaLearner(unittest.TestCase):
+#
+#     def test_get_target_array(self):
+#
+#         mock_system = MockSystem()
+#         sarsa_learner = VectorSarsaLearner(mock_system)
+#
+#         states = [MockState1(), MockState2A()]
+#         actions = [0]
+#         rewards = [0]
+#         episode = Episode(states=states, actions=actions, rewards=rewards)
+#
+#         targets = sarsa_learner.get_target_array(episode)
+#
+#         # target[0] should be
+#         # reward + Q(next state=MockState2A)[0] = 11 + [1, 0][0] = 12
+#         # target[1] should be
+#         # reward(action1) + Q(next state)[0] = 22 + [0, 1][0] = 22
+#         # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
+#         # Reward of 33 for the new state, then action reward is always zero
+#         # So target[1] = [0, 0]
+#
+#         expected = np.array([12, 22])
+#         np.testing.assert_almost_equal(expected, targets[0])
+#
+#         expected = np.array([33, 33])
+#         np.testing.assert_almost_equal(expected, targets[1])
+#
+#
+# class TestVectorQLearner(unittest.TestCase):
+#     def test_get_state_targets1(self):
+#         mock_system = MockSystem()
+#         learner = VectorQLearner(mock_system)
+#
+#         targets = learner.get_state_targets(MockState1())
+#
+#         expected = np.array([12, 23])
+#         np.testing.assert_almost_equal(expected, targets)
+#
+#     def test_get_state_targets2A(self):
+#         mock_system = MockSystem()
+#         learner = VectorQLearner(mock_system)
+#
+#         # Expectations
+#         # Action 0
+#         #  33 + 1.0 * 0 = 33
+#         # Action 1
+#         # 33 + 1.0 * 0 = 33
+#         expected = np.array([33, 33])
+#         targets = learner.get_state_targets(MockState2A())
+#
+#         np.testing.assert_almost_equal(expected, targets)
+#
+#     def test_get_target_array(self):
+#         mock_system = MockSystem()
+#         learner = VectorQLearner(mock_system)
+#
+#         states = [MockState1(), MockState2A()]
+#         actions = [0]
+#         rewards = [0]
+#         episode = Episode(states=states, actions=actions, rewards=rewards)
+#
+#         targets = learner.get_target_array(episode)
+#
+#         # target[0] should be
+#         # reward + max(Q(next state=MockState2A)) = 11 + max(1, 0) = 12
+#         # target[1] should be
+#         # reward(action1) + max(Q(next state)) = 22 + max(0, 1) = 1
+#         # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
+#
+#         expected = np.array([12, 23])
+#         np.testing.assert_almost_equal(expected, targets[0])
+#
+#         expected = np.array([33, 33])
+#         np.testing.assert_almost_equal(expected, targets[1])
 
 
 class SarsaTargetArrayCalculatorTests(unittest.TestCase):
 
     def setUp(self):
         mock_system = MockSystem()
-        self.calculator = learner.SarsaTargetArrayCalculator(mock_system, discount_factor=0.9)
+        self.calculator = learner.build_sarsa_target_array_calculator(mock_system, discount_factor=0.9)
 
     def test_get_state_targets1(self):
 
@@ -284,14 +278,11 @@ class SarsaTargetArrayCalculatorTests(unittest.TestCase):
 
         targets = self.calculator.get_target_array(episode)
 
-        # [11.0 + 0.9 * 1.0, 2.0]
-        # [33.0 + 0.9 * 0.0, 0.0]
-        expected = np.array(
-            [
-                [11.9, 2.0],
-                [33.0, 0.0]
-            ]
-        )
+        expected = np.array([
+            11 + 0.9 * 1.0,
+            33 + 0.9 * 0.0
+        ])
+
         np.testing.assert_almost_equal(expected, targets)
 
     def test_get_targets2(self):
@@ -301,13 +292,13 @@ class SarsaTargetArrayCalculatorTests(unittest.TestCase):
         episode = Episode(states, actions, rewards)
 
         targets = self.calculator.get_target_array(episode)
-        # [2.0, 22.0 + 0.9 * 0]
-        expected0 = np.array([1.0, 22.0])
-        np.testing.assert_almost_equal(expected0, targets[0])
 
-        # [33 + 0.9 * 0.0, 1.0]
-        expected0 = np.array([33.0, 1.0])
-        np.testing.assert_almost_equal(expected0, targets[1])
+        expected = np.array([
+            22.0 + 0.9 * 0,
+            33.0 + 0.9 * 0
+        ])
+
+        np.testing.assert_array_almost_equal(expected, targets)
 
 
 class MockSystem(RLSystem):

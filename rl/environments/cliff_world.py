@@ -111,18 +111,38 @@ class GridActionValueFunction(ActionValueFunction):
         #print('key is %s' % str(key))
         return self.values[key]
 
-    def fit(self, states, y, **kwargs):
+    def vectorized_fit(self, states, targets, **kwargs):
+        """
+
+        Args:
+            states: list of states
+            targets: (num_states x num_actions) array of target values
+            **kwargs:
+
+        Returns:
+
+        """
         for i in range(len(states)):
             state = states[i]
             key = str(state)
-            _y = y[i]
+            _y = targets[i]
             current_value = self.values[key]
             diff = (_y - current_value)
             target = current_value + self.learning_rate * diff
             self.values[key] = target
             print("Updated %s's value from %s to %s" % (key, str(current_value), target))
 
-    def fit_1d(self, states, actions, targets):
+    def scalar_fit(self, states, actions, targets):
+        """
+
+        Args:
+            states: list of states
+            actions: list of actions
+            targets: list of targets
+
+        Returns:
+
+        """
         for i in range(len(states)):
             state = states[i]
             key = str(state)
@@ -131,6 +151,7 @@ class GridActionValueFunction(ActionValueFunction):
             target = current_value + self.learning_rate * diff
             self.values[key][actions[i]] = target
             print("Updated Q(%s, %s) from %s to %s" % (key, actions[i], str(current_value), target))
+
 #
 # class GridActionValueFunction(ActionValueFunction):
 #

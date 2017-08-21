@@ -76,7 +76,7 @@ class VectorLearner(Learner):
 
     def learn(self, experience, **kwargs):
         target_array = self.target_array_calculator.get_target_array(experience)
-        self.rl_system.action_value_function.fit(
+        self.rl_system.action_value_function.vectorized_fit(
             experience.get_training_states(),
             target_array,
             **kwargs)
@@ -86,7 +86,7 @@ class ScalarLearner(Learner):
 
     def learn(self, experience, **kwargs):
         target_array = self.target_array_calculator.get_target_array(experience)
-        self.rl_system.action_value_function.fit_1d(
+        self.rl_system.action_value_function.scalar_fit(
             experience.get_training_states(),
             experience.get_training_actions(),
             target_array,
@@ -229,6 +229,16 @@ class QLearningTargetArrayCalculator(ScalarTargetArrayCalculator):
         super().__init__(rl_system, QLearnerActionTargetCalculator(rl_system, discount_factor=discount_factor))
 
 
+def build_sarsa_target_array_calculator(rl_system, discount_factor = 1.0):
+    action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor=discount_factor)
+    return ScalarTargetArrayCalculator(rl_system, action_target_calculator)
+
+
+def get_q_learning_target_array_calculator(rl_system, discount_factor=1.0):
+    action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor=discount_factor)
+    return ScalarTargetArrayCalculator(rl_system, action_target_calculator)
+
+
 class SarsaLearner(Learner):
     '''
     target = R_{t+1} + \gamma * Q(S_{t+1}, A_{t+1})
@@ -319,3 +329,11 @@ def build_sarsa_learner(rl_system, discount_factor=1.0):
     target_array_calculator = ScalarTargetArrayCalculator(rl_system, action_target_calculator)
     learner = ScalarLearner(rl_system, target_array_calculator=target_array_calculator)
     return learner
+
+
+def build_q_learner(rl_system, discount_factor=1.0):
+    action_target_calculator = QLearnerActionTargetCalculator(rl_system, discount_factor=discount_factor)
+    target_array_calculator = ScalarTargetArrayCalculator(rl_system, action_target_calculator)
+    learner = ScalarLearner(rl_system, target_array_calculator=target_array_calculator)
+    return learner
+
