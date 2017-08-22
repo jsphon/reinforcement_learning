@@ -13,7 +13,7 @@ class ActionTargetCalculator(object):
         raise NotImplemented()
 
 
-class QLearning(ActionTargetCalculator):
+class QLearningActionTargetCalculator(ActionTargetCalculator):
     def calculate(self, reward, next_state_action_values):
         return reward + self.discount_factor * next_state_action_values.max()
 

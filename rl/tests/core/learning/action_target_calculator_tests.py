@@ -7,7 +7,7 @@ import numpy as np
 
 import scipy.stats
 from rl.core.learning.action_target_calculator import \
-    QLearning,\
+    QLearningActionTargetCalculator,\
     SarsaActionTargetCalculator,\
     ExpectedSarsaActionTargetCalculator
 
@@ -49,7 +49,7 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
 class QLearningActionTargetCalculatorTests(unittest.TestCase):
     def test_calculate(self):
         rl_system = MagicMock()
-        calculator = QLearning(
+        calculator = QLearningActionTargetCalculator(
             rl_system=rl_system,
             discount_factor=1.0)
 
