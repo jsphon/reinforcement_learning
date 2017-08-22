@@ -3,7 +3,7 @@ import numpy as np
 from rl.core.learning.action_target_calculator import \
     SarsaActionTargetCalculator, \
     ExpectedSarsaActionTargetCalculator, \
-    QLearningTargetCalculator
+    QLearningActionTargetCalculator
 
 
 class TargetArrayCalculator(object):
@@ -127,7 +127,7 @@ def build_sarsa_target_array_calculator(rl_system, discount_factor = 1.0):
 
 
 def build_q_learning_target_array_calculator(rl_system, discount_factor=1.0):
-    action_target_calculator = QLearningTargetCalculator(rl_system, discount_factor=discount_factor)
+    action_target_calculator = QLearningActionTargetCalculator(rl_system, discount_factor=discount_factor)
     return ScalarTargetArrayCalculator(rl_system, action_target_calculator)
 
 
@@ -142,7 +142,7 @@ def build_vectorized_sarsa_target_array_calculator(rl_system, discount_factor = 
 
 
 def build_vectorized_q_learning_target_array_calculator(rl_system, discount_factor=1.0):
-    action_target_calculator = QLearningTargetCalculator(rl_system, discount_factor=discount_factor)
+    action_target_calculator = QLearningActionTargetCalculator(rl_system, discount_factor=discount_factor)
     return VectorizedTargetArrayCalculator(rl_system, action_target_calculator)
 
 
