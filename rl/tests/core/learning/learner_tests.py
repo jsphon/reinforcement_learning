@@ -1,20 +1,11 @@
 import logging
 import unittest
-from mock import MagicMock
-from collections import defaultdict
 
 import numpy as np
 
-from rl.core import RLSystem, State
 from rl.core.experience import Episode
-from rl.core.policy import Policy
-from rl.core.reward_function import RewardFunction
-from rl.core.value_function import ActionValueFunction
 from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
-from rl.core.learning.learner import build_q_learner
-from rl.tests.core.learning.mock_rl_system import MockState1, MockState2A, MockState2B, MockState3
-from rl.tests.core.learning.mock_rl_system import MockSystem
-
+from rl.core.learning.learner import build_q_learner, build_vectorized_q_learner
 
 N = 1000
 
@@ -51,171 +42,33 @@ class QLearningTests(unittest.TestCase):
         np.testing.assert_array_equal(expected, y)
 
 
-#
-# class TestVectorSarsaLearner(unittest.TestCase):
-#
-#     def test_get_target_array(self):
-#
-#         mock_system = MockSystem()
-#         sarsa_learner = VectorSarsaLearner(mock_system)
-#
-#         states = [MockState1(), MockState2A()]
-#         actions = [0]
-#         rewards = [0]
-#         episode = Episode(states=states, actions=actions, rewards=rewards)
-#
-#         targets = sarsa_learner.get_target_array(episode)
-#
-#         # target[0] should be
-#         # reward + Q(next state=MockState2A)[0] = 11 + [1, 0][0] = 12
-#         # target[1] should be
-#         # reward(action1) + Q(next state)[0] = 22 + [0, 1][0] = 22
-#         # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
-#         # Reward of 33 for the new state, then action reward is always zero
-#         # So target[1] = [0, 0]
-#
-#         expected = np.array([12, 22])
-#         np.testing.assert_almost_equal(expected, targets[0])
-#
-#         expected = np.array([33, 33])
-#         np.testing.assert_almost_equal(expected, targets[1])
-#
-#
-# class TestVectorQLearner(unittest.TestCase):
-#     def test_get_state_targets1(self):
-#         mock_system = MockSystem()
-#         learner = VectorQLearner(mock_system)
-#
-#         targets = learner.get_state_targets(MockState1())
-#
-#         expected = np.array([12, 23])
-#         np.testing.assert_almost_equal(expected, targets)
-#
-#     def test_get_state_targets2A(self):
-#         mock_system = MockSystem()
-#         learner = VectorQLearner(mock_system)
-#
-#         # Expectations
-#         # Action 0
-#         #  33 + 1.0 * 0 = 33
-#         # Action 1
-#         # 33 + 1.0 * 0 = 33
-#         expected = np.array([33, 33])
-#         targets = learner.get_state_targets(MockState2A())
-#
-#         np.testing.assert_almost_equal(expected, targets)
-#
-#     def test_get_target_array(self):
-#         mock_system = MockSystem()
-#         learner = VectorQLearner(mock_system)
-#
-#         states = [MockState1(), MockState2A()]
-#         actions = [0]
-#         rewards = [0]
-#         episode = Episode(states=states, actions=actions, rewards=rewards)
-#
-#         targets = learner.get_target_array(episode)
-#
-#         # target[0] should be
-#         # reward + max(Q(next state=MockState2A)) = 11 + max(1, 0) = 12
-#         # target[1] should be
-#         # reward(action1) + max(Q(next state)) = 22 + max(0, 1) = 1
-#         # target[1] should be Reward of taking action1 from MockState1 plus Q(MockState2B)
-#
-#         expected = np.array([12, 23])
-#         np.testing.assert_almost_equal(expected, targets[0])
-#
-#         expected = np.array([33, 33])
-#         np.testing.assert_almost_equal(expected, targets[1])
+class VectorizedQLearningTests(unittest.TestCase):
 
-#
-# class MockSystem(RLSystem):
-#     def __init__(self):
-#         super(MockSystem, self).__init__()
-#         self.num_actions = 2
-#         self.model = MockModel()
-#         self.policy = MockPolicy(self)
-#         self.action_value_function = MockActionValueFunction(self.policy)
-#         self.reward_function = MockRewardFunction()
+    def test_learn(self):
+        np.random.seed(1)
+        states = [SimpleGridState((1, 1)), SimpleGridState((2, 2)), SimpleGridState((3, 3))]
+        rewards = [-1, -2]
+        actions = [1, 2]
+        episode = Episode(states, actions, rewards)
 
-#
-# class MockPolicy(Policy):
-#     def calculate_action_value_probabilities(self, action_values):
-#         return np.array([1.0, 0.0])
-#
-#
-# class MockRewardFunction(RewardFunction):
-#     def __call__(self, old_state, action, new_state):
-#
-#         if isinstance(old_state, MockState3) and isinstance(new_state, MockState3):
-#             # Terminal State
-#             return 0
-#         elif isinstance(new_state, MockState2A):
-#             return 11
-#         elif isinstance(new_state, MockState2B):
-#             return 22
-#         elif isinstance(new_state, MockState3):
-#             return 33
-#
-#
-# class MockActionValueFunction(ActionValueFunction):
-#     def __call__(self, state):
-#
-#         if isinstance(state, MockState1):
-#             return np.array([1., 2.])
-#         elif isinstance(state, MockState2A):
-#             return np.array([1., 0.])
-#         elif isinstance(state, MockState2B):
-#             return np.array([0., 1.])
-#         elif isinstance(state, MockState3):
-#             return np.array([0., 0.])
-#         else:
-#             raise ValueError('State not expected %s' % str(state))
-#
-#
-# class MockModel(object):
-#     def apply_action(self, state, action):
-#
-#         if isinstance(state, MockState1):
-#             if action == 0:
-#                 return MockState2A()
-#             elif action == 1:
-#                 return MockState2B()
-#             else:
-#                 raise ValueError('Expect 0 or 1')
-#         elif isinstance(state, (MockState2A, MockState2B)):
-#             return MockState3()
-#         elif isinstance(state, MockState3):
-#             return MockState3()
-#         else:
-#             raise ValueError('object %s not expected' % str(state))
-#
-#
-# class MockState(State):
-#     def __init__(self):
-#         super(MockState, self).__init__()
-#         self.size = 3
-#         self.array_dtype = np.bool
-#
-#
-# class MockState1(MockState):
-#     def as_array(self):
-#         return np.array([False, False], np.bool).reshape(1, 2)
-#
-#
-# class MockState2A(MockState):
-#     def as_array(self):
-#         return np.array([True, False], np.bool).reshape(1, 2)
-#
-#
-# class MockState2B(MockState):
-#     def as_array(self):
-#         return np.array([False, True], np.bool).reshape(1, 2)
-#
-#
-# class MockState3(MockState):
-#     def as_array(self):
-#         return np.array([True, True], np.bool).reshape(1, 2)
+        grid_world = SimpleGridWorld()
+
+        q_learner = build_vectorized_q_learner(grid_world)
+        q_learner.learn(episode)
+
+        y = grid_world.action_value_function.on_list(episode.states)
+        logging.info('Q Learning fitted targets are:')
+        logging.info('\n' + str(y))
+
+        # The learning rate is set to 0.1 by default, so we can calculate
+        # the expect result usign the actions and rewards above.
+        expected = np.array([
+            [0, -0.1, 0, 0],
+            [0, 0, -0.2, 0],
+            [0, 0, 0, 0]
+        ])
+
+        np.testing.assert_array_equal(expected, y)
 
 
 if __name__ == '__main__':

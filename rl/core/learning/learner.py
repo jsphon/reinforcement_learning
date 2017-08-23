@@ -1,7 +1,3 @@
-from rl.core.learning.target_array_calculator import\
-    SarsaActionTargetCalculator,\
-    ExpectedSarsaActionTargetCalculator,\
-    QLearningActionTargetCalculator
 
 from rl.core.learning.target_array_calculator import\
     build_sarsa_target_array_calculator,\

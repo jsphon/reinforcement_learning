@@ -35,7 +35,7 @@ class TabularGridActionValueFunction(ActionValueFunction):
         :return: np.ndarray(num_actions)
         """
         key = str(state)
-        return self.values[key]
+        return self.values[key].copy()
 
     def on_list(self, states):
         """
