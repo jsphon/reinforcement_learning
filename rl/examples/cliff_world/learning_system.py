@@ -31,8 +31,10 @@ class LearningSystem(object):
 
         print('=== AVERAGE REWARD %s' % average_reward)
         print('=== Value Function %s ===' % (i or ''))
-        print(self.rl_system.get_value_grid())
+        if hasattr(self.rl_system, 'get_value_grid'):
+            print(self.rl_system.get_value_grid())
 
-        print('=== Greedy Actions %s ===' % (i or ''))
-        actions = self.rl_system.get_greedy_action_grid_string()
-        print(textwrap.indent(actions, ' '))
+        if hasattr(self.rl_system, 'get_greedy_action_grid_string'):
+            print('=== Greedy Actions %s ===' % (i or ''))
+            actions = self.rl_system.get_greedy_action_grid_string()
+            print(textwrap.indent(actions, ' '))

@@ -19,5 +19,5 @@ class State(object):
         For input to the reward function fitting
         :return:
         """
-        raise NotADirectoryError()
+        raise NotImplemented()
 
