@@ -2,8 +2,8 @@ import textwrap
 
 from rl.core.experience import ExperienceGenerator
 from rl.core.learning.learner import build_sarsa_learner
+from rl.core.learning.learning_system import LearningSystem
 from rl.environments.cliff_world import CliffWorld
-from rl.examples.cliff_world.learning_system import LearningSystem
 from rl.lib.timer import Timer
 
 grid_world = CliffWorld()

@@ -2,13 +2,16 @@ import logging
 import unittest
 
 import numpy as np
+from mock import MagicMock
 
 from rl.core.experience import Episode
 from rl.core.learning.target_array_calculator import \
     build_q_learning_target_array_calculator, \
-    build_sarsa_target_array_calculator
+    build_sarsa_target_array_calculator, \
+    VectorizedStateMachineTargetArrayCalculator
 from rl.tests.core.learning.mock_rl_system import MockState1, MockState2A, MockState2B, MockState3
 from rl.tests.core.learning.mock_rl_system import MockSystem
+from rl.core.state import IntExtState, State
 
 N = 1000
 
@@ -48,7 +51,6 @@ class QLearningTargetArrayCalculatorTests(unittest.TestCase):
 
 
 class SarsaTargetArrayCalculatorTests(unittest.TestCase):
-
     def setUp(self):
         mock_system = MockSystem()
         self.calculator = build_sarsa_target_array_calculator(mock_system, discount_factor=0.9)
@@ -84,48 +86,43 @@ class SarsaTargetArrayCalculatorTests(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected, targets)
 
 
-    # Where did these come from?
-    # def test_get_state_targets1(self):
-    #
-    #     targets = self.calculator.get_state_targets(state=MockState1(),
-    #                                         action=0,
-    #                                         reward=11)
-    #
-    #     # Expected0 = reward(action|state) + gamma * Q(next_state|next_action)
-    #     #           = 11 + 0.9 * 1
-    #     #           = 11.9
-    #     # Expected1 = Q(MockState1(), action=1)
-    #     #           = 2
-    #     expected = np.array([11.9, 2.0])
-    #     np.testing.assert_almost_equal(expected, targets)
-    #
-    # def test_get_state_targets2A(self):
-    #
-    #     targets = self.calculator.get_state_targets(state=MockState2A(),
-    #                                         action=0,
-    #                                         reward=1)
-    #
-    #     # Expected0 = reward(action|state) + gamma * Q(next_state|next_action)
-    #     #           = 1 + 0.9 * 0
-    #     #           = 1.0
-    #     # Expected1 = Q(MockState2A(), action=1)
-    #     #           = 0.0
-    #     expected = np.array([1.0, 0.0])
-    #     np.testing.assert_almost_equal(expected, targets)
-    #
-    # def test_get_state_targets2B(self):
-    #
-    #     targets = self.calculator.get_state_targets(state=MockState2B(),
-    #                                         action=0,
-    #                                         reward=2)
-    #
-    #     # Expected0 = reward(action|state) + gamma * Q(next_state|next_action)
-    #     #           = 2 + 0.9 * 0
-    #     #           = 2.0
-    #     # Expected1 = Q(MockState2B(), action=1)
-    #     #           = 1.0
-    #     expected = np.array([2.0, 1.0])
-    #     np.testing.assert_almost_equal(expected, targets)
+class VectorizedStateMachineTargetArrayCalculatorTest(unittest.TestCase):
+
+    def setUp(self):
+
+        action_target_calculator = MagicMock()
+        rl_system = MagicMock(
+            num_internal_states=2,
+            num_actions=[2, 2]
+        )
+
+        self.calculator = VectorizedStateMachineTargetArrayCalculator(
+            rl_system,
+            action_target_calculator,
+        )
+
+    def test_get_state_targets(self):
+
+        external_state = MagicMock()
+        int_ext_state = IntExtState(0, external_state)
+
+        targets = self.calculator.get_state_targets(int_ext_state)
+
+        self.assertEqual(2, len(targets))
+
+    def test_get_target_array(self):
+
+        external_state1 = MagicMock()
+        int_ext_state1 = IntExtState(0, external_state1)
+
+        external_state2 = MagicMock()
+        int_ext_state2 = IntExtState(1, external_state2)
+
+        states = [int_ext_state1, int_ext_state2]
+
+        targets = self.calculator.get_target_array(states)
+
+        self.assertEqual((2, 4), targets.shape)
 
 
 if __name__ == '__main__':
