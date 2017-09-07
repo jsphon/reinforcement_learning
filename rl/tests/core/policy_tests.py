@@ -20,7 +20,7 @@ class PolicyTests(unittest.TestCase):
         Test that choose action returns a value in the expected range
         :return:
         """
-        policy = Policy(rl_system=MagicMock(num_actions=2))
+        policy = Policy()
         policy.calculate_state_probabilities = MagicMock(return_value=np.array([0.5, 0.5]))
 
         num_true = 0

@@ -1,0 +1,7 @@
+
+
+Remove rl_system from policy, as this reduces inter-class dependencies complexity in testing.
+
+Move choose_action(state) from policy to rl_system
+
+Continue the example in ant/value_function
