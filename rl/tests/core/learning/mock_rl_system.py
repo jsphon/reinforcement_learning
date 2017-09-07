@@ -11,7 +11,7 @@ class MockSystem(RLSystem):
         super(MockSystem, self).__init__()
         self.num_actions = 2
         self.model = MockModel()
-        self.policy = MockPolicy(self)
+        self.policy = MockPolicy()
         self.action_value_function = MockActionValueFunction(self.policy)
         self.reward_function = MockRewardFunction()
 

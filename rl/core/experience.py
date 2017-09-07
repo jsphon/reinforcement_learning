@@ -35,7 +35,7 @@ class ExperienceGenerator(object):
         states.append(state)
         for _ in range(max_len):
 
-            action = self.policy.choose_action(state)
+            action = self.rl_system.choose_action(state)
             actions.append(action)
             new_state = self.model.apply_action(state, action)
             reward = self.reward_function(state, action, new_state)

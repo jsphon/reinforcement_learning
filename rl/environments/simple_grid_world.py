@@ -57,14 +57,14 @@ class SimpleGridWorld(BaseGridWorld):
     def get_greedy_action_grid(self):
 
         actions = np.ndarray(self.shape, dtype=np.int8)
-        policy = EpsilonGreedyPolicy(rl_system=self, epsilon=0)
+        policy = EpsilonGreedyPolicy(epsilon=0)
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
                 state = self.state_class(player=(i, j))
                 if state.is_terminal:
                     actions[i, j] = -1
                 else:
-                    actions[i, j] = policy.choose_action(state)
+                    actions[i, j] = self.choose_action(state)
 
         return actions
 

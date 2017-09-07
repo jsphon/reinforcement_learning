@@ -18,19 +18,6 @@ class Policy(object):
 
     """
 
-    def __init__(self, rl_system):
-        self.rl_system = rl_system
-
-    def choose_action(self, state):
-        probabilities = self.calculate_state_probabilities(state)
-        num_actions = self.rl_system.num_actions
-        action = np.random.choice(num_actions, p=probabilities)
-        return action
-
-    def calculate_state_probabilities(self, state):
-        action_values = self.rl_system.action_value_function(state)
-        return self.calculate_action_value_probabilities(action_values)
-
     def calculate_action_value_probabilities(self, action_values):
         raise NotImplemented()
 
@@ -55,14 +42,14 @@ class StochasticPolicy(Policy):
 
 
 class EquiProbableRandomPolicy(StochasticPolicy):
+
     def calculate_action_value_probabilities(self, action_values):
-        num_actions = self.rl_system.num_actions
+        num_actions = len(action_values)
         return np.ones(num_actions) / num_actions
 
 
 class EpsilonGreedyPolicy(StochasticPolicy):
-    def __init__(self, rl_system, epsilon=0.1):
-        super(EpsilonGreedyPolicy, self).__init__(rl_system)
+    def __init__(self, epsilon=0.1):
         self.epsilon = epsilon
 
     def __str__(self):
@@ -71,7 +58,7 @@ class EpsilonGreedyPolicy(StochasticPolicy):
     def calculate_action_value_probabilities(self, action_values):
         best_action = action_values.argmax()
 
-        num_actions = self.rl_system.num_actions
+        num_actions = len(action_values)
         probabilities = np.ones(num_actions) * self.epsilon / (num_actions - 1)
         probabilities[best_action] = 1.0 - self.epsilon
 
@@ -79,6 +66,7 @@ class EpsilonGreedyPolicy(StochasticPolicy):
 
 
 class SoftmaxPolicy(StochasticPolicy):
+
     def calculate_action_value_probabilities(self, action_values):
         return softmax(action_values)
 
