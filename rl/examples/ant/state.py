@@ -3,9 +3,9 @@ from rl.core.state import IntExtState, State
 
 
 class AntState(IntExtState):
-    def __init__(self):
-        self.internal_state = 0
-        self.external_state = ExternalState()
+    def __init__(self, internal_state=0, pos=5):
+        self.internal_state = internal_state
+        self.external_state = ExternalState(pos)
 
 
 class ExternalState(State):

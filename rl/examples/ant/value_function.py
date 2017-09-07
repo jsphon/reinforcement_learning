@@ -58,22 +58,15 @@ class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
 
 
 if __name__ == '__main__':
-    from rl.core.state import IntExtState, State
-
-    class ExternalState(State):
-        def __init__(self):
-            self.values = np.ones(10)
-
-        def as_array(self):
-            return self.values
-
+    from rl.examples.ant.state import AntState
     value_function = AntActionValueFunction()
 
-    external_state = ExternalState()
-    int_ext_state = IntExtState(0, external_state)
+    state = AntState(internal_state=0)
 
-    print(value_function(int_ext_state))
+    print(value_function(state))
 
-    int_ext_state = IntExtState(1, external_state)
+    state = AntState(internal_state=1)
 
-    print(value_function(int_ext_state))
+    print(value_function(state))
+
+    print(value_function.combined_model.predict(state.external_state.as_array()))
