@@ -12,7 +12,7 @@ class MockSystem(RLSystem):
         self.num_actions = 2
         self.model = MockModel()
         self.policy = MockPolicy()
-        self.action_value_function = MockActionValueFunction(self.policy)
+        self.action_value_function = MockActionValueFunction()
         self.reward_function = MockRewardFunction()
 
 
