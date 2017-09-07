@@ -1,8 +1,8 @@
 
 class ValueFunction(object):
 
-    def __init__(self, policy):
-        self.policy = policy
+    def __call__(self, state):
+        pass
 
 
 class StateValueFunction(ValueFunction):
@@ -50,5 +50,5 @@ class NeuralNetStateMachineActionValueFunction(StateMachineActionValueFunction):
 
     def __call__(self, int_ext_state):
         internal_state = int_ext_state.internal_state
-        arr = int_ext_state.external_state.as_array()
+        arr = int_ext_state.external_state.as_array().reshape(1, -1)
         return self.state_models[internal_state].predict(arr).ravel()
