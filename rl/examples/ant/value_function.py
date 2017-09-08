@@ -69,4 +69,5 @@ if __name__ == '__main__':
 
     print(value_function(state))
 
-    print(value_function.combined_model.predict(state.external_state.as_array()))
+    print(value_function.combined_model.predict(state.external_state.as_array().reshape((1, 10))))
+
