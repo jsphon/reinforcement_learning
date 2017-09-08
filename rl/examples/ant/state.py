@@ -3,19 +3,31 @@ from rl.core.state import IntExtState, State
 
 
 class AntState(IntExtState):
-    def __init__(self, internal_state=0, pos=5):
+
+    def __init__(self, internal_state=1, position=5):
         self.internal_state = internal_state
-        self.external_state = ExternalState(pos)
+        self.external_state = ExternalState(position)
+        self.num_homecomings = 0
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return '<AntState internal_state=%s, external_state.position=%s, num_homecomings=%s>'%(self.internal_state, self.external_state.position, self.num_homecomings)
+
+    def copy(self):
+        return AntState(internal_state=self.internal_state, position=self.external_state.position)
 
 
 class ExternalState(State):
-    def __init__(self, pos=5):
-        self.pos = pos
-        self.values = np.zeros(10, dtype=np.bool)
-        self.values[pos] = 1
+
+    def __init__(self, position=5):
+        self.position = position
 
     def as_array(self):
-        return self.values
+        values = np.zeros(10, dtype=np.bool)
+        values[self.position] = 1
+        return values
 
 
 if __name__ == '__main__':

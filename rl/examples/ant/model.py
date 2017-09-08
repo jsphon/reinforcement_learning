@@ -1,38 +1,66 @@
 from rl.core.model import Model
+import numpy as np
+
+FINDING_HOME = 0
+FINDING_FOOD = 1
+
+MOVE_LEFT = 0
+MOVE_RIGHT = 1
+
+HOME_POSITION = 2
+FOOD_POSITION = 8
 
 
 class AntModel(Model):
     def __init__(self):
         super(Model, self).__init__()
-        #self.num_actions =
 
     def apply_action(self, state, action):
-        next_state = state.copy()
-        if action == 0:
-            self.move_up(next_state)
-        elif action == 1:
-            self.move_down(next_state)
-        elif action == 2:
-            self.move_left(next_state)
-        elif action == 3:
-            self.move_right(next_state)
+
+        internal_state = state.internal_state
+
+        if internal_state == FINDING_HOME:
+            return self.apply_finding_home_action(state, action)
+        elif internal_state == FINDING_FOOD:
+            return self.apply_finding_food_action(state, action)
         else:
-            raise Exception('Unexpected action %s' % str(action))
-        #print('walked to %s'%str(next_state.player))
-        return next_state
+            raise ValueError('Action should be 0 or 1')
 
-    def move_up(self, state):
-        new_position = (max(state.player[0] - 1, 0), state.player[1])
-        state.update_player(new_position)
+    def apply_finding_food_action(self, state, action):
 
-    def move_down(self, state):
-        new_position = (min(state.player[0] + 1, 3), state.player[1])
-        state.update_player(new_position)
+        new_state = self.apply_movement(state, action)
+        if new_state.external_state.position == FOOD_POSITION:
+            print('Changing state to finding home')
+            new_state.internal_state = FINDING_HOME
 
-    def move_left(self, state):
-        new_position = (state.player[0], max(state.player[1] - 1, 0))
-        state.update_player(new_position)
+        return new_state
 
-    def move_right(self, state):
-        new_position = (state.player[0], min(state.player[1] + 1, 11))
-        state.update_player(new_position)
+    def apply_finding_home_action(self, state, action):
+
+        new_state = self.apply_movement(state, action)
+        if new_state.external_state.position == HOME_POSITION:
+            print('changing state to finding food')
+            new_state.internal_state = FINDING_FOOD
+            new_state.num_homecomings += 1
+
+        return new_state
+
+    def apply_movement(self, state, action):
+        new_state = state.copy()
+        external_state = state.external_state
+
+        if action == MOVE_RIGHT:
+            new_state.external_state.position = min(9, external_state.position + 1)
+        elif action == MOVE_LEFT:
+            new_state.external_state.position = max(0, external_state.position - 1)
+
+        return new_state
+
+
+if __name__=='__main__':
+
+    from rl.examples.ant.state import AntState
+    model = AntModel()
+    ant_state = AntState()
+
+    print(ant_state)
