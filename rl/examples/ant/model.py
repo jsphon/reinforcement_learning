@@ -1,14 +1,6 @@
 from rl.core.model import Model
 import numpy as np
-
-FINDING_HOME = 0
-FINDING_FOOD = 1
-
-MOVE_LEFT = 0
-MOVE_RIGHT = 1
-
-HOME_POSITION = 2
-FOOD_POSITION = 8
+from .constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, FOOD_POSITION
 
 
 class AntModel(Model):
