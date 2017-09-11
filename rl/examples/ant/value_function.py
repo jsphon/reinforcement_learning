@@ -31,23 +31,14 @@ class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
         model2 = Model(inputs=inputs, outputs=output2)
         model2.compile(**model_kwargs)
 
-        combined_model = Model(inputs=inputs, outputs=[output1, output2])
-        combined_model.compile(**model_kwargs)
+        model = Model(inputs=inputs, outputs=[output1, output2])
+        model.compile(**model_kwargs)
 
         self.state_models = [model1, model2]
-        self.combined_model = combined_model
+        self.model = model
 
-    def combined_fit(self, states, targets, **kwargs):
-        """
-        A vectorized fit of all states at the same time.
-        Args:
-            states:
-            targets:
-            **kwargs:
-
-        Returns:
-
-        """
+    def evaluate(self, states, targets, **kwargs):
+        return self.model.evaluate(states.as_array(), targets, **kwargs)
 
     def vectorized_fit(self, states, targets, **kwargs):
         x = states.as_array()
@@ -70,4 +61,6 @@ if __name__ == '__main__':
     print(value_function(state))
 
     print(value_function.combined_model.predict(state.external_state.as_array().reshape((1, 10))))
+
+
 
