@@ -5,7 +5,6 @@ from rl.core.learning.action_target_calculator import \
     ExpectedSarsaActionTargetCalculator, \
     QLearningActionTargetCalculator
 
-
 from rl.core.state import IntExtState
 
 
@@ -43,7 +42,6 @@ class TargetArrayCalculator(object):
 
 
 class ScalarTargetArrayCalculator(TargetArrayCalculator):
-
     def get_target_array(self, experience):
         """
         Return a 1d array of targets for each action in experience
@@ -147,7 +145,6 @@ class FullyVectorizedTargetArrayCalculator(TargetArrayCalculator):
 
 
 class VectorizedStateMachineTargetArrayCalculator(FullyVectorizedTargetArrayCalculator):
-
     def __init__(
             self,
             rl_system,
@@ -157,31 +154,32 @@ class VectorizedStateMachineTargetArrayCalculator(FullyVectorizedTargetArrayCalc
         self.action_target_calculator = action_target_calculator
         self.total_num_actions = sum(rl_system.num_actions)
 
-    def get_target_array(self, states):
-        targets = np.zeros((len(states), self.total_num_actions))
-        for i, external_state in enumerate(states):
-            row_targets = []
+    def get_target_arrays(self, external_states):
+        targets = []
+        for i in range(self.rl_system.num_internal_states):
+            target = np.empty((len(external_states), self.rl_system.num_actions[i]))
+            targets.append(target)
+
+        for i, external_state in enumerate(external_states):
             for internal_state in range(self.rl_system.num_internal_states):
                 int_ext_state = IntExtState(internal_state, external_state)
                 i_targets = self.get_state_targets(int_ext_state)
-                row_targets.append(i_targets)
-            row = np.concatenate(row_targets)
-            targets[i] = row
+                targets[internal_state][i, :] = i_targets
         return targets
 
-    def get_state_targets(self, int_ext_state):
+    def get_state_targets(self, int_ext_state,):
         num_actions = self.rl_system.num_actions[int_ext_state.internal_state]
         targets = np.empty(num_actions)
 
         for action in range(num_actions):
-            next_state = self.rl_system.model.apply_action(int_ext_state, action)
-            reward = self.rl_system.reward_function(int_ext_state, action, next_state)
-            targets[action] = self.get_target(int_ext_state, action, reward)
+            next_int_ext_state = self.rl_system.model.apply_action(int_ext_state, action)
+            reward = self.rl_system.reward_function(int_ext_state, action, next_int_ext_state)
+            targets[action] = self.get_target(next_int_ext_state, action, reward)
 
         return targets
 
 
-def build_sarsa_target_array_calculator(rl_system, discount_factor = 1.0):
+def build_sarsa_target_array_calculator(rl_system, discount_factor=1.0):
     action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor=discount_factor)
     return ScalarTargetArrayCalculator(rl_system, action_target_calculator)
 
@@ -196,7 +194,7 @@ def build_expected_sarsa_target_array_calculator(rl_system, discount_factor=1.0)
     return ScalarTargetArrayCalculator(rl_system, action_target_calculator)
 
 
-def build_vectorized_sarsa_target_array_calculator(rl_system, discount_factor = 1.0):
+def build_vectorized_sarsa_target_array_calculator(rl_system, discount_factor=1.0):
     action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor=discount_factor)
     return SemiVectorizedTargetArrayCalculator(rl_system, action_target_calculator)
 
@@ -209,3 +207,8 @@ def build_vectorized_q_learning_target_array_calculator(rl_system, discount_fact
 def build_vectorized_expected_sarsa_target_array_calculator(rl_system, discount_factor=1.0):
     action_target_calculator = ExpectedSarsaActionTargetCalculator(rl_system, discount_factor=discount_factor)
     return SemiVectorizedTargetArrayCalculator(rl_system, action_target_calculator)
+
+
+def build_vectorized_state_machine_q_learning_target_array_calculator(rl_system, discount_factor=1.0):
+    action_target_calculator = QLearningActionTargetCalculator(rl_system, discount_factor=discount_factor)
+    return VectorizedStateMachineTargetArrayCalculator(rl_system, action_target_calculator)

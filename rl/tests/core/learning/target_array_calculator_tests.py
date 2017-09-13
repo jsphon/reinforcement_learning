@@ -18,6 +18,45 @@ N = 1000
 logging.basicConfig(level=logging.DEBUG)
 
 
+class VectorizedStateMachineTargetArrayCalculatorTests(unittest.TestCase):
+
+    def setUp(self):
+        rl_system = MagicMock(num_actions=[2, 3], num_states=2)
+        action_target_calculator = MagicMock()
+        self.calculator = VectorizedStateMachineTargetArrayCalculator(
+            rl_system=rl_system,
+            action_target_calculator=action_target_calculator
+        )
+
+    def test___init__(self):
+        self.assertIsInstance(self.calculator, VectorizedStateMachineTargetArrayCalculator)
+
+    def test_get_state_targets1(self):
+
+        internal_state = 0
+        external_state = MagicMock()
+        int_ext_state = IntExtState(internal_state, external_state)
+
+        targets = self.calculator.get_state_targets(int_ext_state)
+        self.assertEqual(2, targets.shape[0])
+
+    def test_get_state_targets2(self):
+
+        internal_state = 1
+        external_state = MagicMock()
+        int_ext_state = IntExtState(internal_state, external_state)
+
+        targets = self.calculator.get_state_targets(int_ext_state)
+        self.assertEqual(3, targets.shape[0])
+
+    def test_get_target_arrays(self):
+
+        external_state1 = MagicMock()
+        external_state2 = MagicMock()
+        external_states = [external_state1, external_state2]
+        targets = self.calculator.get_target_arrays(external_states)
+
+
 class QLearningTargetArrayCalculatorTests(unittest.TestCase):
 
     def test_q_learning_get_target_array(self):
@@ -110,19 +149,18 @@ class VectorizedStateMachineTargetArrayCalculatorTest(unittest.TestCase):
 
         self.assertEqual(2, len(targets))
 
-    def test_get_target_array(self):
+    def test_get_target_arrays(self):
 
         external_state1 = MagicMock()
-        int_ext_state1 = IntExtState(0, external_state1)
-
         external_state2 = MagicMock()
-        int_ext_state2 = IntExtState(1, external_state2)
 
-        states = [int_ext_state1, int_ext_state2]
+        external_states = [external_state1, external_state2]
 
-        targets = self.calculator.get_target_array(states)
+        targets = self.calculator.get_target_arrays(external_states)
 
-        self.assertEqual((2, 4), targets.shape)
+        self.assertEqual(2, len(targets))
+        self.assertEqual((2, 2), targets[0].shape)
+        self.assertEqual((2, 2), targets[1].shape)
 
 
 if __name__ == '__main__':
