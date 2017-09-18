@@ -108,7 +108,7 @@ class FullyVectorizedTargetArrayCalculator(TargetArrayCalculator):
     Only calculates the target for all actions
     """
 
-    def get_target_array(self, experience):
+    def get_target_array(self, states):
         """
         Get the training targets as an array
         Args:
@@ -118,8 +118,7 @@ class FullyVectorizedTargetArrayCalculator(TargetArrayCalculator):
             np.ndarray: (len(experience), num_actions)
 
         """
-        targets = np.zeros((experience.get_training_length(), self.rl_system.num_actions))
-        states = experience.get_training_states()
+        targets = np.zeros((len(states), self.rl_system.num_actions))
         for i, state in enumerate(states):
             targets[i, :] = self.get_state_targets(state)
 
@@ -196,12 +195,12 @@ def build_expected_sarsa_target_array_calculator(rl_system, discount_factor=1.0)
 
 def build_vectorized_sarsa_target_array_calculator(rl_system, discount_factor=1.0):
     action_target_calculator = SarsaActionTargetCalculator(rl_system, discount_factor=discount_factor)
-    return SemiVectorizedTargetArrayCalculator(rl_system, action_target_calculator)
+    return FullyVectorizedTargetArrayCalculator(rl_system, action_target_calculator)
 
 
 def build_vectorized_q_learning_target_array_calculator(rl_system, discount_factor=1.0):
     action_target_calculator = QLearningActionTargetCalculator(rl_system, discount_factor=discount_factor)
-    return SemiVectorizedTargetArrayCalculator(rl_system, action_target_calculator)
+    return FullyVectorizedTargetArrayCalculator(rl_system, action_target_calculator)
 
 
 def build_vectorized_expected_sarsa_target_array_calculator(rl_system, discount_factor=1.0):

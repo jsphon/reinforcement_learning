@@ -5,7 +5,8 @@ from rl.core.learning.target_array_calculator import\
     build_expected_sarsa_target_array_calculator,\
     build_vectorized_q_learning_target_array_calculator,\
     build_vectorized_expected_sarsa_target_array_calculator,\
-    build_vectorized_sarsa_target_array_calculator
+    build_vectorized_sarsa_target_array_calculator,\
+    build_vectorized_state_machine_q_learning_target_array_calculator
 
 
 class Learner(object):
@@ -20,10 +21,10 @@ class Learner(object):
 
 class VectorizedLearner(Learner):
 
-    def learn(self, experience, **kwargs):
-        target_array = self.target_array_calculator.get_target_array(experience)
+    def learn(self, states, **kwargs):
+        target_array = self.target_array_calculator.get_target_array(states)
         self.rl_system.action_value_function.vectorized_fit(
-            experience.get_training_states(),
+            states,
             target_array,
             **kwargs)
 
@@ -73,4 +74,10 @@ def build_vectorized_q_learner(rl_system, discount_factor=1.0):
 def build_vectorized_expected_sarsa_learner(rl_system, discount_factor=1.0):
     target_array_calculator = build_vectorized_expected_sarsa_target_array_calculator(rl_system, discount_factor)
     learner = VectorizedLearner(rl_system, target_array_calculator=target_array_calculator)
+    return learner
+
+
+def build_vectorized_state_machine_q_learner(rl_system, discount_factor=1.0):
+    target_array_calculator = build_vectorized_state_machine_q_learning_target_array_calculator(rl_system, discount_factor)
+    learner = VectorizedLearner(rl_system, target_array_calculator)
     return learner

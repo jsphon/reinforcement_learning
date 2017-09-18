@@ -21,9 +21,9 @@ class MyTestCase(unittest.TestCase):
 
         fitted_loss = value_function.evaluate(states, targets)
 
-        self.assertLess(fitted_loss[0] < original_loss[0])
-        self.assertLess(fitted_loss[1] < original_loss[1])
-        self.assertLess(fitted_loss[2] < original_loss[3])
+        self.assertLess(fitted_loss[0], original_loss[0])
+        self.assertLess(fitted_loss[1], original_loss[1])
+        self.assertLess(fitted_loss[2], original_loss[2])
 
     def test___call__(self):
         state = AntState()
@@ -37,7 +37,7 @@ class MyTestCase(unittest.TestCase):
 
 class States(object):
     def __init__(self):
-        self.values = np.random.randn(5, 10)
+        self.values = np.random.randn(5, 11)
 
     def as_array(self):
         return self.values
