@@ -1,6 +1,6 @@
 from rl.core.model import Model
 import numpy as np
-from .constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, FOOD_POSITION
+from rl.examples.ant.constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, FOOD_POSITION
 
 
 class AntModel(Model):
@@ -33,7 +33,7 @@ class AntModel(Model):
         if new_state.external_state.position == HOME_POSITION:
             print('changing state to finding food')
             new_state.internal_state = FINDING_FOOD
-            new_state.num_homecomings += 1
+            new_state.external_state.num_homecomings += 1
 
         return new_state
 
@@ -56,3 +56,4 @@ if __name__=='__main__':
     ant_state = AntState()
 
     print(ant_state)
+

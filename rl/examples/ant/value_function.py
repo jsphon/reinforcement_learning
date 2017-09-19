@@ -1,5 +1,4 @@
 from rl.core.value_function import NeuralNetStateMachineActionValueFunction
-import numpy as np
 from keras.layers import Input, Dense
 from keras.models import Model
 
@@ -9,7 +8,7 @@ class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
     def __init__(self):
         super(AntActionValueFunction, self).__init__()
 
-        input_size = 10
+        input_size = 11
 
         # This returns a tensor
         inputs = Input(shape=(input_size,))
@@ -60,7 +59,7 @@ if __name__ == '__main__':
 
     print(value_function(state))
 
-    print(value_function.combined_model.predict(state.external_state.as_array().reshape((1, 10))))
+    print(value_function.model.predict(state.external_state.as_array().reshape((1, 11))))
 
 
 
