@@ -143,7 +143,8 @@ class FullyVectorizedTargetArrayCalculator(TargetArrayCalculator):
         return targets
 
 
-class VectorizedStateMachineTargetArrayCalculator(FullyVectorizedTargetArrayCalculator):
+class VectorizedStateMachineTargetArrayCalculator(TargetArrayCalculator):
+
     def __init__(
             self,
             rl_system,
@@ -153,7 +154,7 @@ class VectorizedStateMachineTargetArrayCalculator(FullyVectorizedTargetArrayCalc
         self.action_target_calculator = action_target_calculator
         self.total_num_actions = sum(rl_system.num_actions)
 
-    def get_target_arrays(self, external_states):
+    def get_target_array(self, external_states):
         targets = []
         for i in range(self.rl_system.num_internal_states):
             target = np.empty((len(external_states), self.rl_system.num_actions[i]))

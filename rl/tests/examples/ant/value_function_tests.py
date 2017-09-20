@@ -4,7 +4,7 @@ import numpy as np
 
 from rl.examples.ant.state import AntState
 from rl.examples.ant.value_function import AntActionValueFunction
-
+from rl.core.state import IntExtState
 
 class MyTestCase(unittest.TestCase):
     def test_vectorized_fit(self):
@@ -27,9 +27,10 @@ class MyTestCase(unittest.TestCase):
 
     def test___call__(self):
         state = AntState()
+        int_ext_state = IntExtState(0, state)
         value_function = AntActionValueFunction()
 
-        value = value_function(state)
+        value = value_function(int_ext_state)
 
         self.assertIsInstance(value, np.ndarray)
         self.assertEqual(2, len(value))

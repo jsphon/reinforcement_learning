@@ -49,12 +49,12 @@ class VectorizedStateMachineTargetArrayCalculatorTests(unittest.TestCase):
         targets = self.calculator.get_state_targets(int_ext_state)
         self.assertEqual(3, targets.shape[0])
 
-    def test_get_target_arrays(self):
+    def test_get_target_array(self):
 
         external_state1 = MagicMock()
         external_state2 = MagicMock()
         external_states = [external_state1, external_state2]
-        targets = self.calculator.get_target_arrays(external_states)
+        targets = self.calculator.get_target_array(external_states)
 
 
 class QLearningTargetArrayCalculatorTests(unittest.TestCase):
@@ -149,14 +149,14 @@ class VectorizedStateMachineTargetArrayCalculatorTest(unittest.TestCase):
 
         self.assertEqual(2, len(targets))
 
-    def test_get_target_arrays(self):
+    def test_get_target_array(self):
 
         external_state1 = MagicMock()
         external_state2 = MagicMock()
 
         external_states = [external_state1, external_state2]
 
-        targets = self.calculator.get_target_arrays(external_states)
+        targets = self.calculator.get_target_array(external_states)
 
         self.assertEqual(2, len(targets))
         self.assertEqual((2, 2), targets[0].shape)
