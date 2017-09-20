@@ -1,3 +1,5 @@
+
+import numpy as np
 from rl.core.rl_system import RLSystem
 
 from rl.examples.ant.reward_function import AntRewardFunction
@@ -23,6 +25,34 @@ class AntWorld(RLSystem):
 
         # self.action_value_function = TabularGridActionValueFunction(self.num_actions)
 
+    def calculate_action_values(self):
+
+        result = []
+        for internal_state in (0, 1):
+            action_values = []
+            for _position in range(10):
+                _external_state = AntState(position=_position)
+                _state = IntExtState(internal_state, _external_state)
+                avs = self.action_value_function(_state)
+                action_values.append(avs)
+            result.append(np.r_[action_values])
+        return result
+
+
+def calculate_greedy_actions(ant_world):
+    rows = []
+    for internal_state in (0, 1):
+        row = []
+        for _position in range(10):
+            _external_state = AntState(position=_position)
+            _state = IntExtState(internal_state, _external_state)
+            _action = ant_world.choose_action(_state)
+            row.append(str(_action))
+        rows.append(''.join(row))
+
+    _greedy_actions = '\n'.join(rows)
+    return _greedy_actions
+
 
 if __name__ == '__main__':
 
@@ -46,29 +76,15 @@ if __name__ == '__main__':
         state = AntState(position=position)
         states_list.append(state)
 
-    for _ in range(1000):
-        learner.learn(states_list)
+    for _ in range(1000): learner.learn(states_list)
 
     state = IntExtState(1, external_state)
-
-    def calculate_greedy_actions(world):
-        rows = []
-        for internal_state in (0, 1):
-            row = []
-            for _position in range(10):
-                _external_state = AntState(position=position)
-                _state = IntExtState(internal_state, _external_state)
-                _action = world.choose_action(_state)
-                row.append(str(_action))
-            rows.append(''.join(row))
-
-        _greedy_actions = '\n'.join(rows)
-        return _greedy_actions
 
     greedy_actions = calculate_greedy_actions(world)
 
     print(greedy_actions)
 
-
     state = IntExtState(0, AntState(1))
 
+    action_values = world.calculate_action_values()
+    print(action_values)
