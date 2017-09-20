@@ -3,14 +3,14 @@ from rl.core.state import IntExtState, State
 
 
 class AntState(State):
-    def __init__(self, position=5):
-        self._num_homecomings = 0
+    def __init__(self, position=5, max_home_comings=1):
         self._is_terminal = False
         self.array_dtype = np.bool
         self._num_homecomings = 0
         self.size = 11
         self.position = position
         self.is_terminal = False
+        self.max_home_comings = max_home_comings
 
     def __repr__(self):
         return str(self)
@@ -35,7 +35,7 @@ class AntState(State):
     @num_homecomings.setter
     def num_homecomings(self, value):
         self._num_homecomings = value
-        if value == 5:
+        if value == self.max_home_comings:
             self.is_terminal = True
 
 
