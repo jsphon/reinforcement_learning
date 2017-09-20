@@ -5,8 +5,11 @@ import numpy as np
 from rl.examples.ant.state import AntState
 from rl.examples.ant.value_function import AntActionValueFunction
 from rl.core.state import IntExtState
+from rl.core.experience import StatesList
+
 
 class MyTestCase(unittest.TestCase):
+
     def test_vectorized_fit(self):
         states = States()
         target1 = np.random.randn(5, 2)
@@ -34,6 +37,28 @@ class MyTestCase(unittest.TestCase):
 
         self.assertIsInstance(value, np.ndarray)
         self.assertEqual(2, len(value))
+
+    def test_flexibility(self):
+        """
+        Test that the model is flexible enough to
+        represent our expected result
+        """
+
+        ant_states = [AntState(position) for position in range(10)]
+        ant_states = StatesList(ant_states)
+        # Finding Home Targets
+        targets0 = np.array([[7, 8 , 0, 10, 9, 8, 7, 6, 5, 4],  # Left
+                             [9, 10, 0, 8 , 7, 6, 5, 4, 3, 2]]).T # Right
+        # Finding Food Targets
+        targets1 = np.array([[1, 2, 3, 4, 5, 6, 7, 8,  0, 10],  # Left
+                             [3, 4, 5, 6, 7, 8, 9, 10, 0, 9 ]]).T # Right
+        targets = [targets0, targets1]
+
+        value_function = AntActionValueFunction()
+        value_function.vectorized_fit(ant_states, targets, epochs=200)
+
+        score = value_function.evaluate(ant_states, targets)
+        self.assertLess(score[0], 1.0)
 
 
 class States(object):

@@ -41,7 +41,7 @@ class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
 
     def vectorized_fit(self, states, targets, **kwargs):
         x = states.as_array()
-        self.model.fit(x, targets, **kwargs)
+        return self.model.fit(x, targets, **kwargs)
 
     def scalar_fit(self, states, actions, rewards, **kwargs):
         pass
@@ -49,13 +49,14 @@ class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
 
 if __name__ == '__main__':
     from rl.examples.ant.state import AntState
+    from rl.core.state import IntExtState
     value_function = AntActionValueFunction()
 
-    state = AntState(internal_state=0)
+    state = IntExtState(0, AntState(position=1))
 
     print(value_function(state))
 
-    state = AntState(internal_state=1)
+    state = IntExtState(1, AntState(position=1))
 
     print(value_function(state))
 
