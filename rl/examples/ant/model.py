@@ -1,6 +1,6 @@
 from rl.core.model import Model
-import numpy as np
 from rl.examples.ant.constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, FOOD_POSITION
+from rl.core.state import IntExtState
 
 
 class AntModel(Model):
@@ -38,7 +38,8 @@ class AntModel(Model):
         return new_state
 
     def apply_movement(self, state, action):
-        new_state = state.copy()
+
+        new_state = IntExtState(state.internal_state, state.external_state.copy())
         external_state = state.external_state
 
         if action == MOVE_RIGHT:

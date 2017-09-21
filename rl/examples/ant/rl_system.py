@@ -76,7 +76,7 @@ if __name__ == '__main__':
         state = AntState(position=position)
         states_list.append(state)
 
-    for _ in range(1000): learner.learn(states_list)
+    for _ in range(1000): learner.learn(states_list, epochs=1)
 
     state = IntExtState(1, external_state)
 
@@ -88,3 +88,6 @@ if __name__ == '__main__':
 
     action_values = world.calculate_action_values()
     print(action_values)
+
+    # Why is this [10, 10] ?
+    #learner.target_array_calculator.get_state_targets(IntExtState(0, AntState(3)))
