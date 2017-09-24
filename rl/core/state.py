@@ -37,13 +37,10 @@ class IntExtState(object):
 
         self.external_state = external_state
         self.internal_state = internal_state
+        self.is_terminal = False
 
     def copy(self):
         return IntExtState(self.internal_state, self.external_state)
-
-    @property
-    def is_terminal(self):
-        return self.external_state.is_terminal
 
     @property
     def size(self):
