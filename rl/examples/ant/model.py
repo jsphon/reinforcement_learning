@@ -34,6 +34,9 @@ class AntModel(Model):
             print('changing state to finding food')
             new_state.internal_state = FINDING_FOOD
             new_state.external_state.num_homecomings += 1
+            if new_state.external_state.num_homecomings==new_state.external_state.max_home_comings:
+                print('Ant found home...')
+                new_state.is_terminal = True
 
         return new_state
 
