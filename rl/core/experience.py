@@ -70,19 +70,19 @@ class Experience(object):
         raise NotImplemented()
 
 
-class StatesList(list):
-
-    def get_training_length(self):
-        return len(self)
-
-    def as_array(self):
-        state_size = self[0].size
-        num_training_states = len(self)
-        dtype = self[0].array_dtype
-        result = np.ndarray((num_training_states, state_size), dtype=dtype)
-        for i in range(num_training_states):
-            result[i, :] = self[i].as_array()
-        return result
+# class StatesList(list):
+#
+#     def get_training_length(self):
+#         return len(self)
+#
+#     def as_array(self):
+#         state_size = self[0].size
+#         num_training_states = len(self)
+#         dtype = self[0].array_dtype
+#         result = np.ndarray((num_training_states, state_size), dtype=dtype)
+#         for i in range(num_training_states):
+#             result[i, :] = self[i].as_array()
+#         return result
 
 
 class Episode(Experience):
