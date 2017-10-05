@@ -16,7 +16,6 @@ class RLSystem(object):
             reward_function=None,
             action_value_function=None,
             model=None,
-            num_actions=0,
             state_size=0,
     ):
         self.policy = policy
@@ -24,7 +23,6 @@ class RLSystem(object):
         self.action_value_function = action_value_function
         self.model = model
         self.get_new_state = None
-        self.num_actions = num_actions
         self.state_size = state_size
 
     def choose_action(self, state):
@@ -35,3 +33,11 @@ class RLSystem(object):
     def calculate_state_probabilities(self, state):
         action_values = self.action_value_function(state)
         return self.policy.calculate_action_value_probabilities(action_values)
+
+
+class StateMachineSystem(object):
+
+    def __init__(self, *args, **kwargs):
+        super(StateMachineSystem, self).__init__(*args, **kwargs)
+        self.num_internal_states = 0
+        self.external_states_meta = []

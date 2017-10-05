@@ -55,10 +55,21 @@ class StateMeta(object):
         self.num_actions = 2
 
 
-class StateList(list):
+class StateList(object):
 
-    def __init__(self, meta=None):
-        self.meta = meta or StateMeta()
+    def __init__(self, states=None, meta=None):
+        self.meta = meta or states[0].meta if states else StateMeta()
+        self.values = states or []
+
+    def __len__(self):
+        return len(self.values)
+
+    def __iter__(self):
+        return self.values.__iter__()
+
+    @property
+    def num_actions(self):
+        return self.meta.num_actions
 
     def as_array(self):
         state_size = self[0].size
@@ -79,7 +90,14 @@ class IntExtState(object):
 
         self.external_state = external_state
         self.internal_state = internal_state
-        self.is_terminal = False
+
+    @property
+    def meta(self):
+        return self.external_state.meta
+
+    @property
+    def num_actions(self):
+        return self.external_state.num_actions
 
     def copy(self):
         return IntExtState(self.internal_state, self.external_state)

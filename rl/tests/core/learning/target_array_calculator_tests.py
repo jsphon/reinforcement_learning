@@ -5,162 +5,235 @@ import numpy as np
 from mock import MagicMock
 
 from rl.core.experience import Episode
-from rl.core.learning.target_array_calculator import \
-    build_q_learning_target_array_calculator, \
-    build_sarsa_target_array_calculator, \
-    VectorizedStateMachineTargetArrayCalculator
+from rl.core.learning.target_array_calculator import build_target_array_calculator,\
+    ModelBasedTargetArrayCalculator
+
 from rl.tests.core.learning.mock_rl_system import MockState1, MockState2A, MockState2B, MockState3
 from rl.tests.core.learning.mock_rl_system import MockSystem
-from rl.core.state import IntExtState, State
+from rl.core.state import IntExtState, State, StateList
+
 
 N = 1000
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-class VectorizedStateMachineTargetArrayCalculatorTests(unittest.TestCase):
+class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
     def setUp(self):
-        rl_system = MagicMock(num_actions=[2, 3], num_states=2)
-        action_target_calculator = MagicMock()
-        self.calculator = VectorizedStateMachineTargetArrayCalculator(
+        rl_system = MockSystem()
+        self.calculator = build_target_array_calculator(
             rl_system=rl_system,
-            action_target_calculator=action_target_calculator
+            calculator_type='modelbased',
+            learning_algo='qlearning'
         )
 
-    def test___init__(self):
-        self.assertIsInstance(self.calculator, VectorizedStateMachineTargetArrayCalculator)
+    def test_setUp(self):
+        self.assertIsInstance(self.calculator, ModelBasedTargetArrayCalculator)
 
-    def test_get_state_targets1(self):
+    def test_get_target_matrix(self):
+        s1 = MockState1()
+        s2a = MockState2A()
+        s2b = MockState2B()
+        s3 = MockState3()
 
-        internal_state = 0
-        external_state = MagicMock()
-        int_ext_state = IntExtState(internal_state, external_state)
+        states = StateList([s1, s2a, s2b, s3])
 
-        targets = self.calculator.get_state_targets(int_ext_state)
-        self.assertEqual(2, targets.shape[0])
+        result = self.calculator.get_target_matrix(states)
 
-    def test_get_state_targets2(self):
+        self.assertEqual((4, 2), result.shape)
 
-        internal_state = 1
-        external_state = MagicMock()
-        int_ext_state = IntExtState(internal_state, external_state)
+    def test_get_state_targets_s1(self):
+        s1 = MockState1()
+        result = self.calculator.get_state_targets(s1)
 
-        targets = self.calculator.get_state_targets(int_ext_state)
-        self.assertEqual(3, targets.shape[0])
+        self.assertEqual((2, ), result.shape)
+        self.assertEqual(12, result[0])
+        self.assertEqual(23, result[1])
 
-    def test_get_target_array(self):
+    def test_get_state_targets_s2a(self):
+        s2a = MockState2A()
+        result = self.calculator.get_state_targets(s2a)
 
-        external_state1 = MagicMock()
-        external_state2 = MagicMock()
-        external_states = [external_state1, external_state2]
-        targets = self.calculator.get_target_array(external_states)
+        self.assertEqual((2, ), result.shape)
+        self.assertEqual(33, result[0])
+        self.assertEqual(33, result[1])
 
+    def test_get_state_targets_s2b(self):
+        s2b = MockState2B()
+        result = self.calculator.get_state_targets(s2b)
 
-class QLearningTargetArrayCalculatorTests(unittest.TestCase):
+        self.assertEqual((2, ), result.shape)
+        self.assertEqual(33, result[0])
+        self.assertEqual(33, result[1])
 
-    def test_q_learning_get_target_array(self):
-        states = [MockState1(), MockState2A(), MockState3()]
-        actions = [0, 0]
-        rewards = [0, 0]
-        episode = Episode(states=states, actions=actions, rewards=rewards)
+    def test_get_state_targets_s3(self):
+        s3 = MockState3()
+        result = self.calculator.get_state_targets(s3)
 
-        calculator = build_q_learning_target_array_calculator(MockSystem())
-        targets = calculator.get_target_array(episode)
+        self.assertEqual((2, ), result.shape)
+        self.assertEqual(0, result[0])
+        self.assertEqual(0, result[1])
 
-        # Get this from MockActionValueFunction
-        expected = np.array([1, 0])
-        np.testing.assert_array_almost_equal(expected, targets)
+    def test_get_state_action_target_s1(self):
+        result = self.calculator.get_state_action_target(MockState1(), 0)
+        self.assertEqual(12, result)
 
-    def test_q_learning_get_target_array2(self):
-        states = [MockState1(), MockState2B(), MockState3()]
-        actions = [1, 0]
-        rewards = [0, 10]
-        episode = Episode(states=states, actions=actions, rewards=rewards)
+        result = self.calculator.get_state_action_target(MockState1(), 1)
+        self.assertEqual(23, result)
 
-        calculator = build_q_learning_target_array_calculator(MockSystem())
-        targets = calculator.get_target_array(episode)
+    def test_get_state_action_target_s3(self):
+        result = self.calculator.get_state_action_target(MockState3(), 0)
+        self.assertEqual(0, result)
 
-        expected = np.array([
-            0.0 + 1,
-            10.0 + 0.0
-        ])
-
-        np.testing.assert_almost_equal(expected, targets)
-
-
-class SarsaTargetArrayCalculatorTests(unittest.TestCase):
-    def setUp(self):
-        mock_system = MockSystem()
-        self.calculator = build_sarsa_target_array_calculator(mock_system, discount_factor=0.9)
-
-    def test_get_target_array1(self):
-        states = [MockState1(), MockState2A(), MockState3()]
-        rewards = [11, 33]
-        actions = [0, 0]
-        episode = Episode(states, actions, rewards)
-
-        targets = self.calculator.get_target_array(episode)
-
-        expected = np.array([
-            11 + 0.9 * 1.0,
-            33 + 0.9 * 0.0
-        ])
-
-        np.testing.assert_almost_equal(expected, targets)
-
-    def test_get_target_array2(self):
-        states = [MockState1(), MockState2B(), MockState3()]
-        rewards = [22, 33]
-        actions = [1, 0]
-        episode = Episode(states, actions, rewards)
-
-        targets = self.calculator.get_target_array(episode)
-
-        expected = np.array([
-            22.0 + 0.9 * 0,
-            33.0 + 0.9 * 0
-        ])
-
-        np.testing.assert_array_almost_equal(expected, targets)
+        result = self.calculator.get_state_action_target(MockState3(), 1)
+        self.assertEqual(0, result)
 
 
-class VectorizedStateMachineTargetArrayCalculatorTest(unittest.TestCase):
+class StateMachineTargetArrayCalculatorTests(unittest.TestCase):
 
     def setUp(self):
-
-        action_target_calculator = MagicMock()
-        rl_system = MagicMock(
-            num_internal_states=2,
-            num_actions=[2, 2]
+        rl_system = MagicMock(num_internal_states=2)
+        self.calculator = build_target_array_calculator(
+            rl_system=rl_system,
+            calculator_type='modelbasedstatemachine',
+            learning_algo='qlearning'
         )
 
-        self.calculator = VectorizedStateMachineTargetArrayCalculator(
-            rl_system,
-            action_target_calculator,
-        )
+    # def test_get_state_targets1(self):
+    #
+    #     internal_state = 0
+    #     external_state = MagicMock(num_actions=2)
+    #     int_ext_state = IntExtState(internal_state, external_state)
+    #
+    #     targets = self.calculator.get_state_targets(int_ext_state)
+    #     self.assertEqual(2, targets.shape[0])
+    #
+    # def test_get_state_targets2(self):
+    #
+    #     internal_state = 1
+    #     external_state = MagicMock()
+    #     int_ext_state = IntExtState(internal_state, external_state)
+    #
+    #     targets = self.calculator.get_state_targets(int_ext_state)
+    #     self.assertEqual(3, targets.shape[0])
 
-    def test_get_state_targets(self):
+    def test_get_target_matrix(self):
 
-        external_state = MagicMock()
-        int_ext_state = IntExtState(0, external_state)
-
-        targets = self.calculator.get_state_targets(int_ext_state)
-
-        self.assertEqual(2, len(targets))
-
-    def test_get_target_array(self):
-
-        external_state1 = MagicMock()
-        external_state2 = MagicMock()
-
+        external_state1 = MagicMock(num_actions=2)
+        external_state2 = MagicMock(num_actions=2)
         external_states = [external_state1, external_state2]
-
-        targets = self.calculator.get_target_array(external_states)
-
+        lst = StateList(external_states)
+        targets = self.calculator.get_target_matrix(lst)
+        print(targets)
         self.assertEqual(2, len(targets))
-        self.assertEqual((2, 2), targets[0].shape)
-        self.assertEqual((2, 2), targets[1].shape)
+        #self.fail()
+
+#
+# class QLearningTargetArrayCalculatorTests(unittest.TestCase):
+#
+#     def test_q_learning_get_target_array(self):
+#         states = [MockState1(), MockState2A(), MockState3()]
+#         actions = [0, 0]
+#         rewards = [0, 0]
+#         episode = Episode(states=states, actions=actions, rewards=rewards)
+#
+#         calculator = build_q_learning_target_array_calculator(MockSystem())
+#         targets = calculator.get_target_matrix(episode)
+#
+#         # Get this from MockActionValueFunction
+#         expected = np.array([1, 0])
+#         np.testing.assert_array_almost_equal(expected, targets)
+#
+#     def test_q_learning_get_target_array2(self):
+#         states = [MockState1(), MockState2B(), MockState3()]
+#         actions = [1, 0]
+#         rewards = [0, 10]
+#         episode = Episode(states=states, actions=actions, rewards=rewards)
+#
+#         calculator = build_q_learning_target_array_calculator(MockSystem())
+#         targets = calculator.get_target_matrix(episode)
+#
+#         expected = np.array([
+#             0.0 + 1,
+#             10.0 + 0.0
+#         ])
+#
+#         np.testing.assert_almost_equal(expected, targets)
+#
+#
+# class SarsaTargetArrayCalculatorTests(unittest.TestCase):
+#     def setUp(self):
+#         mock_system = MockSystem()
+#         self.calculator = build_sarsa_target_array_calculator(mock_system, discount_factor=0.9)
+#
+#     def test_get_target_array1(self):
+#         states = [MockState1(), MockState2A(), MockState3()]
+#         rewards = [11, 33]
+#         actions = [0, 0]
+#         episode = Episode(states, actions, rewards)
+#
+#         targets = self.calculator.get_target_matrix(episode)
+#
+#         expected = np.array([
+#             11 + 0.9 * 1.0,
+#             33 + 0.9 * 0.0
+#         ])
+#
+#         np.testing.assert_almost_equal(expected, targets)
+#
+#     def test_get_target_array2(self):
+#         states = [MockState1(), MockState2B(), MockState3()]
+#         rewards = [22, 33]
+#         actions = [1, 0]
+#         episode = Episode(states, actions, rewards)
+#
+#         targets = self.calculator.get_target_matrix(episode)
+#
+#         expected = np.array([
+#             22.0 + 0.9 * 0,
+#             33.0 + 0.9 * 0
+#         ])
+#
+#         np.testing.assert_array_almost_equal(expected, targets)
+#
+#
+# class VectorizedStateMachineTargetArrayCalculatorTest(unittest.TestCase):
+#
+#     def setUp(self):
+#
+#         action_target_calculator = MagicMock()
+#         rl_system = MagicMock(
+#             num_internal_states=2,
+#             num_actions=[2, 2]
+#         )
+#
+#         self.calculator = VectorizedStateMachineTargetArrayCalculator(
+#             rl_system,
+#             action_target_calculator,
+#         )
+#
+#     def test_get_state_targets(self):
+#
+#         external_state = MagicMock()
+#         int_ext_state = IntExtState(0, external_state)
+#
+#         targets = self.calculator.get_state_targets(int_ext_state)
+#
+#         self.assertEqual(2, len(targets))
+#
+#     def test_get_target_array(self):
+#
+#         external_state1 = MagicMock()
+#         external_state2 = MagicMock()
+#
+#         external_states = [external_state1, external_state2]
+#
+#         targets = self.calculator.get_target_matrix(external_states)
+#
+#         self.assertEqual(2, len(targets))
+#         self.assertEqual((2, 2), targets[0].shape)
+#         self.assertEqual((2, 2), targets[1].shape)
 
 
 if __name__ == '__main__':

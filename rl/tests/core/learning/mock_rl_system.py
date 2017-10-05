@@ -4,6 +4,7 @@ from rl.core import RLSystem, State
 from rl.core.policy import Policy
 from rl.core.reward_function import RewardFunction
 from rl.core.value_function import ActionValueFunction
+from rl.core.model import Model
 
 
 class MockSystem(RLSystem):
@@ -22,6 +23,7 @@ class MockPolicy(Policy):
 
 
 class MockRewardFunction(RewardFunction):
+
     def __call__(self, old_state, action, new_state):
 
         if isinstance(old_state, MockState3) and isinstance(new_state, MockState3):
@@ -45,12 +47,15 @@ class MockActionValueFunction(ActionValueFunction):
         elif isinstance(state, MockState2B):
             return np.array([0., 1.])
         elif isinstance(state, MockState3):
-            return np.array([0., 0.])
+            # Note that these should not affect the action target
+            # calculator as MockState3 is the terminal state.
+            return np.array([3., 4.])
         else:
             raise ValueError('State not expected %s' % str(state))
 
 
-class MockModel(object):
+class MockModel(Model):
+
     def apply_action(self, state, action):
 
         if isinstance(state, MockState1):
@@ -66,6 +71,10 @@ class MockModel(object):
             return MockState3()
         else:
             raise ValueError('object %s not expected' % str(state))
+
+    def is_terminal(self, state):
+
+        return isinstance(state, MockState3)
 
 
 class MockState(State):
