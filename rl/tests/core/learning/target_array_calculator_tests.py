@@ -40,8 +40,10 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
         states = StateList([s1, s2a, s2b, s3])
 
         result = self.calculator.get_target_matrix(states)
-
         self.assertEqual((4, 2), result.shape)
+
+        expected = np.array([[12, 23], [33, 33], [33, 33], [0, 0]])
+        np.testing.assert_array_equal(expected, result)
 
     def test_get_state_targets_s1(self):
         s1 = MockState1()
