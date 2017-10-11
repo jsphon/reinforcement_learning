@@ -30,7 +30,7 @@ class VectorizedLearner(Learner):
 #         )
 
 
-def build_learner(rl_system, discount_factor, learning_algo='qlearning', calculator_type='modelbased'):
+def build_learner(rl_system, discount_factor=1.0, learning_algo='qlearning', calculator_type='modelbased'):
     target_array_calculator = build_target_array_calculator(rl_system,
                                                             discount_factor=discount_factor,
                                                             learning_algo=learning_algo,

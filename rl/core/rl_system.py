@@ -35,9 +35,10 @@ class RLSystem(object):
         return self.policy.calculate_action_value_probabilities(action_values)
 
 
-class StateMachineSystem(object):
+class StateMachineSystem(RLSystem):
 
     def __init__(self, *args, **kwargs):
         super(StateMachineSystem, self).__init__(*args, **kwargs)
         self.num_internal_states = 0
+        self.num_actions = []
         self.external_states_meta = []

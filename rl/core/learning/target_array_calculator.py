@@ -140,6 +140,7 @@ class ModelBasedTargetArrayCalculator(object):
         :return: np.ndarray(num_actions)
         """
 
+        #fail here. the next line is wrong
         num_actions = state.num_actions
         targets = np.empty(num_actions)
 
@@ -169,20 +170,27 @@ class ModelBasedTargetArrayCalculator(object):
         return target
 
 
-class StateMachineTargetArrayCalculator(object):
-
-    def __init__(self, rl_system, action_target_calculator):
-        self.rl_system = rl_system
-        self.model_based_target_array_calculator = ModelBasedTargetArrayCalculator(rl_system, action_target_calculator)
+class ModelBasedStateMachineTargetArrayCalculator(ModelBasedTargetArrayCalculator):
 
     def get_target_matrix(self, external_states):
 
         targets = []
         for internal_state in range(self.rl_system.num_internal_states):
             int_ext_states = [IntExtState(internal_state, external_state) for external_state in external_states]
-            int_ext_states_list = StateList(int_ext_states)
-            i_targets = self.model_based_target_array_calculator.get_target_matrix(int_ext_states_list)
+            i_targets = [self.get_state_targets(x) for x in int_ext_states]
+            i_targets = np.r_[i_targets]
             targets.append(i_targets)
+
+        return targets
+
+    def get_state_targets(self, state):
+
+        internal_state = state.internal_state
+        num_actions = self.rl_system.num_actions[internal_state]
+        targets = np.empty(num_actions)
+
+        for action in range(num_actions):
+            targets[action] = self.get_state_action_target(state, action)
 
         return targets
 
@@ -204,7 +212,7 @@ def build_target_array_calculator(
     if calculator_type=='modelbased':
         return ModelBasedTargetArrayCalculator(rl_system, action_target_calculator)
     elif calculator_type=='modelbasedstatemachine':
-        return StateMachineTargetArrayCalculator(rl_system, action_target_calculator)
+        return ModelBasedStateMachineTargetArrayCalculator(rl_system, action_target_calculator)
 
 
 

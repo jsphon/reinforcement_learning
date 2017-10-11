@@ -5,7 +5,7 @@ import numpy as np
 
 from rl.core.experience import Episode
 from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
-from rl.core.learning.learner import build_q_learner, build_vectorized_q_learner
+from rl.core.learning.learner import build_learner#build_q_learner, build_vectorized_q_learner
 
 N = 1000
 
@@ -24,7 +24,8 @@ class QLearningTests(unittest.TestCase):
 
         grid_world = SimpleGridWorld()
 
-        q_learner = build_q_learner(grid_world)
+        #q_learner = build_q_learner(grid_world)
+        q_learner = build_learner(grid_world)
         q_learner.learn(episode)
 
         y = grid_world.action_value_function.on_list(episode.states)
@@ -52,7 +53,7 @@ class VectorizedQLearningTests(unittest.TestCase):
 
         grid_world = SimpleGridWorld()
 
-        q_learner = build_vectorized_q_learner(grid_world)
+        q_learner = build_learner(grid_world)
         q_learner.learn(states)
 
         y = grid_world.action_value_function.on_list(states)

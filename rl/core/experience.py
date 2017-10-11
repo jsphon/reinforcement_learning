@@ -1,4 +1,5 @@
 import numpy as np
+from rl.core.state import StateList
 
 
 class ExperienceGenerator(object):
@@ -95,7 +96,7 @@ class Episode(Experience):
         return len(self.states) - 1
 
     def get_training_states(self):
-        return StatesList(self.states[:-1])
+        return StateList(self.states[:-1])
 
     def get_training_actions(self):
         return self.actions
@@ -133,7 +134,7 @@ class EpisodeList(Experience):
         return np.concatenate(rewards_lst, axis=0)
 
     def get_training_states(self):
-        training_states = StatesList()
+        training_states = StateList()
         for episode in self.episodes:
             training_states.extend(episode.get_training_states())
         return training_states

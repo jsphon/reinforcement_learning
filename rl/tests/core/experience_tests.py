@@ -3,7 +3,8 @@ import unittest
 
 import numpy as np
 
-from rl.core.experience import ExperienceGenerator, Episode, StatesList
+from rl.core.experience import ExperienceGenerator, Episode
+from rl.core.state import StateList
 from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
 
 N = 1000
@@ -65,7 +66,7 @@ class StatesListsTests(unittest.TestCase):
 
     def test_as_array(self):
         states = [SimpleGridState((1, 1)), SimpleGridState((2, 2))]
-        states_list = StatesList(states)
+        states_list = StateList(states)
 
         result = states_list.as_array()
 
