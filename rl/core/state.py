@@ -49,10 +49,10 @@ class State(object):
 
 class StateMeta(object):
 
-    def __init__(self):
-        self.size = 0
-        self.array_dtype = np.float
-        self.num_actions = 2
+    def __init__(self, size=-1, array_dtype=np.float, num_actions=-1):
+        self.size = size
+        self.array_dtype = array_dtype
+        self.num_actions = num_actions
 
 
 class StateList(object):
@@ -66,6 +66,9 @@ class StateList(object):
 
     def __iter__(self):
         return self.values.__iter__()
+
+    def __getitem__(self, arg):
+        return self.values[arg]
 
     @property
     def num_actions(self):

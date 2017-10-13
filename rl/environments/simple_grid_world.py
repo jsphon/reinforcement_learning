@@ -75,61 +75,6 @@ class SimpleGridWorld(BaseGridWorld):
                 rewards[i, j] = self.reward_function.get_reward(None, None, state)
         return rewards
 
-#
-# class GridActionValueFunction(ActionValueFunction):
-#
-#     def __init__(self, shape, num_actions):
-#
-#         input_size = shape[0] * shape[1]
-#
-#         model = Sequential()
-#         model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(input_size,)))
-#         model.add(Activation('relu'))
-#         # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
-#
-#         model.add(Dense(150, kernel_initializer='lecun_uniform'))
-#         model.add(Activation('relu'))
-#         # model.add(Dropout(0.2))
-#
-#         model.add(Dense(num_actions, kernel_initializer='lecun_uniform'))
-#         model.add(Activation('linear'))  # linear output so we can have range of real-valued outputs
-#
-#         rms = RMSprop()
-#         model.compile(loss='mse', optimizer=rms)
-#         self.model = model
-#
-#     def __call__(self, state):
-#         """
-#
-#         :param state:
-#         :return: np.ndarray(num_actions)
-#         """
-#         arr = state.as_array()
-#         return self.model.predict(arr).ravel()
-#
-#     def on_list(self, states):
-#         """
-#
-#         :param states:
-#         :return: np.ndarray(len(states), num_actions)
-#         """
-#
-#         state_size = states[0].size
-#         num_states = len(states)
-#         dtype = states[0].array_dtype
-#         arr = np.ndarray((num_states, state_size), dtype=dtype)
-#         for i in range(num_states):
-#             arr[i, :] = states[i].as_array()
-#         return self.model.predict(arr)
-#
-#     def vectorized_fit(self, states, targets, **kwargs):
-#
-#         x = states.as_array()
-#         self.model.fit(x, targets, **kwargs)
-#
-#     def scalar_fit(self, states, actions, rewards, **kwargs):
-#         pass
-
 
 class SimpleGridWorldRewardFunction(RewardFunction):
     def __call__(self, old_state, action, new_state):
@@ -161,6 +106,9 @@ class SimpleGridModel(Model):
         else:
             raise Exception('Unexpected action %s' % str(action))
         return result
+
+    def is_terminal(self, state):
+        return state.player in ((0, 0), (3, 3))
 
     def move_up(self, state):
         new_position = (max(state.player[0] - 1, 0), state.player[1])
