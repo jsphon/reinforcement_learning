@@ -5,7 +5,7 @@ import numpy as np
 from rl.examples.ant.state import AntState
 from rl.examples.ant.value_function import AntActionValueFunction
 from rl.core.state import IntExtState
-from rl.core.experience import StatesList
+from rl.core.experience import StateList
 
 
 class MyTestCase(unittest.TestCase):
@@ -45,7 +45,7 @@ class MyTestCase(unittest.TestCase):
         """
 
         ant_states = [AntState(position) for position in range(10)]
-        ant_states = StatesList(ant_states)
+        ant_states = StateList(ant_states)
         # Finding Home Targets
         targets0 = np.array([[7, 8 , 0, 10, 9, 8, 7, 6, 5, 4],  # Left
                              [9, 10, 0, 8 , 7, 6, 5, 4, 3, 2]]).T # Right
