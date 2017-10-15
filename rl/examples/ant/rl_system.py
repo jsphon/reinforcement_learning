@@ -65,16 +65,18 @@ if __name__ == '__main__':
 
     world.choose_action(int_ext_state)
 
-    from rl.core.learning.learner import build_vectorized_state_machine_q_learner
+    from rl.core.learning.learner import build_learner
 
-    learner = build_vectorized_state_machine_q_learner(world)
+    learner = build_learner(world, calculator_type='modelbasedstatemachine')
 
-    from rl.core.experience import StatesList
+    from rl.core.state import StateList
 
-    states_list = StatesList()
+    states = []
     for position in range(10):
         state = AntState(position=position)
-        states_list.append(state)
+        states.append(state)
+
+    states_list = StateList(states)
 
     for _ in range(1000): learner.learn(states_list, epochs=1)
 
