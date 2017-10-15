@@ -1,7 +1,7 @@
 import textwrap
 
 from rl.core.experience import ExperienceGenerator
-from rl.core.learning.learner import build_q_learner
+from rl.core.learning.learner import build_learner
 from rl.core.learning.learning_system import LearningSystem
 from rl.environments.cliff_world import CliffWorld
 from rl.lib.timer import Timer
@@ -11,7 +11,7 @@ grid_world.policy.epsilon = 0.1
 grid_world.action_value_function.learning_rate = 0.05
 
 generator = ExperienceGenerator(grid_world)
-learner = build_q_learner(grid_world)
+learner = build_learner(grid_world)
 
 learning_system = LearningSystem(learner, generator)
 with Timer('training') as t:

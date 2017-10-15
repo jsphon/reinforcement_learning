@@ -1,5 +1,15 @@
 import numpy as np
-from rl.core.state import State
+from rl.core.state import State, StateMeta
+
+
+class AntStateMeta(StateMeta):
+
+    def __init__(self):
+        super(AntStateMeta, self).__init__(
+            size = 11,
+            num_actions = 2,
+            array_dtype = np.float
+        )
 
 
 class AntState(State):
@@ -7,15 +17,11 @@ class AntState(State):
     def __init__(
             self,
             position=5,
-            num_homecomings=0,
-            max_home_comings=1):
-        self._is_terminal = False
-        self.array_dtype = np.bool
+            num_homecomings=0):
         self._num_homecomings = num_homecomings
-        self.size = 11
         self.position = position
-        self.is_terminal = False
-        self.max_home_comings = max_home_comings
+
+        self.meta = AntStateMeta()
 
     def __repr__(self):
         return str(self)
@@ -27,8 +33,7 @@ class AntState(State):
     def copy(self):
         return AntState(
             position=self.position,
-            num_homecomings=self._num_homecomings,
-            max_home_comings=self.max_home_comings
+            num_homecomings=self._num_homecomings
         )
 
     def as_array(self):
@@ -44,8 +49,6 @@ class AntState(State):
     @num_homecomings.setter
     def num_homecomings(self, value):
         self._num_homecomings = value
-        if value == self.max_home_comings:
-            self.is_terminal = True
 
 
 if __name__ == '__main__':

@@ -140,8 +140,6 @@ class ModelBasedTargetArrayCalculator(object):
         :return: np.ndarray(num_actions)
         """
 
-        #fail here. the next line is wrong
-        #num_actions = state.num_actions
         num_actions = self.rl_system.num_actions
         targets = np.empty(num_actions)
 

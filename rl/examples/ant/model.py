@@ -4,8 +4,9 @@ from rl.core.state import IntExtState
 
 
 class AntModel(Model):
-    def __init__(self):
+    def __init__(self, max_num_homecomings=1):
         super(Model, self).__init__()
+        self.max_num_homecomings = max_num_homecomings
 
     def apply_action(self, state, action):
 
@@ -34,7 +35,7 @@ class AntModel(Model):
             print('changing state to finding food')
             new_state.internal_state = FINDING_FOOD
             new_state.external_state.num_homecomings += 1
-            if new_state.external_state.num_homecomings==new_state.external_state.max_home_comings:
+            if new_state.external_state.num_homecomings == new_state.external_state.max_home_comings:
                 print('Ant found home...')
                 new_state.is_terminal = True
 
@@ -52,12 +53,14 @@ class AntModel(Model):
 
         return new_state
 
+    def is_terminal(self, state):
+        return state.num_homecomings >= self.max_num_homecomings
 
-if __name__=='__main__':
 
+if __name__ == '__main__':
     from rl.examples.ant.state import AntState
+
     model = AntModel()
     ant_state = AntState()
 
     print(ant_state)
-
