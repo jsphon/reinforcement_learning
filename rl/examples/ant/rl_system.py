@@ -5,7 +5,9 @@ from rl.core.rl_system import RLSystem
 from rl.examples.ant.reward_function import AntRewardFunction
 from rl.examples.ant.model import AntModel
 from rl.examples.ant.value_function import AntActionValueFunction
+from rl.examples.ant.state import AntState
 from rl.core.policy import EpsilonGreedyPolicy# SoftmaxPolicy
+from rl.core.state import IntExtState
 
 
 class AntWorld(RLSystem):
@@ -15,15 +17,9 @@ class AntWorld(RLSystem):
         self.reward_function = AntRewardFunction()
         self.model = AntModel()
         self.action_value_function = AntActionValueFunction()
-        #self.policy = SoftmaxPolicy()
         self.policy = EpsilonGreedyPolicy(epsilon=0)
         self.num_actions = (2, 2)
         self.num_internal_states = 2
-
-        # self.state_class = SimpleGridState
-        # self.shape = (4, 4)
-
-        # self.action_value_function = TabularGridActionValueFunction(self.num_actions)
 
     def calculate_action_values(self):
 
@@ -41,23 +37,25 @@ class AntWorld(RLSystem):
 
 def calculate_greedy_actions(ant_world):
     rows = []
+    null_cells = [(0, 2), (1, 8)]
     for internal_state in (0, 1):
         row = []
         for _position in range(10):
             _external_state = AntState(position=_position)
             _state = IntExtState(internal_state, _external_state)
             _action = ant_world.choose_action(_state)
-            row.append(str(_action))
+            if (internal_state, _position) in null_cells:
+                row.append('x')
+            else:
+                row.append(str(_action))
         rows.append(''.join(row))
+
 
     _greedy_actions = '\n'.join(rows)
     return _greedy_actions
 
 
 if __name__ == '__main__':
-
-    from rl.examples.ant.state import AntState
-    from rl.core.state import IntExtState
 
     external_state = AntState()
     int_ext_state = IntExtState(0, external_state)

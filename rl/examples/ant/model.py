@@ -23,7 +23,6 @@ class AntModel(Model):
 
         new_state = self.apply_movement(state, action)
         if new_state.external_state.position == FOOD_POSITION:
-            print('Changing state to finding home')
             new_state.internal_state = FINDING_HOME
 
         return new_state
@@ -32,7 +31,6 @@ class AntModel(Model):
 
         new_state = self.apply_movement(state, action)
         if new_state.external_state.position == HOME_POSITION:
-            print('changing state to finding food')
             new_state.internal_state = FINDING_FOOD
             new_state.external_state.num_homecomings += 1
 
