@@ -1,23 +1,18 @@
 import copy
 
 import numpy as np
-import pandas as pd
-from keras.layers.core import Dense, Activation
-from keras.models import Sequential
-from keras.optimizers import RMSprop
 
 from rl.core.model import Model
 from rl.core.policy import EpsilonGreedyPolicy
 from rl.core.reward_function import RewardFunction
-from rl.core.rl_system import RLSystem
 from rl.core.state import State
 from rl.core.value_function import ActionValueFunction
+from rl.environments.simple_grid_world import SimpleGridWorld
+
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
 np.set_printoptions(suppress=True)
-
-from rl.environments.simple_grid_world import SimpleGridWorld
 
 
 class CliffWorld(SimpleGridWorld):
@@ -138,57 +133,6 @@ class GridActionValueFunction(ActionValueFunction):
             self.values[key][actions[i]] = target
             print("Updated Q(%s, %s) from %s to %s" % (key, actions[i], str(current_value), target))
 
-#
-# class GridActionValueFunction(ActionValueFunction):
-#
-#     def __init__(self):
-#         model = Sequential()
-#         #model.add(Dense(164, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
-#
-#         # Have one for each state/action
-#         model.add(Dense(4*48, kernel_initializer='lecun_uniform', input_shape=(12 * 4,)))
-#         model.add(Activation('relu'))
-#         # model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
-#
-#         #model.add(Dense(150, kernel_initializer='lecun_uniform'))
-#         #model.add(Dense(48, kernel_initializer='lecun_uniform'))
-#         #model.add(Activation('relu'))
-#         # model.add(Dropout(0.2))
-#
-#         model.add(Dense(4, kernel_initializer='lecun_uniform'))
-#         model.add(Activation('linear'))  # linear output so we can have range of real-valued outputs
-#
-#         rms = RMSprop()
-#         model.compile(loss='mse', optimizer=rms)
-#         self.model = model
-#
-#     def __call__(self, state):
-#         """
-#
-#         :param state:
-#         :return: np.ndarray(num_actions)
-#         """
-#         arr = state.as_array()
-#         return self.model.predict(arr).ravel()
-#
-#     def on_list(self, states):
-#         """
-#
-#         :param states:
-#         :return: np.ndarray(len(states), num_actions)
-#         """
-#
-#         state_size = states[0].size
-#         num_states = len(states)
-#         dtype = states[0].array_dtype
-#         arr = np.ndarray((num_states, state_size), dtype=dtype)
-#         for i in range(num_states):
-#             arr[i, :] = states[i].as_array()
-#         return self.model.predict(arr)
-#
-#     def fit(self, states, targets, **kwargs):
-#         self.model.fit(states.as_array(), targets, **kwargs)
-
 
 class GridRewardFunction(RewardFunction):
     def __call__(self, old_state, action, new_state):
@@ -213,7 +157,7 @@ class GridModel(Model):
         self.num_actions = 4
 
     def apply_action(self, state, action):
-        next_state = state.copy()
+        next_state = GridState(player=state.player)
         if action == 0:
             self.move_up(next_state)
         elif action == 1:
@@ -224,7 +168,6 @@ class GridModel(Model):
             self.move_right(next_state)
         else:
             raise Exception('Unexpected action %s' % str(action))
-        #print('walked to %s'%str(next_state.player))
         return next_state
 
     def move_up(self, state):
@@ -243,27 +186,31 @@ class GridModel(Model):
         new_position = (state.player[0], min(state.player[1] + 1, 11))
         state.update_player(new_position)
 
+    def is_terminal(self, state):
+        return (state.player[0] == 0) and (state.player[1] > 0)
+
 
 class GridState(State):
 
-    def __init__(self, player, visited_states = None):
+    size = 4 * 12
+    shape = (4, 12)
+    array_dtype = np.bool
+
+    def __init__(self, player):
         super(GridState, self).__init__()
         self.player = None
-        self.size = 4 * 12
-        self.shape = (4, 12)
         self.array_dtype = np.bool
-        self.update_player(player)
-        self.visited_states = visited_states or []
+        self.player = player
 
     def __repr__(self):
         return '<GridState player=%s>' % str(self.player)
 
-    @staticmethod
-    def enumerate(self):
+    @classmethod
+    def all(cls):
 
         states = []
-        for i in range(self.shape[0]):
-            for j in range(self.shape[1]):
+        for i in range(cls.shape[0]):
+            for j in range(cls.shape[1]):
                 player = (i, j)
                 state = GridState(player)
                 if not state.is_terminal:
@@ -306,8 +253,6 @@ class GridState(State):
 
     def update_player(self, player):
         self.player = player
-        if (player[0] == 0) and (player[1] > 0):
-            self.is_terminal = True
 
 
 def new_fixed_grid_state():
