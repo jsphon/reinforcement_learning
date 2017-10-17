@@ -5,14 +5,15 @@ from rl.environments.cliff_world import CliffWorld, GridState
 from rl.lib.timer import Timer
 
 grid_world = CliffWorld()
+grid_world.policy.epsilon = 0.25
 grid_world.action_value_function.learning_rate = 0.05
 
 states = GridState.all()
 
-learner = build_learner(grid_world, learning_algo='qlearning')
+learner = build_learner(grid_world, learning_algo='sarsa')
 
 with Timer('training') as t:
-    for i in range(500):
+    for i in range(1000):
         print('Epoch %s' % i)
         learner.learn(states)
 

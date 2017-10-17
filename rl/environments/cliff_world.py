@@ -89,7 +89,6 @@ class GridActionValueFunction(ActionValueFunction):
         :return: np.ndarray(num_actions)
         """
         key = str(state)
-        #print('key is %s' % str(key))
         return self.values[key]
 
     def vectorized_fit(self, states, targets, **kwargs):
@@ -111,7 +110,7 @@ class GridActionValueFunction(ActionValueFunction):
             diff = (_y - current_value)
             target = current_value + self.learning_rate * diff
             self.values[key] = target
-            print("Updated %s's value from %s to %s" % (key, str(current_value), target))
+            #print("Updated %s's value from %s to %s" % (key, str(current_value), target))
 
     def scalar_fit(self, states, actions, targets):
         """
@@ -131,7 +130,7 @@ class GridActionValueFunction(ActionValueFunction):
             diff = (targets[i] - current_value)
             target = current_value + self.learning_rate * diff
             self.values[key][actions[i]] = target
-            print("Updated Q(%s, %s) from %s to %s" % (key, actions[i], str(current_value), target))
+            #print("Updated Q(%s, %s) from %s to %s" % (key, actions[i], str(current_value), target))
 
 
 class GridRewardFunction(RewardFunction):
