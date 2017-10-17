@@ -12,9 +12,6 @@ class State(object):
 
         self.meta = meta or StateMeta()
 
-        # State Data
-        self.is_terminal = False
-
     @property
     def size(self):
         return self.meta.size
