@@ -1,6 +1,4 @@
-
 import logging
-import textwrap
 import unittest
 
 import numpy as np
@@ -12,7 +10,6 @@ from rl.lib.timer import Timer
 
 
 class CliffWorldTests(unittest.TestCase):
-
     def setUp(self):
         self.world = CliffWorld()
 
@@ -31,14 +28,11 @@ class CliffWorldTests(unittest.TestCase):
 
 
 class ModuleTests(unittest.TestCase):
-
     def test_walked_off_cliff(self):
-
         self.assertTrue(walked_off_cliff(GridState((0, 1))))
 
 
 class QLearningIntegrationTests(unittest.TestCase):
-
     def test_training(self):
         grid_world = CliffWorld()
         grid_world.action_value_function.learning_rate = 0.05
@@ -54,13 +48,47 @@ class QLearningIntegrationTests(unittest.TestCase):
         value_grid = grid_world.get_value_grid()
         nan = np.nan
         expected = np.array([
-             [-13.,  nan,  nan,  nan,  nan,  nan,  nan,  nan,  nan,  nan,  nan,  nan],
-             [-12., -11., -10.,  -9.,  -8.,  -7.,  -6.,  -5.,  -4.,  -3.,  -2.,  -1.],
-             [-13., -12., -11., -10.,  -9.,  -8.,  -7.,  -6.,  -5.,  -4.,  -3.,  -2.],
-             [-14., -13., -12., -11., -10.,  -9.,  -8.,  -7.,  -6.,  -5.,  -4.,  -3.],
+            [-13., nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan],
+            [-12., -11., -10., -9., -8., -7., -6., -5., -4., -3., -2., -1.],
+            [-13., -12., -11., -10., -9., -8., -7., -6., -5., -4., -3., -2.],
+            [-14., -13., -12., -11., -10., -9., -8., -7., -6., -5., -4., -3.],
         ]
         )
         np.testing.assert_array_almost_equal(expected, value_grid, decimal=1)
+
+
+class SarsaLearningIntegrationTests(unittest.TestCase):
+    def test_training(self):
+        grid_world = CliffWorld()
+        grid_world.policy.epsilon = 0.4
+        grid_world.action_value_function.learning_rate = 0.05
+
+        states = GridState.all()
+
+        learner = build_learner(grid_world, learning_algo='sarsa')
+
+        with Timer('training') as t:
+            for i in range(1000):
+                learner.learn(states)
+
+        # Create the expected result that only consists of actions
+        # on the expected path. The other numbers can be unpredictable
+        # due to Sarsa's random sampling
+        nan = np.nan
+        expected = np.array([
+            [1, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan],
+            [1, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, 0],
+            [1, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, 0],
+            [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0]
+        ], dtype=np.float)
+
+        actions = grid_world.get_greedy_action_grid()
+
+        # Filter out values that are off the expected path
+        actions = actions.astype(np.float)
+        actions[np.isnan(expected)] = np.nan
+
+        np.testing.assert_array_almost_equal(expected, actions)
 
 
 if __name__ == '__main__':
