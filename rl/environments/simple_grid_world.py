@@ -33,7 +33,7 @@ class SimpleGridWorld(BaseGridWorld):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
                 state = self.state_class(player=(i, j))
-                if state.is_terminal:
+                if self.model.is_terminal(state):
                     values[i, j] = np.nan
                 else:
                     v = self.action_value_function(state)

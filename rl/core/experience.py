@@ -44,7 +44,7 @@ class ExperienceGenerator(object):
             states.append(new_state)
             rewards.append(reward)
 
-            if new_state.is_terminal:
+            if self.model.is_terminal(new_state):
                 break
             else:
                 state = new_state
