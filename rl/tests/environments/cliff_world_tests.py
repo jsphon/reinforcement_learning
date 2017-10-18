@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 
 from rl.core.learning.learner import build_learner
-from rl.environments.cliff_world import CliffWorld, GridState
-from rl.environments.cliff_world import walked_off_cliff
+from rl.environments.grid_world.cliff_world import CliffWorld, GridState
+from rl.environments.grid_world.cliff_world import walked_off_cliff
 from rl.lib.timer import Timer
 
 

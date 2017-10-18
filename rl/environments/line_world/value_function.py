@@ -1,6 +1,7 @@
-from rl.core.value_function import NeuralNetStateMachineActionValueFunction
 from keras.layers import Input, Dense
 from keras.models import Model
+
+from rl.core.value_function import NeuralNetStateMachineActionValueFunction
 
 
 class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
@@ -48,7 +49,7 @@ class AntActionValueFunction(NeuralNetStateMachineActionValueFunction):
 
 
 if __name__ == '__main__':
-    from rl.examples.ant.state import AntState
+    from rl.environments.line_world.state import AntState
     from rl.core.state import IntExtState
     value_function = AntActionValueFunction()
 

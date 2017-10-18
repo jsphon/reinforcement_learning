@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 
 from rl.core.experience import Episode
-from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
 from rl.core.learning.learner import build_learner
+from rl.environments.grid_world.simple_grid_world import SimpleGridWorld, SimpleGridState
 
 N = 1000
 

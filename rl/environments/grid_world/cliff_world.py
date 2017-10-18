@@ -7,8 +7,7 @@ from rl.core.policy import EpsilonGreedyPolicy
 from rl.core.reward_function import RewardFunction
 from rl.core.state import State
 from rl.core.value_function import ActionValueFunction
-from rl.environments.simple_grid_world import SimpleGridWorld
-
+from rl.environments.grid_world.simple_grid_world import SimpleGridWorld
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)

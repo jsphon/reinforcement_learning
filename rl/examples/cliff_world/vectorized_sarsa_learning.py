@@ -1,7 +1,7 @@
 import textwrap
 
 from rl.core.learning.learner import build_learner
-from rl.environments.cliff_world import CliffWorld, GridState
+from rl.environments.grid_world.cliff_world import CliffWorld, GridState
 from rl.lib.timer import Timer
 
 grid_world = CliffWorld()

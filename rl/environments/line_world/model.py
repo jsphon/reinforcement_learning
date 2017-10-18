@@ -1,6 +1,7 @@
 from rl.core.model import Model
-from rl.examples.ant.constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, FOOD_POSITION
 from rl.core.state import IntExtState
+from rl.environments.line_world.constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, \
+    FOOD_POSITION
 
 
 class AntModel(Model):
@@ -53,7 +54,7 @@ class AntModel(Model):
 
 
 if __name__ == '__main__':
-    from rl.examples.ant.state import AntState
+    from rl.environments.line_world.state import AntState
 
     model = AntModel()
     ant_state = AntState()

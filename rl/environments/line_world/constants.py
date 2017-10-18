@@ -6,3 +6,8 @@ MOVE_RIGHT = 1
 
 HOME_POSITION = 2
 FOOD_POSITION = 8
+
+ACTION_STRINGS = {
+    MOVE_LEFT : '<',
+    MOVE_RIGHT : '>',
+}

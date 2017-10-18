@@ -1,11 +1,11 @@
 import unittest
 
 import numpy as np
+from rl.environments.line_world.state import AntState
 
-from rl.examples.ant.state import AntState
-from rl.examples.ant.value_function import AntActionValueFunction
-from rl.core.state import IntExtState
 from rl.core.experience import StateList
+from rl.core.state import IntExtState
+from rl.environments.line_world.value_function import AntActionValueFunction
 
 
 class MyTestCase(unittest.TestCase):

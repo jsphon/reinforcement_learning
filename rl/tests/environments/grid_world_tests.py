@@ -2,13 +2,14 @@
 Test for Example 4.1 of Sutton
 """
 
-import unittest
 import logging
+import unittest
 
-from rl.environments.simple_grid_world import SimpleGridWorldRewardFunction, SimpleGridWorld
-from rl.environments.simple_grid_world import SimpleGridState
-from rl.environments.base_grid_world import TabularGridActionValueFunction
 import numpy as np
+from rl.environments.grid_world.simple_grid_world import SimpleGridState
+from rl.environments.grid_world.simple_grid_world import SimpleGridWorldRewardFunction, SimpleGridWorld
+
+from rl.environments.grid_world.base_grid_world import TabularGridActionValueFunction
 
 # logging.basicConfig(level=logging.DEBUG)
 

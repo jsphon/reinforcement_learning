@@ -5,7 +5,7 @@ import numpy as np
 
 from rl.core.experience import ExperienceGenerator, Episode
 from rl.core.state import StateList
-from rl.environments.simple_grid_world import SimpleGridWorld, SimpleGridState
+from rl.environments.grid_world.simple_grid_world import SimpleGridWorld, SimpleGridState
 
 N = 1000
 

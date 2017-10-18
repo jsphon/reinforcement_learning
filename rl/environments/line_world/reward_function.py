@@ -1,6 +1,5 @@
 from rl.core.reward_function import RewardFunction
-
-from rl.examples.ant.constants import FINDING_HOME, FINDING_FOOD, MOVE_LEFT, MOVE_RIGHT, HOME_POSITION, FOOD_POSITION
+from rl.environments.line_world.constants import FINDING_HOME, FINDING_FOOD, HOME_POSITION, FOOD_POSITION
 
 
 class AntRewardFunction(RewardFunction):

@@ -1,17 +1,12 @@
 import copy
 
 import numpy as np
-from keras.layers.core import Dense, Activation
-from keras.models import Sequential
-from keras.optimizers import RMSprop
 
 from rl.core.model import Model
-from rl.core.policy import EpsilonGreedyPolicy
 from rl.core.reward_function import RewardFunction
 from rl.core.state import State
-from rl.core.value_function import ActionValueFunction
-from rl.environments.base_grid_world import BaseGridWorld
-from rl.environments.base_grid_world import TabularGridActionValueFunction
+from rl.environments.grid_world.base_grid_world import BaseGridWorld
+from rl.environments.grid_world.base_grid_world import TabularGridActionValueFunction
 
 
 class SimpleGridWorld(BaseGridWorld):

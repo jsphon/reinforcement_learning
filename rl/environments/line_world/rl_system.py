@@ -1,13 +1,14 @@
 
 import numpy as np
-from rl.core.rl_system import RLSystem
+from rl.environments.line_world.model import AntModel
+from rl.environments.line_world.reward_function import AntRewardFunction
+from rl.environments.line_world.state import AntState
 
-from rl.examples.ant.reward_function import AntRewardFunction
-from rl.examples.ant.model import AntModel
-from rl.examples.ant.value_function import AntActionValueFunction
-from rl.examples.ant.state import AntState
-from rl.core.policy import EpsilonGreedyPolicy# SoftmaxPolicy
+from rl.core.policy import EpsilonGreedyPolicy
+from rl.core.rl_system import RLSystem
 from rl.core.state import IntExtState
+from rl.environments.line_world.value_function import AntActionValueFunction
+from rl.environments.line_world.constants import ACTION_STRINGS
 
 
 class AntWorld(RLSystem):
@@ -47,47 +48,11 @@ def calculate_greedy_actions(ant_world):
             if (internal_state, _position) in null_cells:
                 row.append('x')
             else:
-                row.append(str(_action))
+                row.append(ACTION_STRINGS[_action])
         rows.append(''.join(row))
 
+    row0 = 'FINDING HOME : %s' % rows[0]
+    row1 = 'FINDING FOOD : %s' % rows[1]
+    return row0 + '\n' + row1
 
-    _greedy_actions = '\n'.join(rows)
-    return _greedy_actions
 
-
-if __name__ == '__main__':
-
-    external_state = AntState()
-    int_ext_state = IntExtState(0, external_state)
-    world = AntWorld()
-
-    world.choose_action(int_ext_state)
-
-    from rl.core.learning.learner import build_learner
-
-    learner = build_learner(world, calculator_type='modelbasedstatemachine')
-
-    from rl.core.state import StateList
-
-    states = []
-    for position in range(10):
-        state = AntState(position=position)
-        states.append(state)
-
-    states_list = StateList(states)
-
-    for _ in range(1000): learner.learn(states_list, epochs=1)
-
-    state = IntExtState(1, external_state)
-
-    greedy_actions = calculate_greedy_actions(world)
-
-    print(greedy_actions)
-
-    state = IntExtState(0, AntState(1))
-
-    action_values = world.calculate_action_values()
-    print(action_values)
-
-    # Why is this [10, 10] ?
-    #learner.target_array_calculator.get_state_targets(IntExtState(0, AntState(3)))

@@ -1,11 +1,11 @@
 import unittest
 
 import numpy as np
-from rl.examples.ant.rl_system import AntWorld, calculate_greedy_actions
-from rl.examples.ant.state import AntState
-from rl.core.state import IntExtState
+from rl.environments.line_world.state import AntState
+
 from rl.core.learning.learner import build_learner
 from rl.core.state import StateList
+from rl.environments.line_world.rl_system import AntWorld, calculate_greedy_actions
 
 
 class MyTestCase(unittest.TestCase):
@@ -25,8 +25,8 @@ class MyTestCase(unittest.TestCase):
 
         print(greedy_actions)
         expected_greedy_actions = r"""
-11x0000000
-11111111x0
+FINDING HOME : >>x<<<<<<<
+FINDING FOOD : >>>>>>>>x<
 """.strip()
         self.assertEqual(expected_greedy_actions, greedy_actions)
 
@@ -69,9 +69,6 @@ class MyTestCase(unittest.TestCase):
         r1 = action_values[1]
         r1[np.isnan(e1)] = np.nan
         np.testing.assert_array_almost_equal(e1, r1, decimal=0)
-
-
-        # Why is this [10, 10] ?
 
 
 if __name__ == '__main__':

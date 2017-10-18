@@ -2,10 +2,10 @@ import logging
 
 import numpy as np
 
-from rl.lib.timer import Timer
 from rl.core.experience import ExperienceGenerator
 from rl.core.learning.learner import build_q_learner
-from rl.environments.simple_grid_world import SimpleGridWorld
+from rl.environments.grid_world.simple_grid_world import SimpleGridWorld
+from rl.lib.timer import Timer
 
 np.set_printoptions(precision=1)
 np.set_printoptions(linewidth=200)
