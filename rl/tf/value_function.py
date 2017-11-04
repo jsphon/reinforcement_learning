@@ -36,6 +36,12 @@ class ValueFunctionBuilder(object):
         return y
 
 
+def squared_loss(y0, y1):
+    squared_deltas = tf.square(y1-y0)
+    loss = tf.reduce_sum(squared_deltas)
+    return loss
+
+
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
     return tf.Variable(initial)
