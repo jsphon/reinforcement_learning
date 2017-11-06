@@ -48,15 +48,10 @@ class ValueFunctionBuilder(object):
             return tf.less(counter, num_steps)
 
         def body(counter):
-            body_y = self.build(x)
-            body_loss = squared_loss(body_y, y)
-            train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss=body_loss)
-
-            with tf.control_dependencies([train_step]):
+            train_op = self.train_op(x, y, learning_rate=learning_rate)
+            with tf.control_dependencies([train_op]):
                 return counter+1
         return tf.while_loop(cond, body, [i])
-
-
 
     def train_op(self, x, y, *args, **kwargs):
         loss = self.squared_loss(x, y)

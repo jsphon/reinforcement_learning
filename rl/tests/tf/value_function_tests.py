@@ -9,11 +9,12 @@ from rl.lib.timer import Timer
 
 from rl.tf.value_function import ValueFunctionBuilder, squared_loss
 
-TRAIN_STEPS = 10000
+TRAIN_STEPS = 1000
 LEARNING_RATE = 0.001
 
 
 class MyTestCase(unittest.TestCase):
+
     def setUp(self):
         self.builder = ValueFunctionBuilder(
             input_shape=10,
@@ -33,7 +34,7 @@ class MyTestCase(unittest.TestCase):
 
         self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
 
-    def test_something(self):
+    def test_build(self):
 
         y = self.builder.build(self.tx)
 
@@ -73,6 +74,7 @@ class MyTestCase(unittest.TestCase):
         print('final y : %s' % str(final_y))
 
         self.assertLess(final_loss, initial_loss)
+        self.assertLess(final_loss, 1)
 
     def test_train_loop(self):
         '''
@@ -107,6 +109,7 @@ class MyTestCase(unittest.TestCase):
         print('final y : %s' % str(final_y))
 
         self.assertLess(final_loss, initial_loss)
+        self.assertLess(final_loss, 1)
 
 
 if __name__ == '__main__':
