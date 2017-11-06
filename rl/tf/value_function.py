@@ -35,6 +35,29 @@ class ValueFunctionBuilder(object):
         y = tf.matmul(yi, self.weights[-1]) + self.biases[-1]
         return y
 
+    def train_loop(self,
+                   x,
+                   y,
+                   num_steps=10,
+                   learning_rate=0.01
+                   ):
+
+        i = tf.constant(0)
+
+        def cond(counter):
+            return tf.less(counter, num_steps)
+
+        def body(counter):
+            body_y = self.build(x)
+            body_loss = squared_loss(body_y, y)
+            train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss=body_loss)
+
+            with tf.control_dependencies([train_step]):
+                return counter+1
+        return tf.while_loop(cond, body, [i])
+
+
+
     def train_op(self, x, y, *args, **kwargs):
         loss = self.squared_loss(x, y)
         op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
