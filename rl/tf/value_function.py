@@ -35,6 +35,16 @@ class ValueFunctionBuilder(object):
         y = tf.matmul(yi, self.weights[-1]) + self.biases[-1]
         return y
 
+    def train_op(self, x, y, *args, **kwargs):
+        loss = self.squared_loss(x, y)
+        op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+        return op
+
+    def squared_loss(self, x, y):
+        y_hat = self.build(x)
+        loss = squared_loss(y_hat, y)
+        return loss
+
 
 def squared_loss(y0, y1):
     squared_deltas = tf.square(y1-y0)
