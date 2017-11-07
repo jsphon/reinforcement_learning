@@ -2,7 +2,7 @@ import unittest
 
 import logging
 
-#logging.getLogger("tensorflow").setLevel(logging.WARNING)
+logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
 import tensorflow as tf
 
@@ -22,7 +22,8 @@ class MyTestCase(unittest.TestCase):
         )
 
         for position, expected in test_data:
-            state = LineWorldState(position)
+            t_position = tf.Variable(position)
+            state = LineWorldState(t_position)
             vector = state.as_vector()
 
             with tf.Session() as sess:
