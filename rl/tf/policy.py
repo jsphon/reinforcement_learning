@@ -16,3 +16,9 @@ class EpsilonGreedyPolicy(object):
         best_action = tf.argmax(action_values, axis=0)
         t_probabilities = tf.concat([t_probabilities[:best_action], [1.0-self.epsilon], t_probabilities[best_action+1:]], axis=0)
         return t_probabilities
+
+
+class SoftmaxPolicy(object):
+
+    def calculate_action_value_probabilities(self, action_values):
+        return tf.nn.softmax(action_values)

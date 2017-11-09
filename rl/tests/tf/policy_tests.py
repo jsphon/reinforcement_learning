@@ -2,13 +2,40 @@ import unittest
 import tensorflow as tf
 
 import numpy as np
-from rl.tf.policy import EpsilonGreedyPolicy
+from rl.tf.policy import EpsilonGreedyPolicy, SoftmaxPolicy
 
 
-class MyTestCase(unittest.TestCase):
+class SoftmaxPolicyTests(unittest.TestCase):
 
-    def test_something(self):
-        self.assertEqual(True, False)
+    def test_calculate_action_value_probabilities(self):
+
+        test_data = (
+            [0.1, 0.2, 0.3],
+            [0.1, 0.3, 0.2],
+            [0.3, 0.2, 0.1],
+        )
+
+        for action_values in test_data:
+            t_action_values = tf.Variable(action_values)
+            policy = SoftmaxPolicy()
+
+            probabilities = policy.calculate_action_value_probabilities(t_action_values)
+
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                actual = sess.run(probabilities)
+
+            desired = softmax(action_values)
+            np.testing.assert_almost_equal(actual, desired)
+
+
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+
+class EpsilonGreedyPolicyTests(unittest.TestCase):
 
     def test_calculate_action_value_probabilities(self):
 
