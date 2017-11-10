@@ -18,7 +18,7 @@ class RLSystemTests(unittest.TestCase):
         :return:
         """
         rl_system = RLSystem()
-        rl_system.calculate_state_probabilities = MagicMock(return_value=np.array([0.5, 0.5]))
+        rl_system.calculate_action_value_probabilities = MagicMock(return_value=np.array([0.5, 0.5]))
 
         num_true = 0
         n = 1000
@@ -45,7 +45,7 @@ class RLSystemTests(unittest.TestCase):
         rl_system = RLSystem(policy=EquiProbableRandomPolicy())
         rl_system.action_value_function = MagicMock(return_value=np.array([0.5, 0.5]))
 
-        probabilities = rl_system.calculate_state_probabilities(state=None)
+        probabilities = rl_system.calculate_action_value_probabilities(state=None)
         expected = np.array([0.5, 0.5])
         np.testing.assert_array_equal(expected, probabilities)
 
@@ -54,7 +54,7 @@ class RLSystemTests(unittest.TestCase):
         rl_system = RLSystem(policy=SoftmaxPolicy())
         rl_system.action_value_function = MagicMock(return_value=np.array([3.0, 1.0, 0.2]))
 
-        result = rl_system.calculate_state_probabilities(state=None)
+        result = rl_system.calculate_action_value_probabilities(state=None)
         # From https://stackoverflow.com/questions/34968722/softmax-function-python
         expected = [0.8360188, 0.11314284, 0.05083836]
         np.testing.assert_almost_equal(expected, result)

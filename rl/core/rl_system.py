@@ -26,11 +26,11 @@ class RLSystem(object):
         self.state_size = state_size
 
     def choose_action(self, state):
-        probabilities = self.calculate_state_probabilities(state)
+        probabilities = self.calculate_action_value_probabilities(state)
         action = np.random.choice(len(probabilities), p=probabilities)
         return action
 
-    def calculate_state_probabilities(self, state):
+    def calculate_action_value_probabilities(self, state):
         action_values = self.action_value_function(state)
         return self.policy.calculate_action_value_probabilities(action_values)
 
