@@ -54,14 +54,13 @@ class MyTestCase(unittest.TestCase):
 
         for p0, p1 in test_data:
             t_position = tf.Variable(p0)
-            state = LineWorldState(position=t_position)
             model = LineWorldModel()
 
-            new_state = model.move_left(state)
+            new_position = model.move_left(t_position)
 
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
-                result = sess.run(new_state.position)
+                result = sess.run(new_position)
 
             self.assertEqual(p1, result)
 
@@ -77,14 +76,13 @@ class MyTestCase(unittest.TestCase):
 
         for p0, p1 in test_data:
             t_position = tf.Variable(p0)
-            state = LineWorldState(position=t_position)
             model = LineWorldModel()
 
-            new_state = model.move_right(state)
+            new_position = model.move_right(t_position)
 
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
-                result = sess.run(new_state.position)
+                result = sess.run(new_position)
 
             self.assertEqual(p1, result)
 
