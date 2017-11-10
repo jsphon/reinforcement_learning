@@ -1,8 +1,9 @@
 import unittest
-import tensorflow as tf
 
 import numpy as np
-from rl.tf.policy import EpsilonGreedyPolicy, SoftmaxPolicy
+import tensorflow as tf
+
+from rl.tf.core.policy import EpsilonGreedyPolicy, SoftmaxPolicy
 
 
 class SoftmaxPolicyTests(unittest.TestCase):
