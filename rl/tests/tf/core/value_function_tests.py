@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from rl.lib.timer import Timer
 
-from rl.tf.value_function import ValueFunctionBuilder, squared_loss
+from rl.tf.core.value_function import ValueFunctionBuilder, squared_loss
 
 TRAIN_STEPS = 1000
 LEARNING_RATE = 0.001
