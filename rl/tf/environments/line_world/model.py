@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT
+from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT, TARGET
 from rl.tf.environments.line_world.state import LineWorldState
 
 
@@ -19,3 +19,6 @@ class LineWorldModel(object):
         cond = tf.equal(action, MOVE_LEFT)
         new_state = tf.cond(cond, lambda: self.move_left(position), lambda: self.move_right(position))
         return new_state
+
+    def is_terminal(self, position):
+        return tf.equal(position, TARGET)

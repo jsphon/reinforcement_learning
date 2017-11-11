@@ -8,10 +8,33 @@ import logging
 
 
 from rl.tf.environments.line_world.model import LineWorldModel
+from rl.tf.environments.line_world.constants import TARGET
 from rl.tf.environments.line_world.state import LineWorldState
 
 
 class MyTestCase(unittest.TestCase):
+
+    def test_is_terminal_True(self):
+        model = LineWorldModel()
+
+        is_terminal = model.is_terminal(TARGET)
+
+        with tf.Session() as sess:
+            tf.global_variables_initializer()
+            actual = sess.run(is_terminal)
+
+        self.assertTrue(actual)
+
+    def test_is_terminal_False(self):
+        model = LineWorldModel()
+
+        is_terminal = model.is_terminal(TARGET+1)
+
+        with tf.Session() as sess:
+            tf.global_variables_initializer()
+            actual = sess.run(is_terminal)
+
+        self.assertFalse(actual)
 
     def test_apply_action(self):
 
