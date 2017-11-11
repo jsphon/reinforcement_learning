@@ -37,6 +37,23 @@ class MyTestCase(unittest.TestCase):
         result = scipy.stats.chisquare(f_obs, f_exp[0])
         self.assertGreater(result.pvalue, 0.01)
 
+    def test_choose_action__with_to_action_value_function_input(self):
+
+        probabilities = [[.2, .3, .5]]
+        a_logits = np.log(probabilities)
+        t_logits = tf.Variable(a_logits)
+
+        sys = System()
+        sys.calculate_state_probabilities = lambda x: t_logits if x=='transformed_state' else x
+        sys.to_action_value_function_input = lambda x: 'transformed_state' if x=='state' else x
+        action = sys.choose_action('state')
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            actual = sess.run(action)
+
+        self.assertIn(actual, (0, 1, 2))
+
     def test_calculate_action_value_probabilities(self):
 
         test_data = (
