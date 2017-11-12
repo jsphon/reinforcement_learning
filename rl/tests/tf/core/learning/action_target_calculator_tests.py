@@ -53,6 +53,56 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
     def do_chi_squared_htest(self, f_obs, f_exp):
         chi = scipy.stats.chisquare(f_obs, f_exp)
         self.assertTrue(chi.pvalue > 0.01, chi.pvalue)
+
+    def test_calculate2(self):
+        """
+        Test that calculate_action_target returns targets with the correct distributions
+
+        """
+        rl_system = MagicMock()
+        calculator = SarsaActionTargetCalculator(
+            rl_system=rl_system,
+            discount_factor=tf.Variable(1.0))
+
+        a_probabilities = np.array([0.5, 0.3, 0.2])
+        t_probabilities = tf.Variable(a_probabilities)
+        rl_system.policy.calculate_action_value_probabilities.return_value = t_probabilities
+        action_values = tf.Variable([0.0, 1.0, 2.0])
+        reward = tf.Variable(0.0)
+        t_target = calculator.calculate(reward, action_values)
+
+        make_target = lambda:calculator.calculate(reward, action_values)
+
+        samples = self.generate_samples(make_target)
+        print(samples)
+
+    def generate_samples(self, t, num_samples=1000):
+        """
+        Generate samples from the tensor t
+        Args:
+            t:
+            num_samples:
+
+        Returns:
+
+        """
+
+        i = tf.Variable(0)
+
+        cond = lambda i, t, result: tf.less(i, num_samples)
+
+        result = tf.TensorArray(t().dtype, num_samples)
+
+        def body(b_i, b_t, b_result):
+            b_result = b_result.write(b_i, t())
+            return b_i+1, b_t, b_result
+
+        i, t, result = tf.while_loop(cond, body, (i, t(), result))
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            return sess.run(result.stack())
+
+
 #
 #
 # class QLearningActionTargetCalculatorTests(unittest.TestCase):
