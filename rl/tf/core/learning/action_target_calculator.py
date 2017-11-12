@@ -21,11 +21,8 @@ class QLearningActionTargetCalculator(ActionTargetCalculator):
 class SarsaActionTargetCalculator(ActionTargetCalculator):
     def calculate(self, reward, next_state_action_values):
         pi = self.rl_system.policy.calculate_action_value_probabilities(next_state_action_values)
-        #action = np.random.choice(len(pi), p=pi)
         logits = tf.log(pi)
-        #logits = tf.reshape(logits, (1, -1))
         action = tf.multinomial([logits], 1)
-        #return reward + self.discount_factor * next_state_action_values[action]
         next_state_action_value = next_state_action_values[action[0][0]]
         return reward + self.discount_factor * next_state_action_value
 

@@ -38,20 +38,21 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
         t_target = calculator.calculate(reward, action_values)
 
         counts = defaultdict(float)
-        for _ in range(N):
-            with tf.Session() as sess:
-                sess.run(tf.global_variables_initializer())
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            for _ in range(N):
                 result = sess.run(t_target)
-            #logging.info(result)
-            counts[result] += 1
+                logging.info(result)
+                counts[result] += 1
 
         f_exp = N * a_probabilities
         f_obs = [counts[0.0], counts[1.0], counts[2.0]]
+        print(counts)
         self.do_chi_squared_htest(f_obs, f_exp)
 
     def do_chi_squared_htest(self, f_obs, f_exp):
         chi = scipy.stats.chisquare(f_obs, f_exp)
-        self.assertTrue(chi.pvalue > 0.01)
+        self.assertTrue(chi.pvalue > 0.01, chi.pvalue)
 #
 #
 # class QLearningActionTargetCalculatorTests(unittest.TestCase):
