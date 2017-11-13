@@ -1,16 +1,15 @@
 import logging
 import unittest
-from mock import MagicMock
-from collections import defaultdict
 
 import numpy as np
-import tensorflow as tf
-from rl.lib.timer import Timer
-
 import scipy.stats
+import tensorflow as tf
+from mock import MagicMock
+
+from rl.lib.timer import Timer
 from rl.tf.core.learning.action_target_calculator import \
-    QLearningActionTargetCalculator,\
-    SarsaActionTargetCalculator,\
+    QLearningActionTargetCalculator, \
+    SarsaActionTargetCalculator, \
     ExpectedSarsaActionTargetCalculator
 
 N = 10000
@@ -19,7 +18,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class SarsaActionTargetCalculatorTests(unittest.TestCase):
-
     def test_calculate2(self):
         """
         Test that calculate_action_target returns targets with the correct distributions
@@ -39,7 +37,7 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
         def get_target():
             return calculator.calculate(reward, action_values)
 
-        with Timer('Generating Samples'):
+        with Timer('Generating %i Samples' % N):
             samples = generate_samples(get_target, num_samples=N)
 
         itemfreq = scipy.stats.itemfreq(samples)
@@ -55,7 +53,6 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
 
 
 class QLearningActionTargetCalculatorTests(unittest.TestCase):
-
     def test_calculate(self):
         rl_system = MagicMock()
         calculator = QLearningActionTargetCalculator(
@@ -70,6 +67,28 @@ class QLearningActionTargetCalculatorTests(unittest.TestCase):
         actual = evaluate_tensor(target)
 
         self.assertEqual(4.0, actual)
+
+
+class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):
+    def test_calculate(self):
+        rl_system = MagicMock(num_actions=3)
+        a_probabilities = np.array([0.5, 0.3, 0.2])
+        t_probabilities = tf.Variable(a_probabilities, dtype=tf.float32)
+        rl_system.policy.calculate_action_value_probabilities.return_value = t_probabilities
+
+        calculator = ExpectedSarsaActionTargetCalculator(
+            rl_system=rl_system,
+            discount_factor=1.0
+        )
+
+        reward = tf.Variable(1.0)
+        a_next_state_action_values = np.array([1.0, 2.0, 3.0])
+        t_next_state_action_values = tf.Variable(a_next_state_action_values, dtype=tf.float32)
+        target = calculator.calculate(reward, t_next_state_action_values)
+        actual = evaluate_tensor(target)
+        desired = 1.0 + np.dot(a_probabilities, a_next_state_action_values)
+
+        np.testing.assert_almost_equal(desired, actual)
 
 
 def generate_samples(t, num_samples=1000):
@@ -91,7 +110,7 @@ def generate_samples(t, num_samples=1000):
 
     def body(b_i, b_result):
         b_result = b_result.write(b_i, t())
-        return b_i+1, b_result
+        return b_i + 1, b_result
 
     i, result = tf.while_loop(cond, body, (i, result))
     with tf.Session() as sess:
@@ -103,6 +122,7 @@ def evaluate_tensor(t):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         return sess.run(t)
+
 
 #
 # class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):

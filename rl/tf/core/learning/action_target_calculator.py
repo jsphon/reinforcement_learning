@@ -41,8 +41,5 @@ class ExpectedSarsaActionTargetCalculator(ActionTargetCalculator):
 
     def calculate(self, reward, next_state_action_values):
         pi = self.rl_system.policy.calculate_action_value_probabilities(next_state_action_values)
-        num_actions = len(next_state_action_values)
-        pi = pi.reshape((1, num_actions))
-        next_state_action_values = next_state_action_values.reshape((num_actions, 1))
-        expectation = np.dot(pi, next_state_action_values)
+        expectation = tf.tensordot(pi, next_state_action_values, 1)
         return reward + self.discount_factor * expectation
