@@ -7,7 +7,10 @@ class ActionTargetCalculator(object):
     """
     def __init__(self, rl_system, discount_factor=1.0):
         self.rl_system = rl_system
-        self.discount_factor = discount_factor
+        if not isinstance(discount_factor, tf.Tensor):
+            self.discount_factor = tf.Variable(discount_factor)
+        else:
+            self.discount_factor = discount_factor
 
     def calculate(self, reward, next_state_action_values):
         raise NotImplemented()
@@ -15,7 +18,7 @@ class ActionTargetCalculator(object):
 
 class QLearningActionTargetCalculator(ActionTargetCalculator):
     def calculate(self, reward, next_state_action_values):
-        return reward + self.discount_factor * next_state_action_values.max()
+        return reward + self.discount_factor * tf.reduce_max(next_state_action_values)
 
 
 class SarsaActionTargetCalculator(ActionTargetCalculator):
