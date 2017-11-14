@@ -46,6 +46,21 @@ class ModelBasedTargetArrayCalculator(object):
     #
     #     return targets
 
+    def get_state_targets(self, state):
+
+        # 1 x num_actions
+        next_states = self.rl_system.apply_actions(state)
+        rewards = self.rl_system.reward_function.vectorized(state, next_states)
+        is_terminal = self.rl_system.model.is_terminal.vectorized(next_states)
+
+        # num_actions x num_actions
+        next_states_action_values = self.rl_system.action_value_function.vectorized(next_states)
+        next_state_targets = self.action_target_calculator.calculate.vectorized(rewards, next_states_action_values)
+
+        # 1 x num_actions
+        targets = tf.where(is_terminal, rewards, next_state_targets)
+        return targets
+
     # TODO: Can we have a state action target calculator class?
     def get_state_action_target(self, state, action):
         """
