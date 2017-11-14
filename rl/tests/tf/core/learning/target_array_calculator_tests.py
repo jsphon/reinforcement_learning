@@ -8,7 +8,7 @@ from rl.tf.core.learning.target_array_calculator import ModelBasedTargetArrayCal
 
 class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
-    def test_get_state_action_target(self):
+    def setUp(self):
 
         t_state = tf.Variable('state', name='non_terminal_state')
         t_next_state = tf.Variable('next_state')
@@ -19,7 +19,8 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
         t_live_reward = tf.Variable(2.0, name='live_reward')
         t_terminal_reward = tf.Variable(4.0, name='terminal_reward')
-        t_target = tf.Variable(3.0)
+
+        t_live_target = tf.Variable(3.0)
         t_terminal_target = tf.Variable(-1.0, name='terminal_target')
         t_next_state_action_values = tf.Variable([10.0, 20.0])
 
@@ -51,7 +52,7 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
         def calculate(reward, next_state_action_values):
             if reward == t_live_reward and next_state_action_values == t_next_state_action_values:
-                return t_target
+                return t_live_target
             elif reward == t_terminal_reward:
                 # Should not get here
                 return t_terminal_target
@@ -59,13 +60,20 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
         action_target_calculator = MagicMock()
         action_target_calculator.calculate = calculate
 
-        calc = ModelBasedTargetArrayCalculator(rl_system, action_target_calculator)
+        self.calc = ModelBasedTargetArrayCalculator(rl_system, action_target_calculator)
+        self.t_state = t_state
+        self.t_action_to_live = t_action_to_live
+        self.t_action_to_terminal = t_action_to_terminal
 
-        target = calc.get_state_action_target(t_state, t_action_to_live)
+    def test_get_state_action_target_live(self):
+
+        target = self.calc.get_state_action_target(self.t_state, self.t_action_to_live)
         actual = evaluate_tensor(target)
         self.assertEqual(3.0, actual)
 
-        target = calc.get_state_action_target(t_state, t_action_to_terminal)
+    def test_get_state_action_target_terminal(self):
+
+        target = self.calc.get_state_action_target(self.t_state, self.t_action_to_terminal)
         actual = evaluate_tensor(target)
         self.assertEqual(4.0, actual)
 
