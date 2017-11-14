@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 class ModelBasedTargetArrayCalculator(object):
     """
     Class for calculating the training target arrays
@@ -11,6 +12,7 @@ class ModelBasedTargetArrayCalculator(object):
     def __init__(self, rl_system, action_target_calculator):
         self.rl_system = rl_system
         self.action_target_calculator = action_target_calculator
+
     #
     # def get_target_matrix(self, states):
     #     """
@@ -45,8 +47,6 @@ class ModelBasedTargetArrayCalculator(object):
     #     return targets
 
     # TODO: Can we have a state action target calculator class?
-    # TODO: If we have a unit test for this, what will it accomplish?
-    #       It will show that I did the tensorflow translation correctly!
     def get_state_action_target(self, state, action):
         """
         Return the target for the state/action pair
@@ -58,20 +58,15 @@ class ModelBasedTargetArrayCalculator(object):
         next_state = self.rl_system.model.apply_action(state, action)
         reward = self.rl_system.reward_function(state, action, next_state)
 
-        pred = self.rl_system.model.is_terminal(next_state)
+        predicate = self.rl_system.model.is_terminal(next_state)
 
-        when_terminal = lambda: reward
+        def when_terminal():
+            return reward
 
         def when_non_terminal():
             next_state_action_values = self.rl_system.action_value_function(next_state)
             return self.action_target_calculator.calculate(reward, next_state_action_values)
 
-        target = tf.cond(pred, when_terminal, when_non_terminal)
-        #
-        # if self.rl_system.model.is_terminal(next_state):
-        #     target = reward
-        # else:
-        #     next_state_action_values = self.rl_system.action_value_function(next_state)
-        #     target = self.action_target_calculator.calculate(reward, next_state_action_values)
+        target = tf.cond(predicate, when_terminal, when_non_terminal)
 
         return target
