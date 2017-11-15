@@ -47,6 +47,16 @@ class ModelBasedTargetArrayCalculator(object):
     #     return targets
 
     def get_state_targets(self, state):
+        """
+        Get all targets for a single state, so the result will be a tensor
+        of shape (1, num_actions)
+
+        Args:
+            state:
+
+        Returns:
+
+        """
 
         # 1 x num_actions
         next_states = self.rl_system.apply_actions(state)

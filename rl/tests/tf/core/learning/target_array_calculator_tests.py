@@ -1,28 +1,91 @@
 import unittest
 
+import numpy as np
 import tensorflow as tf
 from mock import MagicMock
 from rl.tests.tf.utils import evaluate_tensor
 from rl.tf.core.learning.target_array_calculator import ModelBasedTargetArrayCalculator
+
+t_state = tf.Variable('state', name='non_terminal_state')
+t_next_state = tf.Variable('next_state')
+t_terminal_state = tf.Variable('terminal', name='terminal_state')
+
+t_action_to_live = tf.Variable(0, name='action_to_live')
+t_action_to_terminal = tf.Variable(1, name='action_to_terminal')
+
+t_live_reward = tf.Variable(2.0, name='live_reward')
+t_terminal_reward = tf.Variable(4.0, name='terminal_reward')
+
+t_live_target = tf.Variable(3.0)
+t_terminal_target = tf.Variable(-1.0, name='terminal_target')
+t_next_state_action_values = tf.Variable([10.0, 20.0])
+
+
+class RewardFunction(object):
+
+    def action_reward(self, state, action, next_state):
+        """
+        Receives state, action, state as input, hence the name
+        Args:
+            state:
+            action:
+            next_state:
+
+        Returns:
+
+        """
+
+        to_live = tf.reduce_all(
+            tf.stack([
+                tf.equal(t_state, state),
+                tf.equal(t_action_to_live, action),
+                tf.equal(t_next_state, next_state),
+            ])
+        )
+
+        to_terminal = tf.reduce_all(
+            tf.stack([
+                tf.equal(t_state, state),
+                tf.equal(t_action_to_terminal, action),
+                tf.equal(t_next_state, t_terminal_state),
+            ])
+        )
+
+        return tf.case({
+            to_live: lambda: t_live_reward,
+            to_terminal: lambda: t_terminal_reward,
+            },
+            exclusive=True)
+
+    def state_rewards(self, state, next_states):
+
+        live_reward = self.action_reward(state, t_action_to_live, next_states[0])
+        terminal_reward = self.action_reward(state, t_action_to_terminal, next_states[1])
+        return tf.stack([live_reward, terminal_reward])
+
+
+class RewardFunctionTests(unittest.TestCase):
+
+    def test_state_rewards(self):
+
+        next_states = tf.stack([t_next_state, t_terminal_state])
+
+        print('Next states are %s' % str(evaluate_tensor(next_states)))
+        rf = RewardFunction()
+        state_rewards = rf.state_rewards(t_state, next_states)
+
+        actual = evaluate_tensor(state_rewards)
+        desired = np.array([2.0, 4.0])
+
+        np.testing.assert_array_equal(actual, desired)
+
 
 
 class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
     def setUp(self):
 
-        t_state = tf.Variable('state', name='non_terminal_state')
-        t_next_state = tf.Variable('next_state')
-        t_terminal_state = tf.Variable('terminal', name='terminal_state')
 
-        t_action_to_live = tf.Variable('action', name='action_to_live')
-        t_action_to_terminal = tf.Variable('terminal', name='action_to_terminal')
-
-        t_live_reward = tf.Variable(2.0, name='live_reward')
-        t_terminal_reward = tf.Variable(4.0, name='terminal_reward')
-
-        t_live_target = tf.Variable(3.0)
-        t_terminal_target = tf.Variable(-1.0, name='terminal_target')
-        t_next_state_action_values = tf.Variable([10.0, 20.0])
 
         def apply_action(state, action):
             if state == t_state and action == t_action_to_live:
@@ -76,6 +139,16 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
         target = self.calc.get_state_action_target(self.t_state, self.t_action_to_terminal)
         actual = evaluate_tensor(target)
         self.assertEqual(4.0, actual)
+
+    def test_get_state_targets(self):
+
+        targets = self.calc.get_state_targets(self.t_state)
+        actual = evaluate_tensor(targets)
+
+        desired = np.array([3.0, 4.0])
+        np.testing.assert_array_equal(actual, desired)
+
+
 
 
 if __name__ == '__main__':
