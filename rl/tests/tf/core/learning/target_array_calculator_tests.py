@@ -45,8 +45,6 @@ class RewardFunction(object):
 
         """
 
-        print(t_next_state.graph)
-        print(next_state.graph)
         to_live = tf.reduce_all(
             tf.stack([
                 tf.equal(t_state, state),
@@ -177,59 +175,14 @@ class ActionValueFunction(object):
         return t_next_state_action_values
 
 
-
 class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
     def setUp(self):
 
-        # def apply_action(state, action):
-        #     when_next_state = tf.reduce_all(
-        #         tf.stack([
-        #             tf.equal(state, t_state),
-        #             tf.equal(action, t_action_to_live)
-        #         ])
-        #     )
-        #
-        #     when_terminal_state = tf.reduce_all(
-        #         tf.stack([
-        #             tf.equal(state, t_state),
-        #             tf.equal(action, t_action_to_terminal),
-        #         ])
-        #     )
-        #
-        #     result = tf.case({
-        #         when_next_state: lambda: t_next_state,
-        #         when_terminal_state: lambda: t_terminal_state
-        #     },
-        #         default=lambda: t_state,
-        #         exclusive=True
-        #     )
-        #
-        #     return result
-
-        # def is_terminal(state):
-        #     predicate = tf.equal(state, t_terminal_state)
-        #     return predicate
-
-        # def action_value_function(state):
-        #     return t_next_state_action_values
-
         rl_system = MagicMock()
         rl_system.model = Model()
-        #rl_system.model.apply_action = apply_action
-        #rl_system.model.is_terminal = is_terminal
         rl_system.reward_function = RewardFunction()
         rl_system.action_value_function = ActionValueFunction()
-
-        # def calculate(reward, next_state_action_values):
-        #     if reward == t_live_reward and next_state_action_values == t_next_state_action_values:
-        #         return t_live_target
-        #     elif reward == t_terminal_reward:
-        #         # Should not get here
-        #         return t_terminal_target
-        #     else:
-        #         raise ValueError('How did we get here?')
-
         action_target_calculator = ActionTargetCalculator()
 
         self.calc = ModelBasedTargetArrayCalculator(rl_system, action_target_calculator)
