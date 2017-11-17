@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+from rl.tests.tf.utils import evaluate_tensor
 
 class ModelBasedTargetArrayCalculator(object):
     """
@@ -59,13 +60,13 @@ class ModelBasedTargetArrayCalculator(object):
         """
 
         # 1 x num_actions
-        next_states = self.rl_system.apply_actions(state)
-        rewards = self.rl_system.reward_function.vectorized(state, next_states)
-        is_terminal = self.rl_system.model.is_terminal.vectorized(next_states)
+        next_states = self.rl_system.model.apply_actions(state)
+        rewards = self.rl_system.reward_function.state_rewards(state, next_states)
+        is_terminal = self.rl_system.model.are_states_terminal(next_states)
 
         # num_actions x num_actions
         next_states_action_values = self.rl_system.action_value_function.vectorized(next_states)
-        next_state_targets = self.action_target_calculator.calculate.vectorized(rewards, next_states_action_values)
+        next_state_targets = self.action_target_calculator.vectorized(rewards, next_states_action_values)
 
         # 1 x num_actions
         targets = tf.where(is_terminal, rewards, next_state_targets)
@@ -81,7 +82,9 @@ class ModelBasedTargetArrayCalculator(object):
         :return: np.ndarray(num_actions)
         """
         next_state = self.rl_system.model.apply_action(state, action)
-        reward = self.rl_system.reward_function(state, action, next_state)
+        reward = self.rl_system.reward_function.action_reward(state, action, next_state)
+
+        print(evaluate_tensor(reward))
 
         predicate = self.rl_system.model.is_terminal(next_state)
 
@@ -89,7 +92,7 @@ class ModelBasedTargetArrayCalculator(object):
             return reward
 
         def when_non_terminal():
-            next_state_action_values = self.rl_system.action_value_function(next_state)
+            next_state_action_values = self.rl_system.action_value_function.calculate(next_state)
             return self.action_target_calculator.calculate(reward, next_state_action_values)
 
         target = tf.cond(predicate, when_terminal, when_non_terminal)
