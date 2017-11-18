@@ -14,38 +14,18 @@ class ModelBasedTargetArrayCalculator(object):
         self.rl_system = rl_system
         self.action_target_calculator = action_target_calculator
 
-    #
-    # def get_target_matrix(self, states):
-    #     """
-    #     Get the training targets as an array
-    #     Args:
-    #         states:
-    #
-    #     Returns:
-    #         np.ndarray: (len(experience), num_actions)
-    #
-    #     """
-    #     targets_list = [self.get_state_targets(state) for state in states]
-    #     targets_array = np.stack(targets_list)
-    #
-    #     return targets_array
-    #
-    # def get_state_targets(self, state):
-    #     """
-    #     Return the targets for the state
-    #     :param state:
-    #     :param action:
-    #     :param reward:
-    #     :return: np.ndarray(num_actions)
-    #     """
-    #
-    #     num_actions = self.rl_system.num_actions
-    #     targets = np.empty(num_actions)
-    #
-    #     for action in range(num_actions):
-    #         targets[action] = self.get_state_action_target(state, action)
-    #
-    #     return targets
+    def get_states_targets(self, states):
+        """
+        Get the targets for a of states many
+        Args:
+            states: Tensor of shape (num_states, state_size)
+
+        Returns:
+            Tensor of shape (num_states, num_actions)
+        """
+
+        result = tf.map_fn(self.get_state_targets, states, dtype=tf.float32)
+        return result
 
     def get_state_targets(self, state):
         """
