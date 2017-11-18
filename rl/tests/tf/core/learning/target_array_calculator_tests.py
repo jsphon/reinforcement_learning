@@ -218,17 +218,14 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
     def test_get_states_targets_double(self):
 
-        states = tf.stack([t_state, t_terminal_state], axis=0)
-        shape = tf.shape(states)
-        print('shape is %s'%evaluate_tensor(shape))
+        states = tf.stack([t_state, t_state], axis=0)
+
         targets = self.calc.get_states_targets(states)
 
         actual = evaluate_tensor(targets)
-        desired = np.array([[3.0, 4.0]])
+        desired = np.array([[3.0, 4.0], [3.0, 4.0]])
 
         np.testing.assert_array_equal(actual, desired)
-
-        print(evaluate_tensor(targets))
 
 
 if __name__ == '__main__':
