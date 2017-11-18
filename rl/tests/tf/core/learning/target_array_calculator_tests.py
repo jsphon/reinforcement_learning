@@ -152,10 +152,7 @@ class Model(object):
         return result
 
     def are_states_terminal(self, states):
-        t0 = self.is_terminal(states[0])
-        t1 = self.is_terminal(states[1])
-        return tf.stack([t0, t1])
-        #return tf.map_fn(self.is_terminal, states)
+        return tf.map_fn(self.is_terminal, states, dtype=tf.bool)
 
     def is_terminal(self, state):
         predicate = tf.equal(state, t_terminal_state)
@@ -165,11 +162,8 @@ class Model(object):
 class ActionValueFunction(object):
 
     def vectorized(self, states):
-        #return tf.map_fn(self.calculate, states, dtype=t_next_state_action_values.dtype)
-        v0 = self.calculate(states[0])
-        v1 = self.calculate(states[1])
-        return tf.stack([v0, v1])
-
+        r0 = tf.map_fn(self.calculate, states, dtype=tf.float32)
+        return r0
 
     def calculate(self, state):
         return t_next_state_action_values
@@ -209,8 +203,6 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
         desired = np.array([3.0, 4.0])
         np.testing.assert_array_equal(actual, desired)
-
-
 
 
 if __name__ == '__main__':
