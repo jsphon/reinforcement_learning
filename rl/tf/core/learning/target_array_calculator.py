@@ -1,7 +1,7 @@
 import tensorflow as tf
-import numpy as np
 
 from rl.tests.tf.utils import evaluate_tensor
+
 
 class ModelBasedTargetArrayCalculator(object):
     """
