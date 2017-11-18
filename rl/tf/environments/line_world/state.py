@@ -9,7 +9,4 @@ class LineWorldState(object):
         self.position = position
 
     def as_vector(self):
-        arr = np.zeros(self.num_positions, dtype=np.float32)
-        x = tf.Variable(arr, dtype=tf.float32)
-        b = tf.scatter_update(x, [self.position], [1])
-        return b
+        return tf.one_hot(self.position, self.num_positions, dtype=tf.float32)
