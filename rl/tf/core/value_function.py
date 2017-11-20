@@ -10,12 +10,14 @@ class ValueFunctionBuilder(object):
     def __init__(self,
                  input_shape,
                  hidden_shape,
-                 output_shape
+                 output_shape,
+                 use_one_hot_input_transform=False
                 ):
 
         self.input_shape = input_shape
         self.hidden_shape = hidden_shape
         self.output_shape = output_shape
+        self.use_one_hot_input_transform = use_one_hot_input_transform
 
         weights = [weight_variable((input_shape, hidden_shape[0]))]
         weights += [weight_variable([hidden_shape[i], hidden_shape[i+1]]) for i in range(len(hidden_shape)-1)]
@@ -29,6 +31,9 @@ class ValueFunctionBuilder(object):
     def build(self, x):
 
         yi = x
+        if self.use_one_hot_input_transform:
+            depth = tf.shape(yi)[0]
+            yi = tf.one_hot(x, depth)
         for w, b in zip(self.weights[:-1], self.biases[:-1]):
             yi = tf.nn.relu(tf.matmul(yi, w) + b)
 

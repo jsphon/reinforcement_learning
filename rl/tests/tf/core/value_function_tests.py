@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 from rl.lib.timer import Timer
+from rl.tests.tf.utils import evaluate_tensor
 
 from rl.tf.core.value_function import ValueFunctionBuilder, squared_loss
 
@@ -13,8 +14,38 @@ TRAIN_STEPS = 1000
 LEARNING_RATE = 0.001
 
 
-class MyTestCase(unittest.TestCase):
+class InputTransformTests(unittest.TestCase):
 
+    def setUp(self):
+        self.builder = ValueFunctionBuilder(
+            input_shape=10,
+            hidden_shape=[8, 6],
+            output_shape=3,
+            use_one_hot_input_transform=True,
+        )
+
+        nx = np.arange(10)
+        self.tx = tf.Variable(nx, dtype=tf.int32, trainable=False)
+
+        ny_true = np.array([
+            [9, 0, 9, 8, 7, 6, 4, 3, 2, 1],
+            [9, 8, 7, 6, 5, 4, 3, 2, 3, 4],
+            [1, 2, 3, 4, 5, 6, 7, 6, 5, 4],
+        ]
+        ).T
+
+        self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
+
+    def test_build(self):
+        y = self.builder.build(self.tx)
+
+        result = evaluate_tensor(y)
+        print(result)
+
+        self.assertIsInstance(result, np.ndarray)
+
+
+class MyTestCase(unittest.TestCase):
     def setUp(self):
         self.builder = ValueFunctionBuilder(
             input_shape=10,
@@ -35,7 +66,6 @@ class MyTestCase(unittest.TestCase):
         self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
 
     def test_build(self):
-
         y = self.builder.build(self.tx)
 
         with tf.Session() as sess:
