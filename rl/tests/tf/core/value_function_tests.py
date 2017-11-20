@@ -14,7 +14,44 @@ TRAIN_STEPS = 1000
 LEARNING_RATE = 0.001
 
 
-class InputTransformTests(unittest.TestCase):
+class CustomInputTransformTests(unittest.TestCase):
+
+    def setUp(self):
+
+        def input_transform(x):
+            depth = tf.shape(x)[0]
+            x = tf.one_hot(x, depth)
+            return x
+
+        self.builder = ValueFunctionBuilder(
+            input_shape=10,
+            hidden_shape=[8, 6],
+            output_shape=3,
+            custom_input_transform=input_transform,
+        )
+
+        nx = np.arange(10)
+        self.tx = tf.Variable(nx, dtype=tf.int32, trainable=False)
+
+        ny_true = np.array([
+            [9, 0, 9, 8, 7, 6, 4, 3, 2, 1],
+            [9, 8, 7, 6, 5, 4, 3, 2, 3, 4],
+            [1, 2, 3, 4, 5, 6, 7, 6, 5, 4],
+        ]
+        ).T
+
+        self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
+
+    def test_build(self):
+        y = self.builder.build(self.tx)
+
+        result = evaluate_tensor(y)
+        print(result)
+
+        self.assertIsInstance(result, np.ndarray)
+
+
+class OneHotInputTransformTests(unittest.TestCase):
 
     def setUp(self):
         self.builder = ValueFunctionBuilder(

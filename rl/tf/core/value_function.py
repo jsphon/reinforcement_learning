@@ -11,13 +11,21 @@ class ValueFunctionBuilder(object):
                  input_shape,
                  hidden_shape,
                  output_shape,
-                 use_one_hot_input_transform=False
+                 use_one_hot_input_transform=False,
+                 custom_input_transform=None
                 ):
 
         self.input_shape = input_shape
         self.hidden_shape = hidden_shape
         self.output_shape = output_shape
+
         self.use_one_hot_input_transform = use_one_hot_input_transform
+
+        if use_one_hot_input_transform:
+            assert custom_input_transform is None
+            self.custom_input_transform = one_hot_input_transform
+        else:
+            self.custom_input_transform = custom_input_transform
 
         weights = [weight_variable((input_shape, hidden_shape[0]))]
         weights += [weight_variable([hidden_shape[i], hidden_shape[i+1]]) for i in range(len(hidden_shape)-1)]
@@ -34,6 +42,9 @@ class ValueFunctionBuilder(object):
         if self.use_one_hot_input_transform:
             depth = tf.shape(yi)[0]
             yi = tf.one_hot(x, depth)
+        elif self.custom_input_transform:
+            yi = self.custom_input_transform(yi)
+
         for w, b in zip(self.weights[:-1], self.biases[:-1]):
             yi = tf.nn.relu(tf.matmul(yi, w) + b)
 
@@ -67,6 +78,12 @@ class ValueFunctionBuilder(object):
         y_hat = self.build(x)
         loss = squared_loss(y_hat, y)
         return loss
+
+
+def one_hot_input_transform(x):
+    depth = tf.shape(x)[0]
+    x = tf.one_hot(x, depth)
+    return x
 
 
 def squared_loss(y0, y1):
