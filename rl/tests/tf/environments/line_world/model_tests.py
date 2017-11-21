@@ -1,16 +1,18 @@
 import unittest
-import tensorflow as tf
-from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT
 
+from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT
+import numpy as np
 import logging
 
-#logging.getLogger("tensorflow").setLevel(logging.WARNING)
+logging.getLogger("tensorflow").setLevel(logging.WARNING)
+
+import tensorflow as tf
 
 
 from rl.tf.environments.line_world.model import LineWorldModel
 from rl.tf.environments.line_world.constants import TARGET
 from rl.tf.environments.line_world.state import LineWorldState
-
+from rl.tests.tf.utils import evaluate_tensor
 
 class MyTestCase(unittest.TestCase):
 
@@ -35,6 +37,17 @@ class MyTestCase(unittest.TestCase):
             actual = sess.run(is_terminal)
 
         self.assertFalse(actual)
+
+    def test_apply_actions(self):
+
+        model = LineWorldModel()
+
+        t_next_states = model.apply_actions(1)
+        result = evaluate_tensor(t_next_states)
+
+        expected = np.array([0, 2])
+        np.testing.assert_array_equal(expected, result)
+
 
     def test_apply_action(self):
 

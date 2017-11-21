@@ -15,6 +15,11 @@ class LineWorldModel(object):
     def move_right(self, position):
         return tf.minimum(position + 1, tf.Variable(self.num_positions - 1, dtype=tf.int32))
 
+    def apply_actions(self, position):
+        np0 = self.move_left(position)
+        np1 = self.move_right(position)
+        return tf.stack([np0, np1])
+
     def apply_action(self, position, action):
         cond = tf.equal(action, MOVE_LEFT)
         new_state = tf.cond(cond, lambda: self.move_left(position), lambda: self.move_right(position))
@@ -22,3 +27,4 @@ class LineWorldModel(object):
 
     def is_terminal(self, position):
         return tf.equal(position, TARGET)
+    
