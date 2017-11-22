@@ -1,20 +1,27 @@
-import unittest
-
-from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT
-import numpy as np
 import logging
-
 logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
+import unittest
+import numpy as np
 import tensorflow as tf
 
-
+from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT
 from rl.tf.environments.line_world.model import LineWorldModel
 from rl.tf.environments.line_world.constants import TARGET
-from rl.tf.environments.line_world.state import LineWorldState
 from rl.tests.tf.utils import evaluate_tensor
 
+
 class MyTestCase(unittest.TestCase):
+
+    def test_are_states_terminal(self):
+        model = LineWorldModel()
+
+        positions = tf.Variable([TARGET-1, TARGET, TARGET+1])
+        are_terminal = model.are_states_terminal(positions)
+
+        result = evaluate_tensor(are_terminal)
+        expected = np.array([False, True, False])
+        np.testing.assert_array_equal(expected, result)
 
     def test_is_terminal_True(self):
         model = LineWorldModel()
@@ -47,7 +54,6 @@ class MyTestCase(unittest.TestCase):
 
         expected = np.array([0, 2])
         np.testing.assert_array_equal(expected, result)
-
 
     def test_apply_action(self):
 
