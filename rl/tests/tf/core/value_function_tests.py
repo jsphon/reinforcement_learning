@@ -75,7 +75,6 @@ class OneHotInputTransformTests(unittest.TestCase):
 
     def test_calculate(self):
 
-        tx = tf.Variable(np.arange(5), dtype=tf.int32, trainable=False)
         tx = tf.Variable([1], dtype=tf.int32, trainable=False)
         y = self.builder.calculate(tx)
 
@@ -84,7 +83,17 @@ class OneHotInputTransformTests(unittest.TestCase):
 
         self.assertIsInstance(result, np.ndarray)
 
-    def test_vectorized(self):
+    def test_vectorized_rank1(self):
+
+        tx = tf.Variable([0, 1, 2, 3])
+
+        y = self.builder.vectorized(tx)
+
+        result = evaluate_tensor(y)
+        shape = tuple(evaluate_tensor(tf.shape(result)))
+        self.assertEqual((4, 3), shape)
+
+    def test_vectorized_rank2(self):
 
         tx = tf.Variable([0, 1, 2, 3])
         tx = tf.reshape(tx, (-1, 1))
@@ -94,6 +103,7 @@ class OneHotInputTransformTests(unittest.TestCase):
         result = evaluate_tensor(y)
         shape = tuple(evaluate_tensor(tf.shape(result)))
         self.assertEqual((4, 3), shape)
+
 
 
 class MyTestCase(unittest.TestCase):

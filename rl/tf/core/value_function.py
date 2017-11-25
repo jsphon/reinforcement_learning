@@ -6,14 +6,13 @@ import tensorflow as tf
 
 
 class ValueFunctionBuilder(object):
-
     def __init__(self,
                  input_shape,
                  hidden_shape,
                  output_shape,
                  use_one_hot_input_transform=False,
                  custom_input_transform=None
-                ):
+                 ):
 
         self.input_shape = input_shape
         self.hidden_shape = hidden_shape
@@ -28,7 +27,7 @@ class ValueFunctionBuilder(object):
             self.custom_input_transform = custom_input_transform
 
         weights = [weight_variable((input_shape, hidden_shape[0]))]
-        weights += [weight_variable([hidden_shape[i], hidden_shape[i+1]]) for i in range(len(hidden_shape)-1)]
+        weights += [weight_variable([hidden_shape[i], hidden_shape[i + 1]]) for i in range(len(hidden_shape) - 1)]
         weights += [weight_variable((hidden_shape[-1], output_shape))]
         self.weights = weights
 
@@ -37,17 +36,27 @@ class ValueFunctionBuilder(object):
         self.biases = biases
 
     def vectorized(self, states):
+
+        if self.use_one_hot_input_transform:
+            # For 1-hot, we need rank 2, we won't get
+            # much performance hit with this reshaping here as
+            # we are just constructing the graph, not running it
+            if states.shape.ndims == 1:
+                states = tf.reshape(states, (-1, 1))
+
         results = tf.map_fn(self.calculate, states, dtype=tf.float32)
         shape = (tf.shape(states)[0], self.output_shape)
         results = tf.reshape(results, shape)
         return results
 
     def calculate(self, x):
-        yi = x
+
         if self.use_one_hot_input_transform:
             yi = tf.one_hot(x, depth=self.input_shape, dtype=tf.float32)
         elif self.custom_input_transform:
-            yi = self.custom_input_transform(yi)
+            yi = self.custom_input_transform(x)
+        else:
+            yi = x
 
         for w, b in zip(self.weights[:-1], self.biases[:-1]):
             yi = tf.nn.relu(tf.matmul(yi, w) + b)
@@ -70,7 +79,8 @@ class ValueFunctionBuilder(object):
         def body(counter):
             train_op = self.train_op(x, y, learning_rate=learning_rate)
             with tf.control_dependencies([train_op]):
-                return counter+1
+                return counter + 1
+
         return tf.while_loop(cond, body, [i])
 
     def train_op(self, x, y, *args, **kwargs):
@@ -85,7 +95,7 @@ class ValueFunctionBuilder(object):
 
 
 def squared_loss(y0, y1):
-    squared_deltas = tf.square(y1-y0)
+    squared_deltas = tf.square(y1 - y0)
     loss = tf.reduce_sum(squared_deltas)
     return loss
 
