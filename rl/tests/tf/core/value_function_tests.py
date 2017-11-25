@@ -43,7 +43,7 @@ class CustomInputTransformTests(unittest.TestCase):
         self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
 
     def test_build(self):
-        y = self.builder.build(self.tx)
+        y = self.builder.calculate(self.tx)
 
         result = evaluate_tensor(y)
         print(result)
@@ -87,17 +87,12 @@ class OneHotInputTransformTests(unittest.TestCase):
     def test_vectorized(self):
 
         tx = tf.Variable([0, 1, 2, 3])
+        tx = tf.reshape(tx, (-1, 1))
 
-        tx = tf.reshape(tx, (4, 1))
         y = self.builder.vectorized(tx)
 
         result = evaluate_tensor(y)
-        print(result)
-
         shape = tuple(evaluate_tensor(tf.shape(result)))
-
-        print('shape is %s' % str(shape))
-
         self.assertEqual((4, 3), shape)
 
 
@@ -137,7 +132,7 @@ class MyTestCase(unittest.TestCase):
         Returns:
         '''
 
-        y = self.builder.build(self.tx)
+        y = self.builder.calculate(self.tx)
         loss = squared_loss(y, self.ty_true)
 
         train_op = self.builder.train_op(self.tx, self.ty_true, learning_rate=LEARNING_RATE)
@@ -169,7 +164,7 @@ class MyTestCase(unittest.TestCase):
         Returns:
         '''
 
-        y = self.builder.build(self.tx)
+        y = self.builder.calculate(self.tx)
         loss = squared_loss(y, self.ty_true)
 
         train_loop = self.builder.train_loop(self.tx,

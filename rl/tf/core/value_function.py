@@ -37,26 +37,17 @@ class ValueFunctionBuilder(object):
         self.biases = biases
 
     def vectorized(self, states):
-        print('vectorized called with states %s'%str(states))
         results = tf.map_fn(self.calculate, states, dtype=tf.float32)
         shape = (tf.shape(states)[0], self.output_shape)
         results = tf.reshape(results, shape)
         return results
 
     def calculate(self, x):
-
-
-        from rl.tests.tf.utils import evaluate_tensor
-        print('Building with x shape %s' % str(x.shape))
-        print('x is %s'%str(x))
         yi = x
         if self.use_one_hot_input_transform:
             yi = tf.one_hot(x, depth=self.input_shape, dtype=tf.float32)
         elif self.custom_input_transform:
             yi = self.custom_input_transform(yi)
-
-        print('yi is %s' % yi)
-        #print('rank yi is %s' % evaluate_tensor(tf.rank(yi)))
 
         for w, b in zip(self.weights[:-1], self.biases[:-1]):
             yi = tf.nn.relu(tf.matmul(yi, w) + b)
@@ -88,7 +79,7 @@ class ValueFunctionBuilder(object):
         return op
 
     def squared_loss(self, x, y):
-        y_hat = self.build(x)
+        y_hat = self.calculate(x)
         loss = squared_loss(y_hat, y)
         return loss
 
