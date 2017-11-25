@@ -73,13 +73,32 @@ class OneHotInputTransformTests(unittest.TestCase):
 
         self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
 
-    def test_build(self):
-        y = self.builder.build(self.tx)
+    def test_calculate(self):
+
+        tx = tf.Variable(np.arange(5), dtype=tf.int32, trainable=False)
+        tx = tf.Variable([1], dtype=tf.int32, trainable=False)
+        y = self.builder.calculate(tx)
 
         result = evaluate_tensor(y)
         print(result)
 
         self.assertIsInstance(result, np.ndarray)
+
+    def test_vectorized(self):
+
+        tx = tf.Variable([0, 1, 2, 3])
+
+        tx = tf.reshape(tx, (4, 1))
+        y = self.builder.vectorized(tx)
+
+        result = evaluate_tensor(y)
+        print(result)
+
+        shape = tuple(evaluate_tensor(tf.shape(result)))
+
+        print('shape is %s' % str(shape))
+
+        self.assertEqual((4, 3), shape)
 
 
 class MyTestCase(unittest.TestCase):
@@ -102,8 +121,8 @@ class MyTestCase(unittest.TestCase):
 
         self.ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
 
-    def test_build(self):
-        y = self.builder.build(self.tx)
+    def test_calculate(self):
+        y = self.builder.calculate(self.tx)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
