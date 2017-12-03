@@ -104,6 +104,31 @@ class OneHotInputTransformTests(unittest.TestCase):
         shape = tuple(evaluate_tensor(tf.shape(result)))
         self.assertEqual((4, 3), shape)
 
+    def test_vectorized_values(self):
+        """
+        Show that vectorized returns the same values as those we would get
+         if we looped through a list
+
+        """
+
+        positions = [0, 1, 2, 3]
+        tx = tf.Variable([0, 1, 2, 3])
+        tx = tf.reshape(tx, (-1, 1))
+
+        y = self.builder.vectorized(tx)
+
+        # There are 4 input states, and 3 actions, so we expect
+        # an output of shape (4, 3)
+
+        for position in positions:
+
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                t_expected = self.builder.calculate([position])
+
+                [ay, ey] = sess.run([y, t_expected])
+
+            np.testing.assert_array_equal(ey.ravel(), ay[position])
 
 
 class MyTestCase(unittest.TestCase):
