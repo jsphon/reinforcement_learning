@@ -49,7 +49,8 @@ class MyTestCase(unittest.TestCase):
 
         model = LineWorldModel()
 
-        t_next_states = model.apply_actions(1)
+        t_state = tf.Variable(1)
+        t_next_states = model.apply_actions(t_state)
         result = evaluate_tensor(t_next_states)
 
         expected = np.array([0, 2])
