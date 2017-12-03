@@ -20,6 +20,10 @@ class QLearningActionTargetCalculator(ActionTargetCalculator):
     def calculate(self, reward, next_state_action_values):
         return reward + self.discount_factor * tf.reduce_max(next_state_action_values)
 
+    #TODO Write the test for this:
+    def vectorized(self, reward, next_state_action_values):
+        return reward + self.discount_factor * tf.reduce_max(next_state_action_values)
+
 
 class SarsaActionTargetCalculator(ActionTargetCalculator):
     def calculate(self, reward, next_state_action_values):
