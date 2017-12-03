@@ -19,9 +19,9 @@ class RewardFunction(object):
         to_home = tf.equal(next_state, TARGET)
 
         return tf.case({
-            to_home: lambda: 10,
+            to_home: lambda: 10.0,
             },
-            default = lambda: -1,
+            default = lambda: -1.0,
             exclusive=True)
 
     def state_rewards(self, state, next_states):
