@@ -53,6 +53,7 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
 
 
 class QLearningActionTargetCalculatorTests(unittest.TestCase):
+
     def test_calculate(self):
         rl_system = MagicMock()
         calculator = QLearningActionTargetCalculator(
@@ -67,6 +68,26 @@ class QLearningActionTargetCalculatorTests(unittest.TestCase):
         actual = evaluate_tensor(target)
 
         self.assertEqual(4.0, actual)
+
+    def test_vectorized_1d(self):
+
+        rewards = tf.Variable([1.0, 2.0])
+        next_state_action_values = tf.Variable(
+            [
+                [3.0, 4.0],
+                [5.0, 6.0],
+            ]
+        )
+
+        calculator = QLearningActionTargetCalculator(
+            rl_system=MagicMock(),
+            discount_factor=1.0)
+        t_targets = calculator.vectorized_1d(rewards, next_state_action_values)
+        a_targets = evaluate_tensor(t_targets)
+
+        expected = np.array([1.0 + 5.0, 2.0 + 6.0])
+
+        np.testing.assert_array_equal(expected, a_targets)
 
 
 class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):

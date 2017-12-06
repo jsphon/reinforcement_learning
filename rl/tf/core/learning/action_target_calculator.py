@@ -17,12 +17,22 @@ class ActionTargetCalculator(object):
 
 
 class QLearningActionTargetCalculator(ActionTargetCalculator):
+
     def calculate(self, reward, next_state_action_values):
         return reward + self.discount_factor * tf.reduce_max(next_state_action_values)
 
     #TODO Write the test for this:
-    def vectorized(self, reward, next_state_action_values):
-        return reward + self.discount_factor * tf.reduce_max(next_state_action_values)
+    def vectorized_1d(self, rewards, next_state_action_values):
+        """
+
+        Args:
+            rewards: tf.Tensor of shape (num_actions, 1)
+            next_state_action_values: tf.Tensor of shape (num_actions, num_actions)
+
+        Returns:
+
+        """
+        return rewards + self.discount_factor * tf.reduce_max(next_state_action_values, axis=0)
 
 
 class SarsaActionTargetCalculator(ActionTargetCalculator):
