@@ -53,6 +53,9 @@ class ValueFunctionBuilder(object):
 
         if self.use_one_hot_input_transform:
             yi = tf.one_hot(x, depth=self.input_shape, dtype=tf.float32)
+            if x.shape.ndims == 0:
+                # when x is a scalar
+                yi = tf.reshape(yi, (1, -1))
         elif self.custom_input_transform:
             yi = self.custom_input_transform(x)
         else:

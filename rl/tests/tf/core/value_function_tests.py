@@ -140,7 +140,6 @@ class OneHotInputTransformTests(unittest.TestCase):
         self.assertLess(final_loss, initial_loss)
         self.assertLess(final_loss, 1)
 
-
     def test_calculate(self):
 
         tx = tf.Variable([1], dtype=tf.int32, trainable=False)
@@ -180,7 +179,7 @@ class OneHotInputTransformTests(unittest.TestCase):
         """
 
         positions = [0, 1, 2, 3]
-        tx = tf.Variable([0, 1, 2, 3])
+        tx = tf.Variable(positions)
         tx = tf.reshape(tx, (-1, 1))
 
         y = self.builder.vectorized(tx)
@@ -190,11 +189,10 @@ class OneHotInputTransformTests(unittest.TestCase):
 
         for position in positions:
 
-            with tf.Session() as sess:
-                sess.run(tf.global_variables_initializer())
-                t_expected = self.builder.calculate([position])
+            t_position = tf.Variable(position)
+            t_expected = self.builder.calculate(t_position)
 
-                [ay, ey] = sess.run([y, t_expected])
+            [ay, ey] = evaluate_tensor([y, t_expected])
 
             np.testing.assert_array_equal(ey.ravel(), ay[position])
 
