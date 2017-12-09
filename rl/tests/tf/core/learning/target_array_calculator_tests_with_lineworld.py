@@ -22,6 +22,7 @@ from rl.tf.core.learning.target_array_calculator import ModelBasedTargetArrayCal
 from rl.tf.core.learning.action_target_calculator import QLearningActionTargetCalculator
 from rl.tf.environments.line_world.reward_function import RewardFunction
 from rl.tf.environments.line_world.system import LineWorldSystem
+from rl.tf.environments.line_world.constants import TARGET
 
 
 class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
@@ -34,16 +35,14 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
         calculator = ModelBasedTargetArrayCalculator(lws, action_target_calculator)
 
         t_state = tf.Variable(-1, dtype=tf.int32, name='state')
-        t_action_values = lws.action_value_function.calculate(t_state)
+        t_next_state = lws.model.apply_action(t_state, action=0)
+        t_action_values = lws.action_value_function.calculate(t_next_state)
 
         with tf.name_scope('test_name_scope'):
             t_target = calculator.get_state_action_target(t_state, action=0)
-            t_target.name='target'
 
         tf.summary.scalar('target', t_target)
         tf.summary.scalar('state', t_state)
-        tf.summary.scalar('action_values[0]', t_action_values[0][0])
-        tf.summary.scalar('action_values[1]', t_action_values[0][0])
 
         merged = tf.summary.merge_all()
 
@@ -51,16 +50,23 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
             train_writer = tf.summary.FileWriter('/tmp/tensorboard', sess.graph)
             sess.run(tf.global_variables_initializer())
 
-            for position in range(8, 10):
+            for position in range(10):
 
                 assign_op = t_state.assign(position)
                 sess.run(assign_op)
 
-                target, action_values = sess.run([t_target, t_action_values])
-                expected_target = -1 + action_values.max()
+                next_state, target, action_values = sess.run([t_next_state, t_target, t_action_values])
+
+                if next_state == TARGET:
+                    expected_target = 10.0
+                else:
+                    expected_target = -1 + action_values.max()
+
+                np.testing.assert_almost_equal(expected_target, target)
 
                 target_diff = target-expected_target
                 print('=== %s ===' % position)
+                print('next state is %s'%str(next_state))
                 print('target is %s'%str(target))
                 print('expected target is %s' % str(expected_target))
                 print('diff is %s'%target_diff)
@@ -68,9 +74,11 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
-                summary = sess.run(merged,
-                                options=run_options,
-                                run_metadata=run_metadata)
+                summary = sess.run(
+                    merged,
+                    options=run_options,
+                    run_metadata=run_metadata
+                )
                 train_writer.add_run_metadata(run_metadata, 'position_%s'%position)
                 train_writer.add_summary(summary, position)
 
