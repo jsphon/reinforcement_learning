@@ -106,7 +106,7 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
         np.testing.assert_almost_equal(a_targets[0], a_target0)
         np.testing.assert_almost_equal(a_targets[1], a_target1)
 
-    def test_xx(self):
+    def test_get_states_targets(self):
         a_states = np.arange(10)
         t_states = tf.constant(a_states, dtype=tf.int32)
 
@@ -115,21 +115,21 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
         calculator = ModelBasedTargetArrayCalculator(lws, action_target_calculator)
 
-        t_action_values = lws.action_value_function.calculate(t_states)
         t_targets = calculator.get_states_targets(t_states)
+
+        expected_targets = [calculator.get_state_targets(tf.Variable(x)) for x in range(10)]
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
-            a_action_values, a_targets = sess.run([t_action_values, t_targets])
+            a_targets = sess.run(t_targets)
+            a_expected_targets = sess.run(expected_targets)
 
-        print('action values:\n%s'%str(a_action_values))
+        print('targets are %s' % str(a_targets))
+        print('expected targets are %s' % str(a_expected_targets))
 
-        print('targets:\n%s' % str(a_targets))
+        for expected, actual in zip(a_targets, a_expected_targets):
+            np.testing.assert_almost_equal(expected, actual)
 
-        t0 = action_target_calculator.calculate(-1.0, a_action_values[0])
-        print('t0: %s' % evaluate_tensor(t0))
-
-        np.testing.assert_equal(a_targets[0][0], a_action_values[0].max()-1.0)
 
 if __name__ == '__main__':
     unittest.main()
