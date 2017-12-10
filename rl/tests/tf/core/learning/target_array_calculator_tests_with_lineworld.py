@@ -7,20 +7,8 @@ logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
 import numpy as np
 import tensorflow as tf
-from mock import MagicMock
-from rl.tests.tf.utils import evaluate_tensor
-from rl.tf.core.learning.target_array_calculator import ModelBasedTargetArrayCalculator
-
-import numpy as np
-import tensorflow as tf
-from rl.tests.tf.utils import evaluate_tensor
-from rl.tf.core.policy import EpsilonGreedyPolicy
-from rl.tf.core.system import System
-from rl.tf.core.value_function import ValueFunctionBuilder
-from rl.tf.environments.line_world.model import LineWorldModel
 from rl.tf.core.learning.target_array_calculator import ModelBasedTargetArrayCalculator
 from rl.tf.core.learning.action_target_calculator import QLearningActionTargetCalculator
-from rl.tf.environments.line_world.reward_function import RewardFunction
 from rl.tf.environments.line_world.system import LineWorldSystem
 from rl.tf.environments.line_world.constants import TARGET
 
