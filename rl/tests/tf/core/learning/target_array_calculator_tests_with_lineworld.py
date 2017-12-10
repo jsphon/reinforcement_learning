@@ -86,30 +86,25 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
     def test_get_state_targets(self):
 
-        t_state = tf.constant([0], dtype=tf.int32)
+        t_state = tf.constant(0, dtype=tf.int32)
 
         lws = LineWorldSystem()
         action_target_calculator = QLearningActionTargetCalculator(lws)
-
         calculator = ModelBasedTargetArrayCalculator(lws, action_target_calculator)
 
         t_action_values = lws.action_value_function.calculate(t_state)
-        t_targets = calculator.get_states_targets(t_state)
+        t_targets = calculator.get_state_targets(t_state)
+
+        t_target0 = calculator.get_state_action_target(t_state, 0)
+        t_target1 = calculator.get_state_action_target(t_state, 1)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             a_action_values, a_targets = sess.run([t_action_values, t_targets])
+            a_target0, a_target1 = sess.run([t_target0, t_target1])
 
-        print('action values:\n%s'%str(a_action_values))
-
-        print('targets:\n%s' % str(a_targets))
-
-        t0 = action_target_calculator.calculate(-1.0, a_action_values[0])
-        print('t0: %s' % evaluate_tensor(t0))
-
-        np.testing.assert_equal(a_targets[0][0], a_action_values[0].max()-1.0)
-
-
+        np.testing.assert_almost_equal(a_targets[0], a_target0)
+        np.testing.assert_almost_equal(a_targets[1], a_target1)
 
     def test_xx(self):
         a_states = np.arange(10)
