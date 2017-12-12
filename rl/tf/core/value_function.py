@@ -26,13 +26,13 @@ class ValueFunctionBuilder(object):
         else:
             self.custom_input_transform = custom_input_transform
 
-        weights = [weight_variable((input_shape, hidden_shape[0]))]
-        weights += [weight_variable([hidden_shape[i], hidden_shape[i + 1]]) for i in range(len(hidden_shape) - 1)]
-        weights += [weight_variable((hidden_shape[-1], output_shape))]
+        weights = [weight_variable((input_shape, hidden_shape[0]), name='hidden_0')]
+        weights += [weight_variable([hidden_shape[i], hidden_shape[i + 1]], name='hidden_weight_%i'%(i+1)) for i in range(len(hidden_shape) - 1)]
+        weights += [weight_variable((hidden_shape[-1], output_shape), name='hidden_weight_%i'%len(hidden_shape))]
         self.weights = weights
 
-        biases = [bias_variable([s]) for s in hidden_shape]
-        biases += [bias_variable([output_shape])]
+        biases = [bias_variable([s], 'hidden_bias_%i'%i) for i, s in enumerate(hidden_shape)]
+        biases += [bias_variable([output_shape], name='output_bias')]
         self.biases = biases
 
     def vectorized(self, states):
@@ -103,11 +103,11 @@ def squared_loss(y0, y1):
     return loss
 
 
-def weight_variable(shape):
+def weight_variable(shape, name=None):
     initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
+    return tf.Variable(initial, name=name)
 
 
-def bias_variable(shape):
+def bias_variable(shape, name=None):
     initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial)
+    return tf.Variable(initial, name=name)
