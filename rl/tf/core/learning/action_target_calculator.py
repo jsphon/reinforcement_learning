@@ -8,7 +8,8 @@ class ActionTargetCalculator(object):
     def __init__(self, rl_system, discount_factor=1.0):
         self.rl_system = rl_system
         if not isinstance(discount_factor, tf.Tensor):
-            self.discount_factor = tf.Variable(discount_factor)
+            # Must have trainable == False
+            self.discount_factor = tf.Variable(discount_factor, trainable=False)
         else:
             self.discount_factor = discount_factor
 

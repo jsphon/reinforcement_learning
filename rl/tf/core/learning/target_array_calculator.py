@@ -61,17 +61,55 @@ class ModelBasedTargetArrayCalculator(object):
         :param reward:
         :return: np.ndarray(num_actions)
         """
-        next_state = self.rl_system.model.apply_action(state, action)
-        reward = self.rl_system.reward_function.action_reward(state, action, next_state)
-        predicate = self.rl_system.model.is_terminal(next_state)
+
+        g = self.get_state_action_target_graph(state, action)
+        return g.target
+
+    def get_state_action_target_graph(self, state, action):
+        return GetStateActionTargetGraph(state, action, self)
+
+        #
+        # next_state = self.rl_system.model.apply_action(state, action)
+        # reward = self.rl_system.reward_function.action_reward(state, action, next_state)
+        # predicate = self.rl_system.model.is_terminal(next_state)
+        #
+        # def when_terminal():
+        #     return reward
+        #
+        # def when_non_terminal():
+        #     next_state_action_values = self.rl_system.action_value_function.calculate(next_state)
+        #     return self.action_target_calculator.calculate(reward, next_state_action_values)
+        #
+        # target = tf.cond(predicate, when_terminal, when_non_terminal)
+        #
+        # return target
+
+
+class GetStateActionTargetGraph(object):
+
+    def __init__(self, state, action, target_array_calculator):
+        self.state = state
+        self.action = action
+        self.target_array_calculator = target_array_calculator
+
+        rl_system = target_array_calculator.rl_system
+        self.next_state = rl_system.model.apply_action(state, action)
+        self.reward = rl_system.reward_function.action_reward(state, action, self.next_state)
+        self.predicate = rl_system.model.is_terminal(self.next_state)
+
+        self.next_state_action_values = rl_system.action_value_function.calculate(self.next_state)
+        self.non_terminal_targets = target_array_calculator.action_target_calculator.calculate(self.reward, self.next_state_action_values)
 
         def when_terminal():
-            return reward
+            return self.reward
 
         def when_non_terminal():
-            next_state_action_values = self.rl_system.action_value_function.calculate(next_state)
-            return self.action_target_calculator.calculate(reward, next_state_action_values)
+            return self.non_terminal_targets
+            #self.next_state_action_values = rl_system.action_value_function.calculate(self.next_state)
+            #return target_array_calculator.action_target_calculator.calculate(self.reward, self.next_state_action_values)
 
-        target = tf.cond(predicate, when_terminal, when_non_terminal)
+        self.target = tf.cond(
+            self.predicate,
+            lambda: self.reward,
+            lambda: self.non_terminal_targets)
 
-        return target

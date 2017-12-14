@@ -3,6 +3,8 @@ import unittest
 
 import logging
 
+from tensorflow.contrib.metrics.python.ops.metric_ops import _next_array_size
+
 logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
 import numpy as np
@@ -115,6 +117,9 @@ class ActionTargetCalculator(object):
         )
 
         return result
+
+    def vectorized_1d(self, rewards, next_state_action_values):
+        return self.calculate(rewards, next_state_action_values)
 
 
 class Model(object):

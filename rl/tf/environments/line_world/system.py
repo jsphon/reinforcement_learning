@@ -24,8 +24,6 @@ if __name__=='__main__':
     from rl.tests.tf.utils import evaluate_tensor
 
     a_states = np.arange(10)
-    #t_states = tf.Variable(a_states, dtype=tf.int32)
-    #t_states = tf.constant(a_states, shape=(10, 1), dtype=tf.int32)
     t_states = tf.constant(a_states, dtype=tf.int32)
 
     lws = LineWorldSystem()
@@ -33,42 +31,66 @@ if __name__=='__main__':
 
     calculator = ModelBasedTargetArrayCalculator(lws, action_target_calculator)
 
-    action_values = lws.action_value_function.calculate(t_states)
-    print(evaluate_tensor(action_values))
-    t_targets = calculator.get_states_targets(t_states)
-    a_targets = evaluate_tensor(t_targets)
-    print(a_targets)
+    t_action_values = lws.action_value_function.vectorized(t_states)
+    t_action_values_0_0 = lws.action_value_function.calculate(t_states[0])
 
-    loss = tf.reduce_mean(tf.abs(action_values-t_targets))
+    t_targets = calculator.get_states_targets(t_states)
+    t_target0 = calculator.get_state_action_target(t_states[0], 0)
+    t_target1 = calculator.get_state_action_target(t_states[0], 1)
+
+    t_next_state = lws.model.apply_action(t_states[0], 0)
+    t_next_state_action_values = lws.action_value_function.calculate(t_next_state)
+    t_reward = lws.reward_function.action_reward(t_states[0], 0, t_next_state)
+
+    loss = tf.reduce_mean(tf.abs(t_action_values-t_targets))
+
+    t_learning_rate = tf.Variable(0.001, dtype=tf.float32, name='learning_rate')
+    assign_op = t_learning_rate.assign(0.999 * t_learning_rate)
 
     train_op = lws.action_value_function.train_op(t_states, t_targets, learning_rate=0.001)
-    #train_loop = lws.action_value_function.train_loop(t_states, t_targets)
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for i in range(1000):
-            sess.run([train_op])
-            new_loss = sess.run(loss)
-            print('new loss is %s' % new_loss)
+    g = calculator.get_state_action_target_graph(t_states[0], 0)
 
-            if (i%10)==0:
+    sess = tf.InteractiveSession()
+    sess.run(tf.global_variables_initializer())
 
-                print('After training, our action values are:')
-                print(sess.run(action_values))
+    initial_action_values = t_action_values.eval()
+    initial_targets = t_targets.eval()
 
-                print('targets:')
-                print(sess.run(t_targets))
+    print('Initial action values are\n%s' % str(initial_action_values))
+    print('Initial Targets are\n%s' % str(initial_targets))
 
+    diff = np.abs((initial_action_values[0].max() - 1) - initial_targets[0, 0])
+    assert diff < 1e-6
 
-    """
-    
-    
-    next_states = lws.model.apply_actions(t_states[0])
-    rewards = lws.reward_function.state_rewards(t_states[0], next_states)
-    next_states_action_values = lws.action_value_function.vectorized(tf.reshape(next_states, (2, 1)))
+    sess.run([train_op])
 
-    print('Next states are of shape %s' % str(next_states.shape))
-    print(evaluate_tensor(next_states))
-    
-    """
+    trained_action_values = t_action_values.eval()
+    trained_targets = t_targets.eval()
+    trained_targets0 = t_target0.eval()
+
+    diff = np.abs((trained_action_values[0].max() - 1) - trained_targets[0, 0])
+    #assert diff < 1e-6
+
+    d = (-1 + g.next_state_action_values.eval().max()) - g.non_terminal_targets.eval()
+
+    manual_q = g.reward.eval() + g.next_state_action_values.eval().max()
+    print( 'manual q calc %s' % manual_q )
+
+    actual_q = action_target_calculator.calculate(g.reward, g.next_state_action_values).eval()
+    print( 'actual q calc %s' % actual_q)
+
+    for i in range(10000):
+        sess.run([train_op])
+
+        if i % 100==0:
+            print(i, 'new loss is %s' % loss.eval())
+            print('learning rate is %0.4f' % t_learning_rate.eval())
+
+            print('After training, our action values are:')
+            print(t_action_values.eval())
+
+            print('targets:')
+            print(t_targets.eval())
+
 

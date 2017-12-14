@@ -118,6 +118,54 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
         for expected, actual in zip(a_targets, a_expected_targets):
             np.testing.assert_almost_equal(expected, actual)
 
+    def xtest_get_states_targets_with_train_op(self):
+        a_states = np.arange(10)
+        t_states = tf.constant(a_states, dtype=tf.int32)
+
+        lws = LineWorldSystem()
+        action_target_calculator = QLearningActionTargetCalculator(lws)
+
+        calculator = ModelBasedTargetArrayCalculator(lws, action_target_calculator)
+
+        t_targets = calculator.get_states_targets(t_states)
+        t_action_values = lws.action_value_function.vectorized(t_states)
+
+        expected_targets = [calculator.get_state_targets(tf.Variable(x)) for x in range(10)]
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            a_targets = sess.run(t_targets)
+            a_expected_targets = sess.run(expected_targets)
+            a_action_values = sess.run(t_action_values)
+
+            print('targets are %s' % str(a_targets))
+            print('expected targets are %s' % str(a_expected_targets))
+            print('action values are %s' % str(a_action_values))
+
+            expected_target = -1.0 + a_action_values[0].max()
+            np.testing.assert_almost_equal(expected_target, a_targets[0, 0])
+
+            for expected, actual in zip(a_targets, a_expected_targets):
+                np.testing.assert_almost_equal(expected, actual)
+
+            #for _ in range(10):
+            train_op = lws.action_value_function.train_op(t_states, t_targets, learning_rate=0.001)
+            sess.run(train_op)
+
+            a_targets = sess.run(t_targets)
+            a_expected_targets = sess.run(expected_targets)
+            a_action_values = sess.run(t_action_values)
+
+            print('targets are %s' % str(a_targets))
+            print('expected targets are %s' % str(a_expected_targets))
+            print('action values are %s' % str(a_action_values))
+
+            expected_target = -1.0 + a_action_values[0].max()
+            np.testing.assert_almost_equal(expected_target, a_targets[0, 0])
+
+            for expected, actual in zip(a_targets, a_expected_targets):
+                np.testing.assert_almost_equal(expected, actual)
+
 
 if __name__ == '__main__':
     unittest.main()
