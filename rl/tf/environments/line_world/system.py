@@ -7,11 +7,13 @@ from rl.tf.environments.line_world.model import LineWorldModel
 from rl.tf.core.learning.target_array_calculator import ModelBasedTargetArrayCalculator
 from rl.tf.core.learning.action_target_calculator import QLearningActionTargetCalculator
 from rl.tf.environments.line_world.reward_function import RewardFunction
+from rl.lib.timer import Timer
+
 
 class LineWorldSystem(System):
 
     def __init__(self):
-        self.action_value_function = ValueFunctionBuilder(10, [8, 6], 2, use_one_hot_input_transform=True)
+        self.action_value_function = ValueFunctionBuilder(10, [10], 2, use_one_hot_input_transform=True)
         self.policy = EpsilonGreedyPolicy()
         self.model = LineWorldModel()
         self.reward_function = RewardFunction()
@@ -42,13 +44,17 @@ if __name__=='__main__':
     t_next_state_action_values = lws.action_value_function.calculate(t_next_state)
     t_reward = lws.reward_function.action_reward(t_states[0], 0, t_next_state)
 
-    loss = tf.reduce_mean(tf.abs(t_action_values-t_targets))
+    #loss = tf.reduce_mean(tf.abs(t_action_values-t_targets))
+    loss = lws.action_value_function.squared_loss(t_states, t_targets)
 
     t_learning_rate = tf.Variable(0.001, dtype=tf.float32, name='learning_rate')
     assign_op = t_learning_rate.assign(0.999 * t_learning_rate)
 
-    train_op = lws.action_value_function.train_op(t_states, t_targets, learning_rate=0.001)
+    #train_op = lws.action_value_function.train_op(t_states, t_targets, learning_rate=0.01)
+    train_op = lws.action_value_function.train_op(t_states[3:], t_targets[3:], learning_rate=0.01)
 
+
+    #train_loop = lws.action_value_function.train_loop(t_states, t_targets, num_steps=100, learning_rate=0.001)
     g = calculator.get_state_action_target_graph(t_states[0], 0)
 
     sess = tf.InteractiveSession()
@@ -80,17 +86,24 @@ if __name__=='__main__':
     actual_q = action_target_calculator.calculate(g.reward, g.next_state_action_values).eval()
     print( 'actual q calc %s' % actual_q)
 
-    for i in range(10000):
-        sess.run([train_op])
 
-        if i % 100==0:
-            print(i, 'new loss is %s' % loss.eval())
-            print('learning rate is %0.4f' % t_learning_rate.eval())
+    def train_n_times(n):
+        with Timer('Looping %i times' % n):
+            for i in range(n):
 
-            print('After training, our action values are:')
-            print(t_action_values.eval())
+                #ix = np.random.choice(10, 5)
+                #train_op = lws.action_value_function.train_op(t_states[:3], t_targets[:3], learning_rate=0.01)
 
-            print('targets:')
-            print(t_targets.eval())
+                sess.run([train_op])
 
+                if (i % 100==0) or i==n-1:
+                    print(i, 'new loss is %s' % loss.eval())
+                    print('learning rate is %0.4f' % t_learning_rate.eval())
 
+                    print('After training, our action values are:')
+                    print(t_action_values.eval())
+
+                    print('targets:')
+                    print(t_targets.eval())
+
+    train_n_times(1000)

@@ -202,7 +202,7 @@ class OneHotInputTransformTests2(unittest.TestCase):
     def setUp(self):
         self.builder = ValueFunctionBuilder(
             input_shape=10,
-            hidden_shape=[10, 5],
+            hidden_shape=[10],
             output_shape=2,
             use_one_hot_input_transform=True,
         )
@@ -211,8 +211,9 @@ class OneHotInputTransformTests2(unittest.TestCase):
         self.tx = tf.Variable(nx, dtype=tf.int32, trainable=False)
 
         ny_true = np.array([
-            [9, 10, 9, 8 , 7, 6, 5, 4, 3, 2],
-            [7,  8, 9, 10, 9, 8, 7, 6, 5, 4],
+            [8, 8, 9, 10, 9, 8, 7, 6, 5, 4],
+            [9, 10, 7, 8, 7, 6, 5, 4, 3, 2],
+
         ]
         ).T
 
