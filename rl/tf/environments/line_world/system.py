@@ -19,7 +19,18 @@ class LineWorldSystem(System):
         self.reward_function = RewardFunction()
 
 
+class Learner(object):
 
+    def __init__(self, calculator, t_states, learning_rate=0.01):
+        self.calculator = calculator
+        self.t_targets = self.calculator.get_states_targets(t_states)
+        self.train_op = calculator.rl_system.action_value_function.train_op(t_states, self.t_targets, learning_rate=learning_rate)
+        self.train_loop = calculator.rl_system.action_value_function.train_loop(t_states, self.t_targets, learning_rate=learning_rate)
+        self.loss = self.calculator.rl_system.action_value_function.squared_loss(t_states, self.t_targets)
+
+    def train(self, sess, num_epochs=1):
+        for _ in range(num_epochs):
+            sess.run(self.train_op)
 
 
 if __name__=='__main__':
@@ -37,28 +48,10 @@ if __name__=='__main__':
 
     t_action_values = lws.action_value_function.vectorized(t_states)
 
-    t_targets = calculator.get_states_targets(t_states)
-    loss = lws.action_value_function.squared_loss(t_states, t_targets)
-
-    train_op = lws.action_value_function.train_op(t_states, t_targets, learning_rate=0.01)
-    g = calculator.get_state_action_target_graph(t_states[0], 0)
+    learner = Learner(calculator, t_states)
 
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
-    def train_n_times(n):
-        with Timer('Looping %i times' % n):
-            for i in range(n):
-
-                sess.run([train_op])
-
-                if (i % 100==0) or i==n-1:
-                    print(i, 'new loss is %s' % loss.eval())
-
-                    print('After training, our action values are:')
-                    print(t_action_values.eval())
-
-                    print('targets:')
-                    print(t_targets.eval())
-
-    train_n_times(1000)
+    with Timer('Training...'):
+        learner.train(sess, num_epochs=100)
