@@ -1,5 +1,5 @@
 
-
+from rl.tf.core.learning.learner import Learner
 from rl.tf.core.policy import EpsilonGreedyPolicy
 from rl.tf.core.system import System
 from rl.tf.core.value_function import ValueFunctionBuilder
@@ -17,20 +17,6 @@ class LineWorldSystem(System):
         self.policy = EpsilonGreedyPolicy()
         self.model = LineWorldModel()
         self.reward_function = RewardFunction()
-
-
-class Learner(object):
-
-    def __init__(self, calculator, t_states, learning_rate=0.01):
-        self.calculator = calculator
-        self.t_targets = self.calculator.get_states_targets(t_states)
-        self.train_op = calculator.rl_system.action_value_function.train_op(t_states, self.t_targets, learning_rate=learning_rate)
-        self.train_loop = calculator.rl_system.action_value_function.train_loop(t_states, self.t_targets, learning_rate=learning_rate)
-        self.loss = self.calculator.rl_system.action_value_function.squared_loss(t_states, self.t_targets)
-
-    def train(self, sess, num_epochs=1):
-        for _ in range(num_epochs):
-            sess.run(self.train_op)
 
 
 if __name__=='__main__':

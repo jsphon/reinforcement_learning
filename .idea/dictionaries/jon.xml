@@ -2,6 +2,7 @@
   <dictionary name="jon">
     <words>
       <w>dtype</w>
+      <w>logits</w>
       <w>modelbasedstatemachine</w>
     </words>
   </dictionary>

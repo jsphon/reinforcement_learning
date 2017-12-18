@@ -202,7 +202,7 @@ class OneHotInputTransformTests2(unittest.TestCase):
     def setUp(self):
         self.builder = ValueFunctionBuilder(
             input_shape=10,
-            hidden_shape=[10],
+            hidden_shape=[100, 100, 60, 60, 40, 20],
             output_shape=2,
             use_one_hot_input_transform=True,
         )
