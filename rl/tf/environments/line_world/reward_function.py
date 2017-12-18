@@ -29,3 +29,20 @@ class RewardFunction(object):
         r0 = self.action_reward(state, 0, next_states[0])
         r1 = self.action_reward(state, 1, next_states[1])
         return tf.stack([r0, r1])
+
+    def state_rewards_vectorized(self, states, next_states):
+        """
+
+        Args:
+            states: tensor of states
+            next_states: tensor of next_states
+
+        Returns:
+
+        """
+
+        comparison = tf.equal(next_states, TARGET)
+        win = 10.0 * tf.ones_like(next_states, dtype=tf.float32)
+        lose = -1.0 * tf.ones_like(next_states, dtype=tf.float32)
+        result = tf.where(comparison, win, lose)
+        return result
