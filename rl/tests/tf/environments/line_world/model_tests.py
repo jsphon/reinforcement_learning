@@ -9,6 +9,7 @@ from rl.tf.environments.line_world.constants import MOVE_LEFT, MOVE_RIGHT
 from rl.tf.environments.line_world.model import LineWorldModel
 from rl.tf.environments.line_world.constants import TARGET
 from rl.tests.tf.utils import evaluate_tensor
+from rl.lib.timer import Timer
 
 
 class MyTestCase(tf.test.TestCase):
@@ -51,6 +52,7 @@ class MyTestCase(tf.test.TestCase):
 
         t_states = tf.Variable([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         t_next_states = model.apply_actions_vectorized(t_states)
+
         result = evaluate_tensor(t_next_states)
 
         expected = np.array([
@@ -67,6 +69,31 @@ class MyTestCase(tf.test.TestCase):
         ])
 
         self.assertAllEqual(expected, result)
+
+    def test_apply_actions_vectorized_vs_map_fn(self):
+        """
+        Compare the vectorized version vs using map_fn
+        Returns:
+
+        """
+        N = 100
+        model = LineWorldModel()
+
+        t_states = tf.Variable([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        t_next_states = model.apply_actions_vectorized(t_states)
+
+        with Timer('Vectorized'):
+            for _ in range(N):
+                a_result = evaluate_tensor(t_next_states)
+
+        # slow way
+
+        result2 = tf.map_fn(model.apply_actions, t_states)
+        with Timer('map'):
+            for _ in range(N):
+                a_result2 = evaluate_tensor(result2)
+
+        self.assertAllEqual(a_result, a_result2)
 
     def test_apply_actions(self):
 
