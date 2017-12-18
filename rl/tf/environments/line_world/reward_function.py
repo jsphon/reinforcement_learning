@@ -42,7 +42,8 @@ class RewardFunction(object):
         """
 
         comparison = tf.equal(next_states, TARGET)
-        win = 10.0 * tf.ones_like(next_states, dtype=tf.float32)
-        lose = -1.0 * tf.ones_like(next_states, dtype=tf.float32)
+        ones = tf.ones_like(next_states, dtype=tf.float32)
+        win = 10.0 * ones
+        lose = -1.0 * ones
         result = tf.where(comparison, win, lose)
         return result
