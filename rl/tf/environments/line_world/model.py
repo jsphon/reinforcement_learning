@@ -15,6 +15,11 @@ class LineWorldModel(object):
     def move_right(self, position):
         return tf.minimum(position + 1, tf.Variable(self.num_positions - 1, dtype=tf.int32))
 
+    def apply_actions_vectorized(self, positions):
+        r0 = tf.maximum(positions-1, 0)
+        r1 = tf.minimum(positions+1, 9)
+        return tf.stack([r0, r1], axis=1)
+
     def apply_actions(self, position):
         np0 = self.move_left(position)
         np1 = self.move_right(position)

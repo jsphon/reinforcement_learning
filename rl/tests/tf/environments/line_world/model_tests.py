@@ -11,7 +11,7 @@ from rl.tf.environments.line_world.constants import TARGET
 from rl.tests.tf.utils import evaluate_tensor
 
 
-class MyTestCase(unittest.TestCase):
+class MyTestCase(tf.test.TestCase):
 
     def test_are_states_terminal(self):
         model = LineWorldModel()
@@ -44,6 +44,29 @@ class MyTestCase(unittest.TestCase):
             actual = sess.run(is_terminal)
 
         self.assertFalse(actual)
+
+    def test_apply_actions_vectorized(self):
+
+        model = LineWorldModel()
+
+        t_states = tf.Variable([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        t_next_states = model.apply_actions_vectorized(t_states)
+        result = evaluate_tensor(t_next_states)
+
+        expected = np.array([
+            [0, 1],
+            [0, 2],
+            [1, 3],
+            [2, 4],
+            [3, 5],
+            [4, 6],
+            [5, 7],
+            [6, 8],
+            [7, 9],
+            [8, 9]
+        ])
+
+        self.assertAllEqual(expected, result)
 
     def test_apply_actions(self):
 
