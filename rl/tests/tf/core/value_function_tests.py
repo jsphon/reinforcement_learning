@@ -51,7 +51,7 @@ class CustomInputTransformTests(unittest.TestCase):
         self.assertIsInstance(result, np.ndarray)
 
 
-class OneHotInputTransformTests(unittest.TestCase):
+class OneHotInputTransformTests(tf.test.TestCase):
 
     def setUp(self):
         self.builder = ValueFunctionBuilder(
@@ -151,6 +151,12 @@ class OneHotInputTransformTests(unittest.TestCase):
         self.assertIsInstance(result, np.ndarray)
 
     def test_vectorized_2d(self):
+        """
+        Check that vectorized_2d
+          - returns a tensor of the correct shape
+          - that the values correspond to the values from vectorized
+
+        """
 
         tx = tf.Variable([
             [0, 1],
@@ -160,9 +166,15 @@ class OneHotInputTransformTests(unittest.TestCase):
 
         y = self.builder.vectorized_2d(tx)
 
-        a_y = evaluate_tensor(y)
+        tx0 = tx[:, 0]
+        tx1 = tx[:, 1]
+        y0 = self.builder.vectorized(tx0)
+        y1 = self.builder.vectorized(tx1)
+        a_y, a_y0, a_y1 = evaluate_tensor([y, y0, y1])
 
         self.assertEqual((3, 2, 3), a_y.shape)
+        self.assertAllClose(a_y[:, 0], a_y0)
+        self.assertAllClose(a_y[:, 1], a_y1)
 
     def test_vectorized_rank1(self):
 

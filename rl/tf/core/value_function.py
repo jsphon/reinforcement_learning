@@ -44,6 +44,9 @@ class ValueFunctionBuilder(object):
         Returns:
             rank 3 tensor
 
+            1st and 2nd dimensions (i, j) correspond to the states from the 1st 2 dimensions of states
+            the 3rd (new) dimension corresponds to the action values of state at i, j
+
         """
         if self.use_one_hot_input_transform:
             shape = tf.shape(states)
