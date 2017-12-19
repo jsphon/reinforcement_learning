@@ -176,6 +176,42 @@ class OneHotInputTransformTests(tf.test.TestCase):
         self.assertAllClose(a_y[:, 0], a_y0)
         self.assertAllClose(a_y[:, 1], a_y1)
 
+    def test_vectorized_2d_perf(self):
+        """
+        Check that vectorized_2d
+          - returns a tensor of the correct shape
+          - that the values correspond to the values from vectorized
+
+        """
+
+        tx = tf.Variable(
+            np.random.randint(0, 10, (10, 3))
+        )
+
+        y = self.builder.vectorized_2d(tx)
+
+        tx0 = tx[:, 0]
+        tx1 = tx[:, 1]
+        tx2 = tx[:, 2]
+
+        y0 = self.builder.vectorized(tx0)
+        y1 = self.builder.vectorized(tx1)
+        y2 = self.builder.vectorized(tx2)
+
+        with Timer('vectorized_2d'):
+            for _ in range(10):
+                evaluate_tensor(y)
+
+        with Timer('vectorized'):
+            for _ in range(10):
+                evaluate_tensor([y0, y1, y2])
+
+        ay, ay0, ay1, ay2 = evaluate_tensor([y, y0, y1, y2])
+
+        self.assertAllClose(ay0, ay[:, 0])
+        self.assertAllClose(ay1, ay[:, 1])
+        self.assertAllClose(ay2, ay[:, 2])
+
     def test_vectorized_rank1(self):
 
         tx = tf.Variable([0, 1, 2, 3])
