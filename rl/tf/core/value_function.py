@@ -35,6 +35,26 @@ class ValueFunctionBuilder(object):
         biases += [bias_variable([output_shape], name='output_bias')]
         self.biases = biases
 
+    def vectorized_2d(self, states):
+        """
+
+        Args:
+            states: rank 2 tensor
+
+        Returns:
+            rank 3 tensor
+
+        """
+        if self.use_one_hot_input_transform:
+            shape = tf.shape(states)
+            reshaped_states = tf.reshape(states, [-1])
+            result = self.calculate(reshaped_states)
+            result = tf.reshape(result, (shape[0], shape[1], -1))
+            return result
+        else:
+            states = tf.reshape(states, (-1, self.input_shape))
+        return self.calculate(states)
+
     def vectorized(self, states):
 
         if self.use_one_hot_input_transform:

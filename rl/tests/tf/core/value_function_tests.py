@@ -150,6 +150,20 @@ class OneHotInputTransformTests(unittest.TestCase):
 
         self.assertIsInstance(result, np.ndarray)
 
+    def test_vectorized_2d(self):
+
+        tx = tf.Variable([
+            [0, 1],
+            [1, 2],
+            [2, 3]
+        ])
+
+        y = self.builder.vectorized_2d(tx)
+
+        a_y = evaluate_tensor(y)
+
+        self.assertEqual((3, 2, 3), a_y.shape)
+
     def test_vectorized_rank1(self):
 
         tx = tf.Variable([0, 1, 2, 3])
