@@ -30,6 +30,9 @@ class LineWorldModel(object):
         new_state = tf.cond(cond, lambda: self.move_left(position), lambda: self.move_right(position))
         return new_state
 
+    def are_states_terminal_vectorized(self, positions):
+        return tf.equal(positions, TARGET)
+
     def are_states_terminal(self, positions):
         return tf.map_fn(self.is_terminal, positions, dtype=tf.bool)
 

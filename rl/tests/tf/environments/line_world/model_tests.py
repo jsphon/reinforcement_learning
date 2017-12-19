@@ -24,6 +24,34 @@ class MyTestCase(tf.test.TestCase):
         expected = np.array([False, True, False])
         np.testing.assert_array_equal(expected, result)
 
+    def test_are_states_terminal_vectorized(self):
+
+        model = LineWorldModel()
+        positions = tf.Variable([TARGET-1, TARGET, TARGET+1])
+        are_terminal = model.are_states_terminal_vectorized(positions)
+
+        result = evaluate_tensor(are_terminal)
+        expected = np.array([False, True, False])
+        np.testing.assert_array_equal(expected, result)
+
+    def test_are_states_terminal_vectorized_performance(self):
+
+        model = LineWorldModel()
+
+        a_positions = np.random.randint(0, 10, 10000)
+        t_positions = tf.Variable(a_positions)
+
+        v_are_terminal = model.are_states_terminal_vectorized(t_positions)
+        m_are_terminal = model.are_states_terminal(t_positions)
+
+        with Timer('vectorized'):
+            v_result = evaluate_tensor(v_are_terminal)
+
+        with Timer('map'):
+            m_result = evaluate_tensor(m_are_terminal)
+
+        self.assertAllClose(v_result, m_result)
+
     def test_is_terminal_True(self):
         model = LineWorldModel()
 
