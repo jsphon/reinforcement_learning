@@ -161,7 +161,8 @@ class OneHotInputTransformTests(tf.test.TestCase):
         tx = tf.Variable([
             [0, 1],
             [1, 2],
-            [2, 3]
+            [2, 3],
+            [3, 4],
         ])
 
         y = self.builder.vectorized_2d(tx)
@@ -172,7 +173,8 @@ class OneHotInputTransformTests(tf.test.TestCase):
         y1 = self.builder.vectorized(tx1)
         a_y, a_y0, a_y1 = evaluate_tensor([y, y0, y1])
 
-        self.assertEqual((3, 2, 3), a_y.shape)
+        print(a_y)
+        self.assertEqual((4, 2, 3), a_y.shape)
         self.assertAllClose(a_y[:, 0], a_y0)
         self.assertAllClose(a_y[:, 1], a_y1)
 
