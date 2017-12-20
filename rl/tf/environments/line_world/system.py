@@ -34,10 +34,15 @@ if __name__=='__main__':
 
     t_action_values = lws.action_value_function.vectorized(t_states)
 
-    learner = Learner(calculator, t_states)
+    learner = Learner(calculator, t_states, vectorize=False)
+    learner_v = Learner(calculator, t_states, vectorize=True, train_loop_steps=100)
 
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
-    with Timer('Training...'):
-        learner.train(sess, num_epochs=100)
+    for _ in range(10):
+        #with Timer('Training mapped...'): learner.train(sess, num_epochs=100)
+        with Timer('Training vectorized...'): learner_v.train(sess, num_epochs=100)
+        with Timer('Train Loop...'): learner_v.run_train_loop(sess)
+
+        print(sess.run(t_action_values))
