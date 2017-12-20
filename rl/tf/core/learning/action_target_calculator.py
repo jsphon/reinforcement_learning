@@ -34,6 +34,22 @@ class QLearningActionTargetCalculator(ActionTargetCalculator):
         """
         return rewards + self.discount_factor * tf.reduce_max(next_state_action_values, axis=1)
 
+    def vectorized_2d(self, rewards, next_state_action_values):
+        """
+
+        Args:
+            rewards: tf.Tensor of shape (num_states, num_actions)
+            next_state_action_values: (num_states, num_actions, num_actions)
+                1st dimension represents the number of states in our sample
+                2nd dimension represents the action taken
+                3rd dimension representst he action values, given the action taken in the 2nd dimension
+
+        Returns:
+            tf.Tensor of shape (num_states, num_actions)
+
+        """
+        return rewards + self.discount_factor * tf.reduce_max(next_state_action_values, axis=2)
+
 
 class SarsaActionTargetCalculator(ActionTargetCalculator):
     def calculate(self, reward, next_state_action_values):

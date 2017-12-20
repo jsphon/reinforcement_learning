@@ -52,7 +52,7 @@ class SarsaActionTargetCalculatorTests(unittest.TestCase):
         self.assertTrue(chi.pvalue > 0.01, chi.pvalue)
 
 
-class QLearningActionTargetCalculatorTests(unittest.TestCase):
+class QLearningActionTargetCalculatorTests(tf.test.TestCase):
 
     def test_calculate(self):
         rl_system = MagicMock()
@@ -88,6 +88,51 @@ class QLearningActionTargetCalculatorTests(unittest.TestCase):
         expected = np.array([1.0 + 4.0, 2.0 + 6.0])
 
         np.testing.assert_array_equal(expected, a_targets)
+
+    def test_vectorized_2d(self):
+
+        num_states = 5
+        num_actions = 3
+        rewards = tf.Variable(np.random.randn(num_states, num_actions), dtype=tf.float32)
+        next_state_action_values = tf.Variable(np.random.randn(num_states, num_actions,num_actions), dtype=tf.float32)
+
+        calculator = QLearningActionTargetCalculator(
+            rl_system=MagicMock(),
+            discount_factor=1.0)
+
+        # TEST
+        t_result = calculator.vectorized_2d(rewards, next_state_action_values)
+
+        # VERIFY
+        t_results = [calculator.vectorized_1d(rewards[:,i], next_state_action_values[:, i]) for i in range(num_actions)]
+        a_result, a_results = evaluate_tensor([t_result, t_results])
+
+        print(a_result)
+        self.assertEqual((num_states, num_actions), a_result.shape)
+        for i in range(num_actions):
+            self.assertAllClose(a_result[:, i], a_results[i])
+
+    def test_vectorized_2d_perf(self):
+
+        num_states = 500
+        num_actions = 7
+        rewards = tf.Variable(np.random.randn(num_states, num_actions), dtype=tf.float32)
+        next_state_action_values = tf.Variable(np.random.randn(num_states, num_actions,num_actions), dtype=tf.float32)
+
+        calculator = QLearningActionTargetCalculator(
+            rl_system=MagicMock(),
+            discount_factor=1.0)
+
+        t_result = calculator.vectorized_2d(rewards, next_state_action_values)
+        t_results = [calculator.vectorized_1d(rewards[:,i], next_state_action_values[:, i]) for i in range(num_actions)]
+
+        with Timer('vectorized_2d'):
+            for _ in range(100):
+                evaluate_tensor(t_result)
+
+        with Timer('vectorized_1d'):
+            for _ in range(100):
+                evaluate_tensor(t_results)
 
 
 class ExpectedSarsaActionTargetCalculatorTests(unittest.TestCase):
