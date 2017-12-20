@@ -13,7 +13,7 @@ from rl.tf.environments.line_world.system import LineWorldSystem
 from rl.tf.environments.line_world.constants import TARGET
 
 
-class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
+class ModelBasedTargetArrayCalculatorTests(tf.test.TestCase):
 
     def test_get_state_action_target(self):
 
@@ -93,6 +93,27 @@ class ModelBasedTargetArrayCalculatorTests(unittest.TestCase):
 
         np.testing.assert_almost_equal(a_targets[0], a_target0)
         np.testing.assert_almost_equal(a_targets[1], a_target1)
+
+    def test_get_states_targets_vectorized(self):
+
+        a_states = np.arange(10)
+        t_states = tf.constant(a_states, dtype=tf.int32)
+
+        lws = LineWorldSystem()
+        action_target_calculator = QLearningActionTargetCalculator(lws)
+
+        calculator = ModelBasedTargetArrayCalculator(lws, action_target_calculator)
+
+        t_targets = calculator.get_states_targets_vectorized(t_states)
+        t_expected_targets = calculator.get_states_targets(t_states)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            a_targets = sess.run(t_targets)
+            a_expected_targets = sess.run(t_expected_targets)
+
+        self.assertEqual((10, 2), a_targets.shape)
+        self.assertAllClose(a_expected_targets, a_targets)
 
     def test_get_states_targets(self):
         a_states = np.arange(10)

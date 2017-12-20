@@ -27,6 +27,18 @@ class ModelBasedTargetArrayCalculator(object):
         result = tf.map_fn(self.get_state_targets, states, dtype=tf.float32)
         return result
 
+    def get_states_targets_vectorized(self, t_states):
+
+        next_states = self.rl_system.model.apply_actions_vectorized(t_states)
+        rewards = self.rl_system.reward_function.state_rewards_vectorized(t_states, next_states)
+        is_terminal = self.rl_system.model.are_states_terminal_vectorized(next_states)
+
+        next_states_action_values = self.rl_system.action_value_function.vectorized_2d(next_states)
+        next_state_targets = self.action_target_calculator.vectorized_2d(rewards, next_states_action_values)
+
+        targets = tf.where(is_terminal, rewards, next_state_targets)
+        return targets
+
     def get_state_targets(self, state):
         """
         Get all targets for a single state, so the result will be a tensor
