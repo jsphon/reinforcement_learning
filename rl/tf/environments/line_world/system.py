@@ -13,7 +13,7 @@ from rl.lib.timer import Timer
 class LineWorldSystem(System):
 
     def __init__(self):
-        self.action_value_function = ValueFunctionBuilder(10, [10], 2, use_one_hot_input_transform=True)
+        self.action_value_function = ValueFunctionBuilder(10, [50, 20], 2, use_one_hot_input_transform=True)
         self.policy = EpsilonGreedyPolicy()
         self.model = LineWorldModel()
         self.reward_function = RewardFunction()
@@ -35,14 +35,21 @@ if __name__=='__main__':
     t_action_values = lws.action_value_function.vectorized(t_states)
 
     learner = Learner(calculator, t_states, vectorize=False)
-    learner_v = Learner(calculator, t_states, vectorize=True, train_loop_steps=100)
+    learner_v = Learner(calculator, t_states,
+                        vectorize=True,
+                        train_loop_steps=100,
+                        learning_rate=0.01)
 
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
-    for _ in range(10):
-        #with Timer('Training mapped...'): learner.train(sess, num_epochs=100)
-        with Timer('Training vectorized...'): learner_v.train(sess, num_epochs=100)
-        with Timer('Train Loop...'): learner_v.run_train_loop(sess)
+    for i in range(10):
+        print('=========== %s ============' % (i+1))
+        with Timer('Train Loop...'):
+            learner_v.run_train_loop(sess)
+        print(learner.loss.eval())
+        print('Action vaues')
+        print(t_action_values.eval())
+        print('Targets')
+        print(calculator.get_states_targets_vectorized(t_states).eval())
 
-        print(sess.run(t_action_values))

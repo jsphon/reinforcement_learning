@@ -110,9 +110,18 @@ class ValueFunctionBuilder(object):
         return tf.while_loop(cond, body, [i])
 
     def train_op(self, x, y, *args, **kwargs):
-        loss = self.squared_loss(x, y)
-        op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
-        return op
+        with tf.variable_scope('train_op', reuse=tf.AUTO_REUSE):
+            y_snap = tf.get_variable(
+                'y_snap',
+                shape=y.shape,
+                initializer=tf.constant_initializer(0),
+            )
+        print('Making train op with %s' % str(y_snap))
+        assign_op = tf.assign(y_snap, y)
+        loss = self.squared_loss(x, y_snap)
+        with tf.control_dependencies([assign_op]):
+            train_op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+        return tf.group(assign_op, train_op)
 
     def squared_loss(self, x, y):
         y_hat = self.calculate(x)
