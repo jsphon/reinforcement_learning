@@ -4,6 +4,7 @@ Tensorflow based Value Functions
 
 import tensorflow as tf
 
+from rl.lib.timer import Timer
 
 class ValueFunctionBuilder(object):
     def __init__(self,
@@ -109,24 +110,86 @@ class ValueFunctionBuilder(object):
 
         return tf.while_loop(cond, body, [i])
 
+    def repeat_n_times(self, op, n):
+        i = tf.constant(0)
+
+        def cond(counter):
+            return tf.less(counter, n)
+
+        def body(counter):
+            with tf.control_dependencies([op]):
+                return counter + 1
+
+            return tf.while_loop(cond, body, [i])
+
+        return tf.while_loop(cond, body, [i])
+
     def train_op(self, x, y, *args, **kwargs):
         with tf.variable_scope('train_op', reuse=tf.AUTO_REUSE):
             y_snap = tf.get_variable(
                 'y_snap',
                 shape=y.shape,
                 initializer=tf.constant_initializer(0),
+                trainable=False,
             )
         print('Making train op with %s' % str(y_snap))
         assign_op = tf.assign(y_snap, y)
         loss = self.squared_loss(x, y_snap)
         with tf.control_dependencies([assign_op]):
-            train_op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+            with Timer('Making train op'):
+                # train_ops = [
+                #     tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+                #     for _ in range(2)]
+                train_op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+                #train_ops = self.repeat_n_times(train_op, 1000)
         return tf.group(assign_op, train_op)
 
     def squared_loss(self, x, y):
         y_hat = self.calculate(x)
         loss = squared_loss(y_hat, y)
         return loss
+
+
+class ValueFunctionTrainer(object):
+
+    def __init__(self, x, y, value_function):
+        self.x = x
+        self.y = y
+        self.y_snapshot = tf.convert_to_tensor(self.y)
+        self.value_function = value_function
+        self.loss = self.get_loss()
+
+    def refresh_y_snapshot(self):
+        self.y_snapshot = tf.convert_to_tensor(self.y)
+
+    def refresh_loss(self):
+        self.loss = self.get_loss()
+
+    def get_loss(self):
+        return self.value_function.squared_loss(self.x, self.y_snapshot)
+
+    def train_op(self, *args, **kwargs):
+        # with tf.variable_scope('train_op', reuse=tf.AUTO_REUSE):
+        #     y_snap = tf.get_variable(
+        #         'y_snap',
+        #         shape=y.shape,
+        #         initializer=tf.constant_initializer(0),
+        #         trainable=False,
+        #     )
+        # print('Making train op with %s' % str(y_snap))
+        # assign_op = tf.assign(y_snap, y)
+        # loss = self.squared_loss(x, y_snap)
+        #loss = self.get_loss()
+        # with tf.control_dependencies([assign_op]):
+        #     with Timer('Making train op'):
+                # train_ops = [
+                #     tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+                #     for _ in range(2)]
+                #train_op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=loss)
+                #train_ops = self.repeat_n_times(train_op, 1000)
+        #return tf.group(assign_op, train_ops)
+        train_op = tf.train.GradientDescentOptimizer(*args, **kwargs).minimize(loss=self.loss)
+        return train_op
 
 
 def squared_loss(y0, y1):
@@ -143,3 +206,42 @@ def weight_variable(shape, name=None):
 def bias_variable(shape, name=None):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial, name=name)
+
+
+if __name__=='__main__':
+
+    import numpy as np
+
+    nx = np.arange(10)
+    tx = tf.Variable(nx, dtype=tf.int32, trainable=False)
+
+    ny_true = np.array([
+        [8, 8, 9, 10, 9, 8, 7, 6, 5, 4],
+        [9, 10, 7, 8, 7, 6, 5, 4, 3, 2],
+
+    ]
+    ).T
+
+    ty_true = tf.Variable(ny_true, dtype=tf.float32, trainable=False)
+
+    builder = ValueFunctionBuilder(10, [50, 20], 2, use_one_hot_input_transform=True)
+    yhat = builder.calculate(tx)
+
+    trainer = ValueFunctionTrainer(tx, ty_true, builder)
+
+    train_op = trainer.train_op(learning_rate=0.01)
+
+    sess = tf.InteractiveSession()
+    sess.run(tf.global_variables_initializer())
+
+    print(trainer.get_loss().eval())
+    print(yhat.eval())
+
+    for _ in range(1000):
+        sess.run(train_op)
+
+    print(trainer.get_loss().eval())
+
+
+
+    print(yhat.eval())
