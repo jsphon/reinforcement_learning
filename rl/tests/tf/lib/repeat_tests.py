@@ -11,7 +11,9 @@ class RepeatTestCase(tf.test.TestCase):
         c = tf.Variable(0)
 
         def make_op():
-            return tf.assign(c, c+1)
+            op = tf.assign(c, c+1)
+            op = tf.Print(op, [c], message='hello')
+            return tf.group(op)
 
         repeat_op = repeat(make_op, 10)
 
