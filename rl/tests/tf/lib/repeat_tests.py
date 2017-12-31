@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-from rl.tf.lib.repeat import repeat
+from rl.tf.lib import repeat
 
 
 class RepeatTestCase(tf.test.TestCase):
