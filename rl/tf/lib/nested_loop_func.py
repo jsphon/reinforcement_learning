@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-
+from rl.tf.lib.ordered_group_func import ordered_group
 from . import repeat
 
 def nested_loop(
@@ -8,7 +8,6 @@ def nested_loop(
         inner_steps,
         body,
         outer_loop_pre_func=None,
-        outer_loop_post_func=None
     ):
     """
     Created a (single) nested loop operation.
@@ -19,7 +18,6 @@ def nested_loop(
         outer_loop_pre_func()
         for j in range(inner_steps):
             inner_loop_func()
-        outer_loop_post_func()
 
     The original purpose of this function was for training loops, where we want to
     do some variable assignment every few steps
@@ -32,8 +30,15 @@ def nested_loop(
     """
 
     def get_inner_loop():
-        inner_loop = repeat(body, inner_steps)
-        return inner_loop
+
+        def _get():
+            return repeat(body, inner_steps)
+
+        if outer_loop_pre_func:
+            return ordered_group(outer_loop_pre_func, _get)
+
+        else:
+            return _get()
 
     outer_loop = repeat(get_inner_loop, outer_steps)
 
