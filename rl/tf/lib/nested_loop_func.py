@@ -1,23 +1,21 @@
-import tensorflow as tf
+from . import ordered_group, repeat
 
-from rl.tf.lib.ordered_group_func import ordered_group
-from . import repeat
 
 def nested_loop(
         outer_steps,
         inner_steps,
-        body,
-        outer_loop_pre_func=None,
-    ):
+        get_body_op,
+        get_pre_body_op=None,
+):
     """
     Created a (single) nested loop operation.
 
     This is similar to the following Python code:
 
     for i in range(outer_steps):
-        outer_loop_pre_func()
+        get_pre_body_op()() # double parenthesis is intentional
         for j in range(inner_steps):
-            inner_loop_func()
+            get_body_op()() # double parenthesis is intentional
 
     The original purpose of this function was for training loops, where we want to
     do some variable assignment every few steps
@@ -31,14 +29,14 @@ def nested_loop(
 
     def get_inner_loop():
 
-        def _get():
-            return repeat(body, inner_steps)
-
-        if outer_loop_pre_func:
-            return ordered_group(outer_loop_pre_func, _get)
+        if get_pre_body_op:
+            return ordered_group(get_pre_body_op, _get_inner_loop)
 
         else:
-            return _get()
+            return _get_inner_loop()
+
+    def _get_inner_loop():
+        return repeat(get_body_op, inner_steps)
 
     outer_loop = repeat(get_inner_loop, outer_steps)
 

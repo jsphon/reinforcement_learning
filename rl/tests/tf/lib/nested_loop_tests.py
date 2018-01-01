@@ -14,8 +14,9 @@ class NestedLoopTestCase(tf.test.TestCase):
     def append(self, value):
         def get_append_op():
             append_op = tf.scatter_update(self.c, self.i, value)
-            append_op = tf.Print(append_op, [self.i, self.c[self.i]], 'Appending...')
-            return append_op
+            print_op = tf.Print(append_op, [self.i, self.c[self.i]], 'Appending...')
+            with tf.control_dependencies([append_op]):
+                return print_op
 
         def get_inc_op():
             assign_op = tf.assign(self.i, self.i+1, use_locking=True)
@@ -36,7 +37,7 @@ class NestedLoopTestCase(tf.test.TestCase):
         nl = nested_loop(
             outer_steps=2,
             inner_steps=10,
-            body=self.loop_body,
+            get_body_op=self.loop_body,
         )
 
         with self.test_session() as sess:
@@ -52,8 +53,8 @@ class NestedLoopTestCase(tf.test.TestCase):
         nl = nested_loop(
             outer_steps=2,
             inner_steps=3,
-            body=self.loop_body,
-            outer_loop_pre_func=self.outer_loop_pre_func
+            get_body_op=self.loop_body,
+            get_pre_body_op=self.outer_loop_pre_func
         )
 
         with self.test_session() as sess:
