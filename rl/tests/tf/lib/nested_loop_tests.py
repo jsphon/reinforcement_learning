@@ -8,21 +8,21 @@ from rl.tf.lib.ordered_group_func import ordered_group
 class NestedLoopTestCase(tf.test.TestCase):
 
     def setUp(self):
-        self.c = tf.Variable(tf.zeros(100, tf.float32))
+        self.c = tf.Variable(tf.zeros(20, tf.float32))
         self.i = tf.Variable(0)
 
     def append(self, value):
         def get_append_op():
-            append_op = tf.scatter_update(self.c, self.i, value)
-            print_op = tf.Print(append_op, [self.i, self.c[self.i]], 'Appending...')
-            with tf.control_dependencies([append_op]):
-                return print_op
+            return tf.scatter_update(self.c, self.i, value)
 
         def get_inc_op():
             assign_op = tf.assign(self.i, self.i+1, use_locking=True)
             return assign_op
 
-        return ordered_group(get_append_op, get_inc_op)
+        def get_print_op():
+            return tf.Print(tf.Variable(0), [self.i, self.c[0], self.c[1], self.c[2], self.c[3], self.c[4]], 'Appending...')
+
+        return ordered_group(get_append_op, get_inc_op, get_print_op)
 
     def outer_loop_pre_func(self):
         op = self.append(-tf.to_float(self.i))
