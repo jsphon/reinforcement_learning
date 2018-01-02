@@ -24,13 +24,13 @@ class NestedForLoopTestCase(tf.test.TestCase):
 
         return ordered_group(get_append_op, get_inc_op, get_print_op)
 
-    def outer_body(self, i):
+    def outer_body(self):
         op = self.append(-tf.to_float(self.i))
         return op
 
-    def loop_body(self, j):
+    def loop_body(self):
         op = self.append(tf.to_float(self.i))
-        op = tf.Print(op, [j], 'loop body')
+        op = tf.Print(op, [self.i], 'loop body')
         return op
 
     def test_nested_for_loop(self):
@@ -74,9 +74,9 @@ class ForLoopTestcase(tf.test.TestCase):
     def test_for_loop(self):
         c = tf.Variable(0)
 
-        def body(i):
+        def body():
             op = tf.assign(c, c + 1)
-            op = tf.Print(op, [i, c], message='hello')
+            op = tf.Print(op, [c], message='hello')
             return tf.group(op)
 
         repeat_op = for_loop(body, 10)
@@ -88,6 +88,48 @@ class ForLoopTestcase(tf.test.TestCase):
             result = c.eval()
 
         self.assertEqual(10, result)
+
+
+class OrderedGrouptestCase(tf.test.TestCase):
+    def setUp(self):
+        self.c = tf.Variable(0)
+
+    def add_one(self):
+        r = tf.assign(self.c, self.c + 1)
+        r = tf.Print(r, [self.c], 'Adding one')
+        return r
+
+    def times_two(self):
+        r = tf.assign(self.c, 2 * self.c)
+        r = tf.Print(r, [self.c], 'times two')
+        return r
+
+    def pow_three(self):
+        r = tf.assign(self.c, tf.pow(self.c, 3))
+        r = tf.Print(r, [self.c], 'pow three')
+        return r
+
+    def test_ordered_group1(self):
+        op = ordered_group(self.add_one, self.times_two, self.pow_three)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(op)
+            result = self.c.eval()
+
+        expected = ((0 + 1) * 2) ** 3  # 8
+        self.assertEqual(expected, result)
+
+    def test_ordered_group2(self):
+        op = ordered_group(self.pow_three, self.times_two, self.add_one)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(op)
+            result = self.c.eval()
+
+        expected = ((0 ** 3) * 2) + 1  # 3
+        self.assertEqual(expected, result)
 
 #
 # class OrderedGrouptestCase(tf.test.TestCase):

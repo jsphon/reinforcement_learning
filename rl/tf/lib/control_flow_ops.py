@@ -31,15 +31,15 @@ def nested_for_loop(
 
     """
 
-    def get_inner_loop(i):
+    def get_inner_loop():
 
         if outer_body:
-            return ordered_group(outer_body(i), _get_inner_loop)
+            return ordered_group(outer_body, _get_inner_loop)
 
         else:
-            return _get_inner_loop(i)
+            return _get_inner_loop()
 
-    def _get_inner_loop(i):
+    def _get_inner_loop():
         return for_loop(inner_body, inner_steps)
 
     outer_loop = for_loop(get_inner_loop, outer_steps)
@@ -65,7 +65,7 @@ def for_loop(body, n):
         return tf.less(counter, n)
 
     def while_body(counter):
-        op = body(i)
+        op = body()
         with tf.control_dependencies([op]):
             return counter + 1
 
