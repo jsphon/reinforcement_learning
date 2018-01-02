@@ -1,10 +1,6 @@
 import tensorflow as tf
 
 
-
-import tensorflow as tf
-
-
 def nested_for_loop(
         outer_steps,
         inner_steps,
@@ -88,10 +84,6 @@ def ordered_group(*make_ops):
     """
     if len(make_ops) == 1:
         return make_ops[0]()
-    elif len(make_ops) == 2:
-        op = make_ops[0]()
-        with tf.control_dependencies([op]):
-            return make_ops[-1]()
     else:
         op = make_ops[0]()
         with tf.control_dependencies([op]):
