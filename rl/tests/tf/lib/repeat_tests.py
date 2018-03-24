@@ -1,3 +1,6 @@
+import logging
+logging.getLogger("tensorflow").setLevel(logging.WARNING)
+
 import numpy as np
 from scipy import stats
 import tensorflow as tf
@@ -140,18 +143,13 @@ class RepeatSlowTestCase(tf.test.TestCase):
             loss = tf.losses.mean_squared_error(batch_y, yhat)
             return loss
 
-
         def get_train_op():
             # We have to create the model and loss inside the train op
-            loss = get_loss()
-            return tf.train.GradientDescentOptimizer(0.01).minimize(loss)
+            loss = get_batch_loss()
+            return tf.train.GradientDescentOptimizer(0.001).minimize(loss)
 
-        def body():
-            return get_train_op()
-
-        n = 5000
-
-        train_loop = repeat(body, n)
+        num_iterations = 10000
+        train_loop = repeat(get_train_op, num_iterations)
 
         sess = tf.InteractiveSession()
         sess.run(tf.global_variables_initializer())
@@ -171,5 +169,5 @@ class RepeatSlowTestCase(tf.test.TestCase):
         print('Optimised/scipy b : %0.2f / %0.2f' % (opt_b, intercept))
         print('Final Loss : %0.2f' % final_loss)
 
-        self.assertAlmostEqual(slope, opt_a, places=3)
-        self.assertAlmostEqual(intercept, opt_b, places=3)
+        self.assertAlmostEqual(slope, opt_a, places=1)
+        self.assertAlmostEqual(intercept, opt_b, places=1)
