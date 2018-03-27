@@ -28,15 +28,14 @@ ty = tf.Variable(ay, trainable=False)
 va = tf.Variable(0.0, dtype=tf.float64)
 vb = tf.Variable(0.0, dtype=tf.float64)
 
-yhat = va * tX + vb
-loss = tf.losses.mean_squared_error(ty, yhat)
-
-c = tf.Variable(0)
+def get_loss():
+    yhat = va * tX + vb
+    loss = tf.losses.mean_squared_error(ty, yhat)
+    return loss
 
 def get_train_op():
-    _yhat = va * tX + vb
-    _loss = tf.losses.mean_squared_error(ty, _yhat)
-    return tf.train.GradientDescentOptimizer(0.01).minimize(_loss)
+    loss = get_loss()
+    return tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
 
 def body():
@@ -53,14 +52,10 @@ sess.run(tf.global_variables_initializer())
 with Timer('train loop'):
     sess.run(train_loop)
 
-with Timer('train op'):
-    for _ in range(n):
-        sess.run(train_op)
-
 opt_a = va.eval()
 opt_b = vb.eval()
 
-final_loss = loss.eval()
+final_loss = get_loss().eval()
 
 print('Optimised a : %0.2f' % opt_a)
 print('Optimised b : %0.2f' % opt_b)
